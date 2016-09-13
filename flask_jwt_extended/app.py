@@ -37,14 +37,13 @@ class InvalidHeaderError(JWTExtendedException):
 # TODO add newly created tokens to 'something' so they can be blacklisted later.
 # TODO do something about possibility of uuid collisions?
 # TODO add arbatry data to token
-# TODO what would be the proper claim for identity
 # TODO callback method for jwt_required failed (See
 #      https://github.com/maxcountryman/flask-login/blob/master/flask_login/utils.py#L221)
 def _encode_access_token(identity, secret, fresh, algorithm):
     """
     Creates a new access token.
 
-    :param identity: TODO - not sure I want this. flask-jwt leads to unnecessary db calls on every call
+    :param identity: Some identifier of who this client is (most common would be a client id)
     :param secret: Secret key to encode the JWT with
     :param fresh: If this should be a 'fresh' token or not
     :param algorithm: Which algorithm to use for the toek
@@ -58,6 +57,7 @@ def _encode_access_token(identity, secret, fresh, algorithm):
         'jti': str(uuid.uuid4()),
         'identity': identity,
         'fresh': fresh,
+        'type': 'access',
     }
     byte_str = jwt.encode(token_data, secret, algorithm)
     return byte_str.decode('utf-8')
@@ -79,7 +79,8 @@ def _encode_refresh_token(identity, secret, algorithm):
         'iat': now,
         'nbf': now,
         'jti': str(uuid.uuid4()),
-        'identity': identity
+        'identity': identity,
+        'type': 'refresh',
     }
     byte_str = jwt.encode(token_data, secret, algorithm)
     return byte_str.decode('utf-8')
@@ -140,13 +141,16 @@ def jwt_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         try:
-            encoded_jwt = _verify_jwt_from_request()
+            jwt_data = _verify_jwt_from_request()
         except InvalidHeaderError as e:
             return jsonify({'msg': str(e)}), 422
         except JWTDecodeError as e:
             return jsonify({'msg': str(e)}), 401
 
-        return fn(*args, **kwargs)
+        if jwt_data['type'] != 'access':
+            return jsonify({'msg': 'Only access tokens can access this endpoint'}), 401
+        else:
+            return fn(*args, **kwargs)
     return wrapper
 
 
@@ -165,13 +169,15 @@ def fresh_jwt_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         try:
-            encoded_jwt = _verify_jwt_from_request()
+            jwt_data = _verify_jwt_from_request()
         except InvalidHeaderError as e:
             return jsonify({'msg': str(e)}), 422
         except JWTDecodeError as e:
             return jsonify({'msg': str(e)}), 401
 
-        if not encoded_jwt['fresh']:
+        if jwt_data['type'] != 'access':
+            return jsonify({'msg': 'Only access tokens can access this endpoint'}), 401
+        elif not jwt_data['fresh']:
             return jsonify({'msg': 'TODO - need fresh jwt'}), 401
         else:
             return fn(*args, **kwargs)
@@ -206,19 +212,21 @@ def jwt_auth():
 
 @app.route('/auth/refresh_login')
 def jwt_refresh():
+    # get the token
     try:
-        encoded_token = _verify_jwt_from_request()
+        jwt_data = _verify_jwt_from_request()
     except InvalidHeaderError as e:
         return jsonify({'msg': str(e)}), 422
     except JWTDecodeError as e:
         return jsonify({'msg': str(e)}), 401
 
-    # TODO verify this is a refresh token and not an access token
+    # verify this is a refresh token
+    if jwt_data['type'] != 'refresh':
+        return jsonify({'msg': 'Only refresh tokens can access this endpoint'}), 401
 
-    access_token = _encode_access_token(encoded_token['identity'], SECRET, False, 'HS256')
-    ret = {
-        'access_token': access_token
-    }
+    # Send the caller a new access token
+    access_token = _encode_access_token(jwt_data['identity'], SECRET, False, 'HS256')
+    ret = {'access_token': access_token}
     return jsonify(ret), 200
 
 

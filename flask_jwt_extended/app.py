@@ -32,11 +32,11 @@ class InvalidHeaderError(JWTExtendedException):
 
 
 # TODO access JWT contents in function (flask.g I think)
-# TODO required claims verification
-# TODO encode if this is a refresh or access token in the JWT
+# TODO required jwt claims verification (how to deal with fresh? Different claims
+#      for access/refresh tokens? Or just set fresh to false on the refresh token
 # TODO add newly created tokens to 'something' so they can be blacklisted later.
-# TODO do something about possibility of uuid collisions?
-# TODO add arbatry data to token
+#      Should this be only refresh tokens, or access tokens to? Or an option for either
+# TODO add custom data to token (username, ip, etc)
 # TODO callback method for jwt_required failed (See
 #      https://github.com/maxcountryman/flask-login/blob/master/flask_login/utils.py#L221)
 def _encode_access_token(identity, secret, fresh, algorithm):
@@ -126,7 +126,6 @@ def _verify_jwt_from_request():
     return _decode_jwt(token, SECRET, 'HS256')
 
 
-# TODO verify these are access tokens
 def jwt_required(fn):
     """
     If you decorate a vew with this, it will ensure that the requester has a valid

@@ -189,6 +189,13 @@ app = Flask(__name__)
 app.debug = True
 
 
+def _check_username_password(username, password):
+    if username == 'test' and password == 'test':
+        return True
+    else:
+        return False
+
+
 @app.route('/auth/login', methods=['POST'])
 def jwt_auth():
     username = request.json.get('username', None)
@@ -198,7 +205,9 @@ def jwt_auth():
     if not password:
         return jsonify({'msg': 'TODO make callback - password not in request'}), 422
 
-    if username == 'test' and password == 'test':
+    if not _check_username_password(username, password):
+        return jsonify({'msg': 'Invalid username or password'}), 401
+    else:
         access_token = _encode_access_token(username, SECRET, True, 'HS256')
         refresh_token = _encode_refresh_token(username, SECRET, 'HS256')
         ret = {
@@ -206,11 +215,9 @@ def jwt_auth():
             'refresh_token': refresh_token
         }
         return jsonify(ret), 200
-    else:
-        return jsonify({'msg': 'Invalid username or password'}), 401
 
 
-@app.route('/auth/refresh_login')
+@app.route('/auth/refresh_login', methods=['POST'])
 def jwt_refresh():
     # get the token
     try:
@@ -230,10 +237,24 @@ def jwt_refresh():
     return jsonify(ret), 200
 
 
-@app.route('/auth/fresh_login')
+@app.route('/auth/fresh_login', methods=['POST'])
 def jwt_fresh_login():
     # Create a new access token only (no refresh token) that has fresh set to true
-    pass
+    username = request.json.get('username', None)
+    if not username:
+        return jsonify({'msg': 'TODO make callback - username not in request'}), 422
+    password = request.json.get('password', None)
+    if not password:
+        return jsonify({'msg': 'TODO make callback - password not in request'}), 422
+
+    if not _check_username_password(username, password):
+        return jsonify({'msg': 'Invalid username or password'}), 401
+    else:
+        access_token = _encode_access_token(username, SECRET, True, 'HS256')
+        ret = {
+            'access_token': access_token,
+        }
+        return jsonify(ret), 200
 
 
 @app.route('/protected', methods=['GET'])

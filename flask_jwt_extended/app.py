@@ -31,17 +31,13 @@ class InvalidHeaderError(JWTExtendedException):
     pass
 
 
-class InvalidToken(JWTExtendedException):
-    pass
-
-
+# TODO provide callback function to insert custom claims data into the jwt
 # TODO access JWT contents in function (flask.g I think)
 # TODO add newly created tokens to 'something' so they can be blacklisted later.
 #      Should this be only refresh tokens, or access tokens to? Or an option for either
-# TODO add custom data to token (username, ip, etc)
 # TODO callback method for jwt_required failed (See
 #      https://github.com/maxcountryman/flask-login/blob/master/flask_login/utils.py#L221)
-def _encode_access_token(identity, secret, fresh, algorithm):
+def _encode_access_token(identity, secret, fresh, algorithm, custom_data=None):
     """
     Creates a new access token.
 
@@ -51,6 +47,9 @@ def _encode_access_token(identity, secret, fresh, algorithm):
     :param algorithm: Which algorithm to use for the toek
     :return: Encoded JWT
     """
+    if custom_data is None:
+        custom_data = {}
+
     now = datetime.datetime.utcnow()
     token_data = {
         'exp': now + ACCESS_TOKEN_EXPIRE_DELTA,
@@ -60,6 +59,7 @@ def _encode_access_token(identity, secret, fresh, algorithm):
         'identity': identity,
         'fresh': fresh,
         'type': 'access',
+        'custom_claims': custom_data,
     }
     byte_str = jwt.encode(token_data, secret, algorithm)
     return byte_str.decode('utf-8')
@@ -98,21 +98,24 @@ def _decode_jwt(token, secret, algorithm):
     :return: Dictionary containing contents of the JWT
     """
     try:
-        # ext, iat, and nbf are all verified by pyjwt. We just need to make sure
-        # that the custom claims we put in the token are present
         data = jwt.decode(token, secret, algorithm=algorithm)
-        if 'jti' not in data or not isinstance(data['jti'], str):
-            raise InvalidToken("Missing or invalid claim: jti")
-        if 'identity' not in data:
-            raise InvalidToken("Missing claim: identity")
-        if 'type' not in data or data['type'] not in ('refresh', 'access'):
-            raise InvalidToken("Missing or invalid claim: type")
-        if data['type'] == 'access':
-            if 'fresh' not in data or not isinstance(data['fresh'], bool):
-                raise InvalidToken("Missing or invalid claim: fresh")
-        return data
     except jwt.InvalidTokenError as e:
         raise JWTDecodeError(str(e))
+
+    # ext, iat, and nbf are all verified by pyjwt. We just need to make sure
+    # that the custom claims we put in the token are present
+    if 'jti' not in data or not isinstance(data['jti'], str):
+        raise JWTDecodeError("Missing or invalid claim: jti")
+    if 'identity' not in data:
+        raise JWTDecodeError("Missing claim: identity")
+    if 'type' not in data or data['type'] not in ('refresh', 'access'):
+        raise JWTDecodeError("Missing or invalid claim: type")
+    if data['type'] == 'access':
+        if 'fresh' not in data or not isinstance(data['fresh'], bool):
+            raise JWTDecodeError("Missing or invalid claim: fresh")
+        if 'custom_claims' not in data or not isinstance(data['custom_claims'], dict):
+            raise JWTDecodeError("Missing or invalid claim: custom_claims")
+    return data
 
 
 def _verify_jwt_from_request():

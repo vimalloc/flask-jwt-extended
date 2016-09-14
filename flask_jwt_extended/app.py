@@ -4,9 +4,22 @@ import datetime
 from functools import wraps
 
 import jwt
-from flask import Flask, request, jsonify, g
+from werkzeug.local import LocalProxy
+from flask import Flask, request, jsonify
 
-# TODO figure out what doc im usign (pydoc?) and test it
+# TODO read this whole page
+# Per http://flask.pocoo.org/docs/0.11/extensiondev/
+#
+# Find the stack on which we want to store the database connection.
+# Starting with Flask 0.9, the _app_ctx_stack is the correct one,
+# before that we need to use the _request_ctx_stack.
+try:
+    from flask import _app_ctx_stack as ctx_stack
+except ImportError:
+    from flask import _request_ctx_stack as ctx_stack
+
+
+# TODO figure out what doc im using (pydoc?) and test it
 
 
 # Options, should be moved to app.config
@@ -31,7 +44,12 @@ class InvalidHeaderError(JWTExtendedException):
     pass
 
 
-# TODO helper functions for getting identity and custom claims
+def _get_identity():
+    return getattr(ctx_stack.top, 'jwt_identity', None)
+jwt_identity = LocalProxy(lambda: _get_identity())
+
+
+# TODO helper functions for getting custom claims
 # TODO provide callback function to insert custom claims data into the jwt
 # TODO add newly created tokens to 'something' so they can be blacklisted later.
 #      Should this be only refresh tokens, or access tokens to? Or an option for either
@@ -168,8 +186,8 @@ def jwt_required(fn):
         else:
             # Save the jwt take in flask.g so that it can be accessed later by
             # the various endpoints that is using this decorator
-            g.jwt_identity = jwt_data['identity']
-            g.jwt_custom_claims = jwt_data['custom_claims']
+            ctx_stack.top.jwt_identity = jwt_data['identity']
+            ctx_stack.top.jwt_custom_claims = jwt_data['custom_claims']
             return fn(*args, **kwargs)
     return wrapper
 
@@ -202,8 +220,8 @@ def fresh_jwt_required(fn):
         else:
             # Save the jwt take in flask.g so that it can be accessed later by
             # the various endpoints that is using this decorator
-            g.jwt_identity = jwt_data['identity']
-            g.jwt_custom_claims = jwt_data['custom_claims']
+            ctx_stack.top.jwt_identity = jwt_data['identity']
+            ctx_stack.top.jwt_custom_claims = jwt_data['custom_claims']
             return fn(*args, **kwargs)
     return wrapper
 
@@ -284,13 +302,13 @@ def jwt_fresh_login():
 @app.route('/protected', methods=['GET'])
 @jwt_required
 def non_fresh_protected():
-    return jsonify({'msg': 'hello world to {}'.format(g.jwt_identity)})
+    return jsonify({'msg': 'hello world to {}'.format(jwt_identity)})
 
 
 @app.route('/protected-fresh', methods=['GET'])
 @fresh_jwt_required
 def fresh_protected():
-    return jsonify({'msg': 'hello world fresh from {}'.format(g.jwt_identity)})
+    return jsonify({'msg': 'hello world fresh from {}'.format(jwt_identity)})
 
 
 if __name__ == '__main__':

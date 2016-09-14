@@ -61,6 +61,8 @@ jwt_user_claims = LocalProxy(lambda: _get_user_claims())
 
 
 # TODO provide callback function to insert custom claims data into the jwt
+# TODO optional method to verify custom jwt user claims? Is this worth it, or
+#      should it be left to the user?
 # TODO add newly created tokens to 'something' so they can be blacklisted later.
 #      Should this be only refresh tokens, or access tokens to? Or an option for either
 # TODO callback method for jwt_required failed (See
@@ -267,6 +269,9 @@ def _check_username_password(username, password):
         return False
 
 
+# TODO should have the ability to suply the identity here. By default it can be
+#      a username, but we should allow users to use user_ids or anything else they
+#      want to.
 @app.route('/auth/login', methods=['POST'])
 def jwt_auth():
     username = request.json.get('username', None)

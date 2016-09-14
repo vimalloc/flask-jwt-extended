@@ -1,6 +1,8 @@
 import uuid
 import datetime
 
+import json
+
 from functools import wraps
 
 import jwt
@@ -40,6 +42,10 @@ class JWTDecodeError(JWTExtendedException):
     pass
 
 
+class JWTEncodeError(JWTExtendedException):
+    pass
+
+
 class InvalidHeaderError(JWTExtendedException):
     pass
 
@@ -49,13 +55,17 @@ def _get_identity():
 jwt_identity = LocalProxy(lambda: _get_identity())
 
 
-# TODO helper functions for getting custom claims
+def _get_user_claims():
+    return getattr(ctx_stack.top, 'jwt_user_claims', {})
+jwt_user_claims = LocalProxy(lambda: _get_user_claims())
+
+
 # TODO provide callback function to insert custom claims data into the jwt
 # TODO add newly created tokens to 'something' so they can be blacklisted later.
 #      Should this be only refresh tokens, or access tokens to? Or an option for either
 # TODO callback method for jwt_required failed (See
 #      https://github.com/maxcountryman/flask-login/blob/master/flask_login/utils.py#L221)
-def _encode_access_token(identity, secret, fresh, algorithm, custom_data=None):
+def _encode_access_token(identity, secret, fresh, algorithm, user_claims=None):
     """
     Creates a new access token.
 
@@ -65,9 +75,19 @@ def _encode_access_token(identity, secret, fresh, algorithm, custom_data=None):
     :param algorithm: Which algorithm to use for the toek
     :return: Encoded JWT
     """
-    if custom_data is None:
-        custom_data = {}
+    # Verify that all of our custom data we are encoding is what we expect
+    if user_claims is None:
+        user_claims = {}
+    if not isinstance(user_claims, dict):
+        raise JWTEncodeError('user_claims must be a dict')
+    if not isinstance(fresh, bool):
+        raise JWTEncodeError('fresh must be a bool')
+    try:
+        json.dumps(user_claims)
+    except Exception as e:
+        raise JWTEncodeError('Error json serializing user_claims: {}'.format(str(e)))
 
+    # Encode and return the jwt
     now = datetime.datetime.utcnow()
     token_data = {
         'exp': now + ACCESS_TOKEN_EXPIRE_DELTA,
@@ -77,10 +97,9 @@ def _encode_access_token(identity, secret, fresh, algorithm, custom_data=None):
         'identity': identity,
         'fresh': fresh,
         'type': 'access',
-        'custom_claims': custom_data,
+        'user_claims': user_claims,
     }
-    byte_str = jwt.encode(token_data, secret, algorithm)
-    return byte_str.decode('utf-8')
+    return jwt.encode(token_data, secret, algorithm).decode('utf-8')
 
 
 def _encode_refresh_token(identity, secret, algorithm):
@@ -131,8 +150,8 @@ def _decode_jwt(token, secret, algorithm):
     if data['type'] == 'access':
         if 'fresh' not in data or not isinstance(data['fresh'], bool):
             raise JWTDecodeError("Missing or invalid claim: fresh")
-        if 'custom_claims' not in data or not isinstance(data['custom_claims'], dict):
-            raise JWTDecodeError("Missing or invalid claim: custom_claims")
+        if 'user_claims' not in data or not isinstance(data['user_claims'], dict):
+            raise JWTDecodeError("Missing or invalid claim: user_claims")
     return data
 
 
@@ -161,6 +180,16 @@ def _verify_jwt_from_request():
     return _decode_jwt(token, SECRET, 'HS256')
 
 
+def add_user_claims(identity):
+    """
+    Example of adding custom user claims to the jwt
+    """
+    return {
+        'foo': 'bar',
+        'ip': request.remote_addr
+    }
+
+
 def jwt_required(fn):
     """
     If you decorate a vew with this, it will ensure that the requester has a valid
@@ -187,7 +216,7 @@ def jwt_required(fn):
             # Save the jwt take in flask.g so that it can be accessed later by
             # the various endpoints that is using this decorator
             ctx_stack.top.jwt_identity = jwt_data['identity']
-            ctx_stack.top.jwt_custom_claims = jwt_data['custom_claims']
+            ctx_stack.top.jwt_user_claims = jwt_data['user_claims']
             return fn(*args, **kwargs)
     return wrapper
 
@@ -221,7 +250,7 @@ def fresh_jwt_required(fn):
             # Save the jwt take in flask.g so that it can be accessed later by
             # the various endpoints that is using this decorator
             ctx_stack.top.jwt_identity = jwt_data['identity']
-            ctx_stack.top.jwt_custom_claims = jwt_data['custom_claims']
+            ctx_stack.top.jwt_user_claims = jwt_data['user_claims']
             return fn(*args, **kwargs)
     return wrapper
 
@@ -250,7 +279,9 @@ def jwt_auth():
     if not _check_username_password(username, password):
         return jsonify({'msg': 'Invalid username or password'}), 401
     else:
-        access_token = _encode_access_token(username, SECRET, True, 'HS256')
+        user_claims = add_user_claims(username)
+        access_token = _encode_access_token(username, SECRET, False, 'HS256',
+                                            user_claims=user_claims)
         refresh_token = _encode_refresh_token(username, SECRET, 'HS256')
         ret = {
             'access_token': access_token,
@@ -274,7 +305,9 @@ def jwt_refresh():
         return jsonify({'msg': 'Only refresh tokens can access this endpoint'}), 401
 
     # Send the caller a new access token
-    access_token = _encode_access_token(jwt_data['identity'], SECRET, False, 'HS256')
+    user_claims = add_user_claims(jwt_data['identity'])
+    access_token = _encode_access_token(jwt_data['identity'], SECRET, False, 'HS256',
+                                        user_claims=user_claims)
     ret = {'access_token': access_token}
     return jsonify(ret), 200
 
@@ -292,7 +325,9 @@ def jwt_fresh_login():
     if not _check_username_password(username, password):
         return jsonify({'msg': 'Invalid username or password'}), 401
     else:
-        access_token = _encode_access_token(username, SECRET, True, 'HS256')
+        user_claims = add_user_claims(username)
+        access_token = _encode_access_token(username, SECRET, False, 'HS256',
+                                            user_claims=user_claims)
         ret = {
             'access_token': access_token,
         }
@@ -302,13 +337,17 @@ def jwt_fresh_login():
 @app.route('/protected', methods=['GET'])
 @jwt_required
 def non_fresh_protected():
-    return jsonify({'msg': 'hello world to {}'.format(jwt_identity)})
+    ip = jwt_user_claims['ip']
+    msg = '{} says hello from {}'.format(jwt_identity, ip)
+    return jsonify({'msg': msg})
 
 
 @app.route('/protected-fresh', methods=['GET'])
 @fresh_jwt_required
 def fresh_protected():
-    return jsonify({'msg': 'hello world fresh from {}'.format(jwt_identity)})
+    ip = jwt_user_claims['ip']
+    msg = '{} says hello from {} (fresh)'.format(jwt_identity, ip)
+    return jsonify({'msg': msg})
 
 
 if __name__ == '__main__':

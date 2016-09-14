@@ -4,7 +4,7 @@ import datetime
 from functools import wraps
 
 import jwt
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 
 # TODO figure out what doc im usign (pydoc?) and test it
 
@@ -31,8 +31,8 @@ class InvalidHeaderError(JWTExtendedException):
     pass
 
 
+# TODO helper functions for getting identity and custom claims
 # TODO provide callback function to insert custom claims data into the jwt
-# TODO access JWT contents in function (flask.g I think)
 # TODO add newly created tokens to 'something' so they can be blacklisted later.
 #      Should this be only refresh tokens, or access tokens to? Or an option for either
 # TODO callback method for jwt_required failed (See
@@ -166,6 +166,10 @@ def jwt_required(fn):
         if jwt_data['type'] != 'access':
             return jsonify({'msg': 'Only access tokens can access this endpoint'}), 401
         else:
+            # Save the jwt take in flask.g so that it can be accessed later by
+            # the various endpoints that is using this decorator
+            g.jwt_identity = jwt_data['identity']
+            g.jwt_custom_claims = jwt_data['custom_claims']
             return fn(*args, **kwargs)
     return wrapper
 
@@ -196,6 +200,10 @@ def fresh_jwt_required(fn):
         elif not jwt_data['fresh']:
             return jsonify({'msg': 'TODO - need fresh jwt'}), 401
         else:
+            # Save the jwt take in flask.g so that it can be accessed later by
+            # the various endpoints that is using this decorator
+            g.jwt_identity = jwt_data['identity']
+            g.jwt_custom_claims = jwt_data['custom_claims']
             return fn(*args, **kwargs)
     return wrapper
 
@@ -276,13 +284,13 @@ def jwt_fresh_login():
 @app.route('/protected', methods=['GET'])
 @jwt_required
 def non_fresh_protected():
-    return jsonify({'msg': 'hello world'})
+    return jsonify({'msg': 'hello world to {}'.format(g.jwt_identity)})
 
 
 @app.route('/protected-fresh', methods=['GET'])
 @fresh_jwt_required
 def fresh_protected():
-    return jsonify({'msg': 'hello world fresh'})
+    return jsonify({'msg': 'hello world fresh from {}'.format(g.jwt_identity)})
 
 
 if __name__ == '__main__':

@@ -31,9 +31,11 @@ class InvalidHeaderError(JWTExtendedException):
     pass
 
 
+class InvalidToken(JWTExtendedException):
+    pass
+
+
 # TODO access JWT contents in function (flask.g I think)
-# TODO required jwt claims verification (how to deal with fresh? Different claims
-#      for access/refresh tokens? Or just set fresh to false on the refresh token
 # TODO add newly created tokens to 'something' so they can be blacklisted later.
 #      Should this be only refresh tokens, or access tokens to? Or an option for either
 # TODO add custom data to token (username, ip, etc)
@@ -96,7 +98,19 @@ def _decode_jwt(token, secret, algorithm):
     :return: Dictionary containing contents of the JWT
     """
     try:
-        return jwt.decode(token, secret, algorithm=algorithm)
+        # ext, iat, and nbf are all verified by pyjwt. We just need to make sure
+        # that the custom claims we put in the token are present
+        data = jwt.decode(token, secret, algorithm=algorithm)
+        if 'jti' not in data or not isinstance(data['jti'], str):
+            raise InvalidToken("Missing or invalid claim: jti")
+        if 'identity' not in data:
+            raise InvalidToken("Missing claim: identity")
+        if 'type' not in data or data['type'] not in ('refresh', 'access'):
+            raise InvalidToken("Missing or invalid claim: type")
+        if data['type'] == 'access':
+            if 'fresh' not in data or not isinstance(data['fresh'], bool):
+                raise InvalidToken("Missing or invalid claim: fresh")
+        return data
     except jwt.InvalidTokenError as e:
         raise JWTDecodeError(str(e))
 

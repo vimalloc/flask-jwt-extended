@@ -176,7 +176,7 @@ def jwt_required(fn):
         except NoAuthHeaderError:
             return current_app.jwt_manager.unauthorized_callback()
         except jwt.ExpiredSignatureError as e:
-            return current_app.jwt_manager.expired_token_callback(str(e))
+            return current_app.jwt_manager.expired_token_callback()
         except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
             return current_app.jwt_manager.invalid_token_callback(str(e))
 
@@ -222,7 +222,7 @@ def fresh_jwt_required(fn):
         except NoAuthHeaderError:
             return current_app.jwt_manager.unauthorized_callback()
         except jwt.ExpiredSignatureError as e:
-            return current_app.jwt_manager.expired_token_callback(str(e))
+            return current_app.jwt_manager.expired_token_callback()
         except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
             return current_app.jwt_manager.invalid_token_callback(str(e))
 
@@ -285,7 +285,7 @@ def refresh():
     except NoAuthHeaderError:
         return current_app.jwt_manager.unauthorized_callback()
     except jwt.ExpiredSignatureError as e:
-        return current_app.jwt_manager.expired_token_callback(str(e))
+        return current_app.jwt_manager.expired_token_callback()
     except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
         return current_app.jwt_manager.invalid_token_callback(str(e))
 

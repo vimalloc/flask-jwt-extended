@@ -11,5 +11,16 @@ REFRESH_EXPIRES = datetime.timedelta(days=30)
 ALGORITHM = 'HS256'
 
 # Blacklist enabled
-# blacklist storage options (simplekv)
-# blacklist check requests (all, refresh_token, none)
+BLACKLIST_ENABLED = False
+
+# blacklist storage options (simplekv). If using a storage option that supports
+# the simplekv.TimeToLiveMixin (example: redis, memcached), the TTL will be
+# automatically set to 15 minutes after the token expires (to account for
+# clock drift between different jwt providers/consumers).
+#
+# See: http://pythonhosted.org/simplekv/index.html#simplekv.TimeToLiveMixin
+BLACKLIST_STORE = None
+
+# blacklist check requests. Possible values are all, refresh, and None
+# TODO when accessing this value in app.config, make sure it is one of the expected values
+BLACKLIST_TOKEN_CHECKS = None

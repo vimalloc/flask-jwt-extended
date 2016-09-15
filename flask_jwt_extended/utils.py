@@ -12,7 +12,8 @@ try:
 except ImportError:
     from flask import _request_ctx_stack as ctx_stack
 
-from flask_jwt_extended.config import ALGORITHM, REFRESH_EXPIRES, ACCESS_EXPIRES
+from flask_jwt_extended.config import ALGORITHM, REFRESH_EXPIRES, ACCESS_EXPIRES, \
+    BLACKLIST_ENABLED, BLACKLIST_STORE, BLACKLIST_TOKEN_CHECKS
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthHeaderError
 
@@ -40,8 +41,6 @@ def _get_user_claims():
     return getattr(ctx_stack.top, 'jwt_user_claims', {})
 
 
-# TODO add newly created tokens to 'something' so they can be blacklisted later.
-#      Should this be only refresh tokens, or access tokens to? Or an option for either
 def _encode_access_token(identity, secret, algorithm, token_expire_delta,
                          fresh, user_claims):
     """
@@ -65,19 +64,22 @@ def _encode_access_token(identity, secret, algorithm, token_expire_delta,
     except Exception as e:
         raise JWTEncodeError('Error json serializing user_claims: {}'.format(str(e)))
 
-    # Encode and return the jwt
+    # Create the jwt
     now = datetime.datetime.utcnow()
+    uid = str(uuid.uuid4())
     token_data = {
         'exp': now + token_expire_delta,
         'iat': now,
         'nbf': now,
-        'jti': str(uuid.uuid4()),
+        'jti': uid,
         'identity': identity,
         'fresh': fresh,
         'type': 'access',
         'user_claims': user_claims,
     }
-    return jwt.encode(token_data, secret, algorithm).decode('utf-8')
+    encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
+    _store_token_if_blacklist_enabled(uid, token_expire_delta, token_type='access')
+    return encoded_token
 
 
 def _encode_refresh_token(identity, secret, algorithm, token_expire_delta):
@@ -91,16 +93,18 @@ def _encode_refresh_token(identity, secret, algorithm, token_expire_delta):
     :return: Encoded JWT
     """
     now = datetime.datetime.utcnow()
+    uid = str(uuid.uuid4())
     token_data = {
         'exp': now + token_expire_delta,
         'iat': now,
         'nbf': now,
-        'jti': str(uuid.uuid4()),
+        'jti': uid,
         'identity': identity,
         'type': 'refresh',
     }
-    byte_str = jwt.encode(token_data, secret, algorithm)
-    return byte_str.decode('utf-8')
+    encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
+    _store_token_if_blacklist_enabled(uid, token_expire_delta, token_type='refresh')
+    return encoded_token
 
 
 def _decode_jwt(token, secret, algorithm):
@@ -165,6 +169,7 @@ def jwt_required(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
+        # Attempt to decode the token
         try:
             secret = _get_secret_key()
             jwt_data = _verify_jwt_from_request(secret)
@@ -175,9 +180,22 @@ def jwt_required(fn):
         except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
             return current_app.jwt_manager.invalid_token_callback(str(e))
 
+        # Verify this is an access token
         if jwt_data['type'] != 'access':
             err_msg = 'Only access tokens can access this endpoint'
             return current_app.jwt_manager.invalid_token_callback(err_msg)
+
+        # TODO move this into common helper function that raises exception if
+        #      the token is blacklisted. Probably other common code I could do
+        #      this to as well
+        #
+        # If setup to check every request, see if this token has been revoked
+        if _blacklist_enabled() and _blacklist_checks() == 'all':
+            store = _get_blacklist_store()
+            jti = jwt_data['jti']
+            token_status = store[jti]
+            if token_status != 'active':
+                return current_app.jwt_manager.blacklisted_token_callback()
 
         # Save the jwt in the context so that it can be accessed later by
         # the various endpoints that is using this decorator
@@ -208,9 +226,20 @@ def fresh_jwt_required(fn):
         except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
             return current_app.jwt_manager.invalid_token_callback(str(e))
 
+        # Verify this is an access token
         if jwt_data['type'] != 'access':
             err_msg = 'Only access tokens can access this endpoint'
             return current_app.jwt_manager.invalid_token_callback(err_msg)
+
+        # If setup to check every request, see if this token has been revoked
+        if _blacklist_enabled() and _blacklist_checks() == 'all':
+            store = _get_blacklist_store()
+            jti = jwt_data['jti']
+            token_status = store[jti]
+            if token_status != 'active':
+                return current_app.jwt_manager.blacklisted_token_callback()
+
+        # Check if the token is fresh
         if not jwt_data['fresh']:
             return current_app.jwt_manager.token_needs_refresh_callback()
 
@@ -250,6 +279,7 @@ def refresh():
     access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
     algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
 
+    # Get the token
     try:
         jwt_data = _verify_jwt_from_request(secret)
     except NoAuthHeaderError:
@@ -263,6 +293,14 @@ def refresh():
     if jwt_data['type'] != 'refresh':
         err_msg = 'Only refresh tokens can access this endpoint'
         return current_app.jwt_manager.invalid_token_callback(err_msg)
+
+    # If blacklisting is enabled, see if this token has been revoked
+    if _blacklist_enabled():
+        store = _get_blacklist_store()
+        jti = jwt_data['jti']
+        token_status = store[jti]
+        if token_status != 'active':
+            return current_app.jwt_manager.blacklisted_token_callback()
 
     # Create and return the new access token
     user_claims = current_app.jwt_manager.user_claims_callback(jwt_data['identity'])
@@ -288,7 +326,42 @@ def fresh_authenticate(identity):
 
 
 def _get_secret_key():
-    key = current_app.config['SECRET_KEY']
+    key = current_app.config.get('SECRET_KEY', None)
     if not key:
         raise RuntimeError('flask SECRET_KEY must be set')
     return key
+
+
+def _blacklist_enabled():
+    return current_app.config.get('JWT_BLACKLIST', BLACKLIST_ENABLED)
+
+
+def _get_blacklist_store():
+    return current_app.config.get('JWT_BLACKLIST_STORE', BLACKLIST_STORE)
+
+
+def _blacklist_checks():
+    return current_app.config.get('JWT_BLACKLIST_TOKEN_CHECKS', BLACKLIST_TOKEN_CHECKS)
+
+
+def _store_supports_ttl(store):
+    return getattr(store, 'ttl_support', False)
+
+
+def _store_token_if_blacklist_enabled(jti, token_expire_delta, token_type):
+    # If the blacklist isn't enabled, do nothing
+    if not _blacklist_enabled():
+        return
+
+    # If configured to only check refresh tokens and this isn't a refresh token, return
+    if _blacklist_checks() == 'refresh' and token_type != 'refresh':
+        return
+
+    # Otherwise store the token in the blacklist (with current status of active)
+    store = _get_blacklist_store()
+    if _store_supports_ttl(store):
+        ttl = token_expire_delta + datetime.timedelta(minutes=15)
+        ttl_secs = ttl.total_seconds()
+        store.put(key=jti, value="active", ttl_secs=ttl_secs)
+    else:
+        store.put(key=jti, value="active")

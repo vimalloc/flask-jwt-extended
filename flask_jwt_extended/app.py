@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+import simplekv
+import simplekv.memory
 from flask import Flask, request, jsonify
 
 from flask_jwt_extended import JWTManager, jwt_required, fresh_jwt_required,\
@@ -23,6 +25,18 @@ USERS = {
 app = Flask(__name__)
 app.debug = True
 app.secret_key = 'super-secret'
+
+# Enable JWT blacklist / token revoke
+#
+# We are going to be using a simple in memory blacklist for this example. In
+# production, you will likely prefer something like redis (it can work with
+# multiple threads and processes, and supports automatic removal of expired
+# tokens so the blacklist doesn't blow up). Check here for available options:
+# http://pythonhosted.org/simplekv/
+blacklist_store = simplekv.memory.DictStore()
+app.config['JWT_BLACKLIST_ENABLED'] = True
+app.config['JWT_BLACKLIST_STORE'] = blacklist_store
+app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'  # only check blacklist for refresh tokens
 
 # Optional configuration options
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # defaults to 15 minutes

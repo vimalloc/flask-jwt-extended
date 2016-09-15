@@ -33,13 +33,21 @@ class JWTManager:
             jsonify({'msg': 'Fresh token required'}), 401
         )
 
+        # Function that will be called when a revoked token attempts to access
+        # a protected endpoint
+        self.blacklisted_token_callback = lambda: (
+            jsonify({'msg': 'Token has been revoked'}), 401
+        )
+
         # Setup the app if it is given (can be passed to this consturctor, or
         # called later by calling init_app directly)
         if app is not None:
             self.init_app(app)
 
     def init_app(self, app):
-        # In here is where get information stored in the apps config
+        """
+        Register this extension with the flask app
+        """
         app.jwt_manager = self
 
     def user_claims_loader(self, callback):
@@ -103,4 +111,17 @@ class JWTManager:
         Callback must be a function that takes no arguments.
         """
         self.token_needs_refresh_callback = callback
+        return callback
+
+    def blacklist_token_loader(self, callback):
+        """
+        Sets the callback method to be called if a blacklisted (revoked) token
+        attempt to access a protected endpoint
+
+        The default implementation will return json '{"msg": "Token has been revoked"}'
+        with a 401 status code.
+
+        Callback must be a function that takes no arguments.
+        """
+        self.blacklisted_token_callback = callback
         return callback

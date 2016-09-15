@@ -1,9 +1,11 @@
+from datetime import timedelta
+
 from flask import Flask, request, jsonify
 
 # TODO fix __init__.py to make imports easier
 from flask_jwt_extended.jwt_manager import JWTManager
 from flask_jwt_extended.utils import jwt_required, fresh_jwt_required, jwt_auth,\
-    jwt_identity, jwt_refresh, jwt_fresh_login
+    jwt_identity, jwt_refresh, jwt_fresh_login, jwt_user_claims
 
 # Example users database
 USERS = {
@@ -23,16 +25,44 @@ USERS = {
 app = Flask(__name__)
 app.debug = True
 app.secret_key = 'super-secret'
+
+# Optional configuration options
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # defaults to 15 minutes
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)  # defaults to 30 days
+app.config['JWT_ALGORITHM'] = 'HS512'  # Default to HS256
+
 jwt = JWTManager(app)
 
 
-# Function to add custom claims to the JWT
+# Function to add custom claims to the JWT (optional)
 @jwt.user_claims_loader
-def jwt_user_claims(identity):
+def my_claims(identity):
     return {
         'type': USERS[identity]['type'],
         'ip': request.remote_addr
     }
+
+
+# Function to change the result if someone without a token tries to access a
+# protected endpoint without a jwt (optional)
+@jwt.unauthorized_loader
+def my_unauthorized_message():
+    return jsonify({
+        'status': 401,
+        'sub_status': 100,
+        'message': 'You must submit a valid JWT to access this endpoint',
+    })
+
+
+# Function to change the result if someone without a token tries to access a
+# protected endpoint with an expired jwt (optional)
+@jwt.expired_token_loader
+def my_unauthorized_message():
+    return jsonify({
+        'status': 401,
+        'sub_status': 101,
+        'message': 'Token expired',
+    })
 
 
 # Endpoint for authing a user

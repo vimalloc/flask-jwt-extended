@@ -86,7 +86,7 @@ def _encode_refresh_token(identity, secret, algorithm, token_expire_delta):
     Creates a new refresh token, which can be used to create subsequent access
     tokens.
 
-    :param identity: TODO - not sure I want this. flask-jwt leads to unnecessary db calls on every call
+    :param identity: Some identifier used to identify the owner of this token
     :param secret: Secret key to encode the JWT with
     :param algorithm: Which algorithm to use for the toek
     :return: Encoded JWT
@@ -158,12 +158,11 @@ def jwt_required(fn):
     """
     If you decorate a vew with this, it will ensure that the requester has a valid
     JWT before calling the actual view. This does not check the freshness of the
-    token. (TODO href to those docs)
+    token.
 
     See also: fresh_jwt_required()
 
     :param fn: The view function to decorate
-    :type fn: function
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -193,12 +192,9 @@ def fresh_jwt_required(fn):
     If you decorate a vew with this, it will ensure that the requester has a valid
     JWT before calling the actual view.
 
-    TODO docs about freshness and callbacks
-
     See also: jwt_required()
 
     :param fn: The view function to decorate
-    :type fn: function
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):

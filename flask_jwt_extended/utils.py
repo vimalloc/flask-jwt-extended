@@ -291,3 +291,4 @@ def _get_secret_key():
     key = current_app.config['SECRET_KEY']
     if not key:
         raise RuntimeError('flask SECRET_KEY must be set')
+    return key

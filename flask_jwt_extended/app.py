@@ -42,7 +42,7 @@ def my_claims(identity):
 
 
 # Function to change the result if someone without a token tries to access a
-# protected endpoint without a jwt (optional)
+# protected endpoint (optional)
 @jwt.unauthorized_loader
 def my_unauthorized_message():
     return jsonify({
@@ -52,8 +52,8 @@ def my_unauthorized_message():
     })
 
 
-# Function to change the result if someone without a token tries to access a
-# protected endpoint with an expired jwt (optional)
+# Function to change the result if someone with an expired token tries
+# to access a protected endpoint (optional)
 @jwt.expired_token_loader
 def my_unauthorized_message():
     return jsonify({

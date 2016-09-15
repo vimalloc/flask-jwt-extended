@@ -138,7 +138,7 @@ def _verify_jwt_from_request(secret):
     # Verify we have the auth header
     auth_header = request.headers.get('Authorization', None)
     if not auth_header:
-        raise InvalidHeaderError("Missing Authorization Header")
+        raise NoAuthHeaderError("Missing Authorization Header")
 
     # Make sure the header is valid
     parts = auth_header.split()

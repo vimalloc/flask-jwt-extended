@@ -1,25 +1,21 @@
-import uuid
 import datetime
-
 import json
-
-from flask_jwt_extended.config import SECRET, ACCESS_TOKEN_EXPIRE_DELTA, \
-    REFRESH_TOKEN_EXPIRE_DELTA
-from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
-    InvalidHeaderError
+import uuid
 from functools import wraps
 
 import jwt
 from werkzeug.local import LocalProxy
 from flask import request, jsonify, current_app
-
-# Find the stack on which we want to store the database connection.
-# Starting with Flask 0.9, the _app_ctx_stack is the correct one,
-# before that we need to use the _request_ctx_stack.
 try:
+    # see: http://flask.pocoo.org/docs/0.11/extensiondev/
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:
     from flask import _request_ctx_stack as ctx_stack
+
+from flask_jwt_extended.config import SECRET, ACCESS_TOKEN_EXPIRE_DELTA, \
+    REFRESH_TOKEN_EXPIRE_DELTA
+from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
+    InvalidHeaderError, NoAuthHeaderError
 
 
 # Proxy for accessing the identity of the JWT in this context
@@ -117,13 +113,9 @@ def _decode_jwt(token, secret, algorithm):
     :param algorithm: Algorithm used to encode the JWT
     :return: Dictionary containing contents of the JWT
     """
-    try:
-        data = jwt.decode(token, secret, algorithm=algorithm)
-    except jwt.InvalidTokenError as e:
-        raise JWTDecodeError(str(e))
-
     # ext, iat, and nbf are all verified by pyjwt. We just need to make sure
     # that the custom claims we put in the token are present
+    data = jwt.decode(token, secret, algorithm=algorithm)
     if 'jti' not in data or not isinstance(data['jti'], str):
         raise JWTDecodeError("Missing or invalid claim: jti")
     if 'identity' not in data:
@@ -158,7 +150,6 @@ def _verify_jwt_from_request(secret):
         msg = "Badly formatted authorization header. Should be 'Bearer <JWT>'"
         raise InvalidHeaderError(msg)
 
-    # Return the token (raises a JWTDecodeError if decoding fails)
     token = parts[1]
     return _decode_jwt(token, secret, 'HS256')
 
@@ -178,19 +169,22 @@ def jwt_required(fn):
     def wrapper(*args, **kwargs):
         try:
             jwt_data = _verify_jwt_from_request(SECRET)
-        except InvalidHeaderError as e:
-            return jsonify({'msg': str(e)}), 422
-        except JWTDecodeError as e:
-            return jsonify({'msg': str(e)}), 401
+        except NoAuthHeaderError:
+            return current_app.jwt_manager.unauthorized_callback()
+        except jwt.ExpiredSignatureError as e:
+            return current_app.jwt_manager.expired_token_callback(str(e))
+        except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
+            return current_app.jwt_manager.invalid_token_callback(str(e))
 
         if jwt_data['type'] != 'access':
-            return jsonify({'msg': 'Only access tokens can access this endpoint'}), 401
-        else:
-            # Save the jwt take in flask.g so that it can be accessed later by
-            # the various endpoints that is using this decorator
-            ctx_stack.top.jwt_identity = jwt_data['identity']
-            ctx_stack.top.jwt_user_claims = jwt_data['user_claims']
-            return fn(*args, **kwargs)
+            err_msg = 'Only access tokens can access this endpoint'
+            return current_app.jwt_manager.invalid_token_callback(err_msg)
+
+        # Save the jwt in the context so that it can be accessed later by
+        # the various endpoints that is using this decorator
+        ctx_stack.top.jwt_identity = jwt_data['identity']
+        ctx_stack.top.jwt_user_claims = jwt_data['user_claims']
+        return fn(*args, **kwargs)
     return wrapper
 
 
@@ -210,21 +204,24 @@ def fresh_jwt_required(fn):
     def wrapper(*args, **kwargs):
         try:
             jwt_data = _verify_jwt_from_request(SECRET)
-        except InvalidHeaderError as e:
-            return jsonify({'msg': str(e)}), 422
-        except JWTDecodeError as e:
-            return jsonify({'msg': str(e)}), 401
+        except NoAuthHeaderError:
+            return current_app.jwt_manager.unauthorized_callback()
+        except jwt.ExpiredSignatureError as e:
+            return current_app.jwt_manager.expired_token_callback(str(e))
+        except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
+            return current_app.jwt_manager.invalid_token_callback(str(e))
 
         if jwt_data['type'] != 'access':
-            return jsonify({'msg': 'Only access tokens can access this endpoint'}), 401
-        elif not jwt_data['fresh']:
-            return jsonify({'msg': 'TODO - need fresh jwt'}), 401
-        else:
-            # Save the jwt take in flask.g so that it can be accessed later by
-            # the various endpoints that is using this decorator
-            ctx_stack.top.jwt_identity = jwt_data['identity']
-            ctx_stack.top.jwt_user_claims = jwt_data['user_claims']
-            return fn(*args, **kwargs)
+            err_msg = 'Only access tokens can access this endpoint'
+            return current_app.jwt_manager.invalid_token_callback(err_msg)
+        if not jwt_data['fresh']:
+            return current_app.jwt_manager.token_needs_refresh_callback()
+
+        # Save the jwt in the context so that it can be accessed later by
+        # the various endpoints that is using this decorator
+        ctx_stack.top.jwt_identity = jwt_data['identity']
+        ctx_stack.top.jwt_user_claims = jwt_data['user_claims']
+        return fn(*args, **kwargs)
     return wrapper
 
 
@@ -246,14 +243,17 @@ def jwt_refresh():
     # get the token
     try:
         jwt_data = _verify_jwt_from_request(SECRET)
-    except InvalidHeaderError as e:
-        return jsonify({'msg': str(e)}), 422
-    except JWTDecodeError as e:
-        return jsonify({'msg': str(e)}), 401
+    except NoAuthHeaderError:
+        return current_app.jwt_manager.unauthorized_callback()
+    except jwt.ExpiredSignatureError as e:
+        return current_app.jwt_manager.expired_token_callback(str(e))
+    except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
+        return current_app.jwt_manager.invalid_token_callback(str(e))
 
     # verify this is a refresh token
     if jwt_data['type'] != 'refresh':
-        return jsonify({'msg': 'Only refresh tokens can access this endpoint'}), 401
+        err_msg = 'Only refresh tokens can access this endpoint'
+        return current_app.jwt_manager.invalid_token_callback(err_msg)
 
     # Send the caller a new access token
     user_claims = current_app.jwt_manager.user_claims_callback(jwt_data['identity'])
@@ -268,7 +268,5 @@ def jwt_fresh_login(identity):
     access_token = _encode_access_token(identity, SECRET, False, 'HS256',
                                         ACCESS_TOKEN_EXPIRE_DELTA,
                                         user_claims=user_claims)
-    ret = {
-        'access_token': access_token,
-    }
+    ret = {'access_token': access_token}
     return jsonify(ret), 200

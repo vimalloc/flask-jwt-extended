@@ -24,3 +24,10 @@ class InvalidHeaderError(JWTExtendedException):
     An error getting header information from a request
     """
     pass
+
+
+class NoAuthHeaderError(JWTExtendedException):
+    """
+    An error getting header information from a request
+    """
+    pass

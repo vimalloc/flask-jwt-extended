@@ -1,44 +1,40 @@
-import uuid
-import datetime
+from flask import jsonify
 
-import json
-
-from functools import wraps
-
-import jwt
-from werkzeug.local import LocalProxy
-from flask import Flask, request, jsonify
-
-# TODO read this whole page
-# Per http://flask.pocoo.org/docs/0.11/extensiondev/
-#
-# Find the stack on which we want to store the database connection.
-# Starting with Flask 0.9, the _app_ctx_stack is the correct one,
-# before that we need to use the _request_ctx_stack.
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:
     from flask import _request_ctx_stack as ctx_stack
 
 
-# TODO callback method for jwt_required failed (See
-#      https://github.com/maxcountryman/flask-login/blob/master/flask_login/utils.py#L221)
-
 class JWTManager:
-
     def __init__(self, app=None):
-        # Function that will be called to get the identity of a JWT
-        # TODO think I can delete this, and just pass identity to helper
-        self.identity_callback = None
+        # Function that will be called to add custom user claims to a JWT.
+        self.user_claims_callback = lambda: {}
 
-        # Function that will be called to add custom user claims to a JWT
-        self.user_claims_callback = None
+        # Function that will be called when an expired token is received
+        self.expired_token_callback = lambda: (
+            jsonify({'msg': 'Token has expired'}), 401
+        )
 
-        self.unauthorized_callback = None
-        self.jwt_expired_callback = None
-        self.jwt_needs_refresh_callback = None
+        # Function that will be called when an invalid token is received
+        self.invalid_token_callback = lambda err: (
+            jsonify({'msg': err}), 422
+        )
 
-        self.app = app
+        # Function that will be called when attempting to access a protected
+        # endpoint without a valid token
+        self.unauthorized_callback = lambda: (
+            jsonify({'msg': 'Missing Authorization Header'}), 401
+        )
+
+        # Function that will be called when attempting to access a fresh_jwt_required
+        # endpoint with a valid token that is not fresh
+        self.token_needs_refresh_callback = lambda: (
+            jsonify({'msg': 'Fresh token required'}), 401
+        )
+
+        # Setup the app if it is given (can be passed to this consturctor, or
+        # called later by calling init_app directly)
         if app is not None:
             self.init_app(app)
 
@@ -46,29 +42,65 @@ class JWTManager:
         # In here is where get information stored in the apps config
         app.jwt_manager = self
 
-    def identity_loader(self, callback):
-        """
-        This sets the callback method for setting the identity of a JWT when it
-        is created.
-
-        Callback must be a function that takes only one argument, which is the
-        username of the user which just authorized to make a JWT
-
-        :param callback: The callback function for setting a JWT identity
-        """
-        self.identity_callback = callback
-        return callback
-
     def user_claims_loader(self, callback):
         """
         This sets the callback method for adding custom user claims to a JWT.
 
+        By default, no extra user claims will be added to the JWT.
+
         Callback must be a function that takes only one argument, which is the
         identity of the JWT being created.
-
-        :param callback:  The callback function for setting custom user claims
         """
         self.user_claims_callback = callback
         return callback
 
+    def expired_token_loader(self, callback):
+        """
+        Sets the callback method to be called if an expired JWT is received
 
+        The default implementation will return json '{"msg": "Token has expired"}'
+        with a 401 status code.
+
+        Callback must be a function that takes zero arguments.
+        """
+        self.expired_token_callback = callback
+        return callback
+
+    def invalid_token_loader(self, callback):
+        """
+        Sets the callback method to be called if an invalid JWT is received.
+
+        The default implementation will return json '{"msg": <err>}' with a 401
+        status code.
+
+        Callback must be a function that takes only one argument, which is the
+        error message of why the token is invalid.
+        """
+        self.invalid_token_callback = callback
+        return callback
+
+    def unauthorized_loader(self, callback):
+        """
+        Sets the callback method to be called if an invalid JWT is received
+
+        The default implementation will return '{"msg": "Missing Authorization Header"}'
+        json with a 401 status code.
+
+        Callback must be a function that takes only one argument, which is the
+        error message of why the token is invalid.
+        """
+        self.unauthorized_callback = callback
+        return callback
+
+    def token_needs_refresh_loader(self, callback):
+        """
+        Sets the callback method to be called if a valid and non-fresh token
+        attempts to access an endpoint protected with @fresh_jwt_required.
+
+        The default implementation will return json '{"msg": "Fresh token required"}'
+        with a 401 status code.
+
+        Callback must be a function that takes no arguments.
+        """
+        self.token_needs_refresh_callback = callback
+        return callback

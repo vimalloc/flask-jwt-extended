@@ -22,6 +22,7 @@ USERS = {
 # Flask test stuff
 app = Flask(__name__)
 app.debug = True
+app.secret_key = 'super-secret'
 jwt = JWTManager(app)
 
 

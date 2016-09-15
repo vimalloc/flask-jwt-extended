@@ -12,8 +12,7 @@ try:
 except ImportError:
     from flask import _request_ctx_stack as ctx_stack
 
-from flask_jwt_extended.config import SECRET, ACCESS_TOKEN_EXPIRE_DELTA, \
-    REFRESH_TOKEN_EXPIRE_DELTA
+from flask_jwt_extended.config import ACCESS_TOKEN_EXPIRE_DELTA, REFRESH_TOKEN_EXPIRE_DELTA
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthHeaderError
 
@@ -167,7 +166,8 @@ def jwt_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         try:
-            jwt_data = _verify_jwt_from_request(SECRET)
+            secret = _get_secret_key()
+            jwt_data = _verify_jwt_from_request(secret)
         except NoAuthHeaderError:
             return current_app.jwt_manager.unauthorized_callback()
         except jwt.ExpiredSignatureError as e:
@@ -199,7 +199,8 @@ def fresh_jwt_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         try:
-            jwt_data = _verify_jwt_from_request(SECRET)
+            secret = _get_secret_key()
+            jwt_data = _verify_jwt_from_request(secret)
         except NoAuthHeaderError:
             return current_app.jwt_manager.unauthorized_callback()
         except jwt.ExpiredSignatureError as e:
@@ -222,11 +223,12 @@ def fresh_jwt_required(fn):
 
 
 def jwt_auth(identity):
+    secret = _get_secret_key()
     user_claims = current_app.jwt_manager.user_claims_callback(identity)
-    access_token = _encode_access_token(identity, SECRET, False, 'HS256',
+    access_token = _encode_access_token(identity, secret, False, 'HS256',
                                         ACCESS_TOKEN_EXPIRE_DELTA,
                                         user_claims=user_claims)
-    refresh_token = _encode_refresh_token(identity, SECRET, 'HS256',
+    refresh_token = _encode_refresh_token(identity, secret, 'HS256',
                                           REFRESH_TOKEN_EXPIRE_DELTA)
     ret = {
         'access_token': access_token,
@@ -238,7 +240,8 @@ def jwt_auth(identity):
 def jwt_refresh():
     # get the token
     try:
-        jwt_data = _verify_jwt_from_request(SECRET)
+        secret = _get_secret_key()
+        jwt_data = _verify_jwt_from_request(secret)
     except NoAuthHeaderError:
         return current_app.jwt_manager.unauthorized_callback()
     except jwt.ExpiredSignatureError as e:
@@ -253,16 +256,23 @@ def jwt_refresh():
 
     # Send the caller a new access token
     user_claims = current_app.jwt_manager.user_claims_callback(jwt_data['identity'])
-    access_token = _encode_access_token(jwt_data['identity'], SECRET, False, 'HS256',
+    access_token = _encode_access_token(jwt_data['identity'], secret, False, 'HS256',
                                         ACCESS_TOKEN_EXPIRE_DELTA, user_claims=user_claims)
     ret = {'access_token': access_token}
     return jsonify(ret), 200
 
 
 def jwt_fresh_login(identity):
+    secret = _get_secret_key()
     user_claims = current_app.jwt_manager.user_claims_callback(identity)
-    access_token = _encode_access_token(identity, SECRET, False, 'HS256',
+    access_token = _encode_access_token(identity, secret, False, 'HS256',
                                         ACCESS_TOKEN_EXPIRE_DELTA,
                                         user_claims=user_claims)
     ret = {'access_token': access_token}
     return jsonify(ret), 200
+
+
+def _get_secret_key():
+    key = current_app.config['SECRET_KEY']
+    if not key:
+        raise RuntimeError('flask SECRET_KEY must be set')

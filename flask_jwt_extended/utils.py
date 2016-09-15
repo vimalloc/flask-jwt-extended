@@ -222,7 +222,7 @@ def fresh_jwt_required(fn):
     return wrapper
 
 
-def jwt_auth(identity):
+def authenticate(identity):
     # Token settings
     config = current_app.config
     access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
@@ -243,7 +243,7 @@ def jwt_auth(identity):
     return jsonify(ret), 200
 
 
-def jwt_refresh():
+def refresh():
     # Token options
     secret = _get_secret_key()
     config = current_app.config
@@ -273,7 +273,7 @@ def jwt_refresh():
     return jsonify(ret), 200
 
 
-def jwt_fresh_login(identity):
+def fresh_authenticate(identity):
     # Token options
     secret = _get_secret_key()
     config = current_app.config

@@ -2,10 +2,8 @@ from datetime import timedelta
 
 from flask import Flask, request, jsonify
 
-# TODO fix __init__.py to make imports easier
-from flask_jwt_extended.jwt_manager import JWTManager
-from flask_jwt_extended.utils import jwt_required, fresh_jwt_required, jwt_auth,\
-    jwt_identity, jwt_refresh, jwt_fresh_login, jwt_user_claims
+from flask_jwt_extended import JWTManager, jwt_required, fresh_jwt_required,\
+    authenticate, fresh_authenticate, refresh, jwt_identity, jwt_user_claims
 
 # Example users database
 USERS = {
@@ -78,7 +76,7 @@ def login():
     if USERS[username]['password'] != password:
         return jsonify({"msg": "Bad username or password"}), 401
 
-    return jwt_auth(identity=username)
+    return authenticate(identity=username)
 
 
 # Endpoint for getting a fresh access token for a user
@@ -94,13 +92,13 @@ def fresh_login():
     if USERS[username]['password'] != password:
         return jsonify({"msg": "Bad username or password"}), 401
 
-    return jwt_fresh_login(identity=username)
+    return fresh_authenticate(identity=username)
 
 
 # Endpoint for generating a non-fresh access token from the refresh token
 @app.route('/refresh', methods=['POST'])
 def refresh_token():
-    return jwt_refresh()
+    return refresh()
 
 
 @app.route('/protected', methods=['GET'])

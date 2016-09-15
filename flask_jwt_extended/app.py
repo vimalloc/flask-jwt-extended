@@ -44,7 +44,7 @@ def my_claims(identity):
 # Function to change the result if someone without a token tries to access a
 # protected endpoint (optional)
 @jwt.unauthorized_loader
-def my_unauthorized_message():
+def my_unauthorized_response():
     return jsonify({
         'status': 401,
         'sub_status': 100,
@@ -55,7 +55,7 @@ def my_unauthorized_message():
 # Function to change the result if someone with an expired token tries
 # to access a protected endpoint (optional)
 @jwt.expired_token_loader
-def my_unauthorized_message():
+def my_expired_response():
     return jsonify({
         'status': 401,
         'sub_status': 101,

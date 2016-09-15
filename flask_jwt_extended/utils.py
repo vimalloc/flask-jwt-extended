@@ -12,7 +12,7 @@ try:
 except ImportError:
     from flask import _request_ctx_stack as ctx_stack
 
-from flask_jwt_extended.config import ACCESS_TOKEN_EXPIRE_DELTA, REFRESH_TOKEN_EXPIRE_DELTA
+from flask_jwt_extended.config import ALGORITHM, REFRESH_EXPIRES, ACCESS_EXPIRES
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthHeaderError
 
@@ -42,8 +42,8 @@ def _get_user_claims():
 
 # TODO add newly created tokens to 'something' so they can be blacklisted later.
 #      Should this be only refresh tokens, or access tokens to? Or an option for either
-def _encode_access_token(identity, secret, fresh, algorithm, token_expire_delta,
-                         user_claims=None):
+def _encode_access_token(identity, secret, algorithm, token_expire_delta,
+                         fresh, user_claims):
     """
     Creates a new access token.
 
@@ -223,13 +223,19 @@ def fresh_jwt_required(fn):
 
 
 def jwt_auth(identity):
+    # Token settings
+    config = current_app.config
+    access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
+    refresh_expire_delta = config.get('JWT_REFRESH_TOKEN_EXPIRES', REFRESH_EXPIRES)
+    algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
     secret = _get_secret_key()
     user_claims = current_app.jwt_manager.user_claims_callback(identity)
-    access_token = _encode_access_token(identity, secret, False, 'HS256',
-                                        ACCESS_TOKEN_EXPIRE_DELTA,
-                                        user_claims=user_claims)
-    refresh_token = _encode_refresh_token(identity, secret, 'HS256',
-                                          REFRESH_TOKEN_EXPIRE_DELTA)
+
+    # Actually make the tokens
+    access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
+                                        fresh=True, user_claims=user_claims)
+    refresh_token = _encode_refresh_token(identity, secret, algorithm,
+                                          refresh_expire_delta)
     ret = {
         'access_token': access_token,
         'refresh_token': refresh_token
@@ -238,9 +244,13 @@ def jwt_auth(identity):
 
 
 def jwt_refresh():
-    # get the token
+    # Token options
+    secret = _get_secret_key()
+    config = current_app.config
+    access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
+    algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
+
     try:
-        secret = _get_secret_key()
         jwt_data = _verify_jwt_from_request(secret)
     except NoAuthHeaderError:
         return current_app.jwt_manager.unauthorized_callback()
@@ -254,20 +264,25 @@ def jwt_refresh():
         err_msg = 'Only refresh tokens can access this endpoint'
         return current_app.jwt_manager.invalid_token_callback(err_msg)
 
-    # Send the caller a new access token
+    # Create and return the new access token
     user_claims = current_app.jwt_manager.user_claims_callback(jwt_data['identity'])
-    access_token = _encode_access_token(jwt_data['identity'], secret, False, 'HS256',
-                                        ACCESS_TOKEN_EXPIRE_DELTA, user_claims=user_claims)
+    identity = jwt_data['identity']
+    access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
+                                        fresh=False, user_claims=user_claims)
     ret = {'access_token': access_token}
     return jsonify(ret), 200
 
 
 def jwt_fresh_login(identity):
+    # Token options
     secret = _get_secret_key()
+    config = current_app.config
+    access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
+    algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
+
     user_claims = current_app.jwt_manager.user_claims_callback(identity)
-    access_token = _encode_access_token(identity, secret, False, 'HS256',
-                                        ACCESS_TOKEN_EXPIRE_DELTA,
-                                        user_claims=user_claims)
+    access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
+                                        fresh=True, user_claims=user_claims)
     ret = {'access_token': access_token}
     return jsonify(ret), 200
 

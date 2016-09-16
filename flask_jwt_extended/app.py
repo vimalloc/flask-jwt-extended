@@ -114,6 +114,15 @@ def fresh_login():
     return create_fresh_access_token(identity=username)
 
 
+# TODO Endpoint for revoking a token
+
+
+# TODO Endpoint for un-revoking a token
+
+
+# TODO Endpoint for listing tokens
+
+
 # Endpoint for generating a non-fresh access token from the refresh token
 @app.route('/auth/refresh', methods=['POST'])
 def refresh_token():

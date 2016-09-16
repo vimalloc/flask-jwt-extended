@@ -78,7 +78,7 @@ def _encode_access_token(identity, secret, algorithm, token_expire_delta,
         'user_claims': user_claims,
     }
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
-    _store_token_if_blacklist_enabled(uid, token_expire_delta, token_type='access')
+    _store_token_if_blacklist_enabled(token_data)
     return encoded_token
 
 
@@ -103,7 +103,7 @@ def _encode_refresh_token(identity, secret, algorithm, token_expire_delta):
         'type': 'refresh',
     }
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
-    _store_token_if_blacklist_enabled(uid, token_expire_delta, token_type='refresh')
+    _store_token_if_blacklist_enabled(token_data)
     return encoded_token
 
 
@@ -346,20 +346,28 @@ def _store_supports_ttl(store):
     return getattr(store, 'ttl_support', False)
 
 
-def _store_token_if_blacklist_enabled(jti, token_expire_delta, token_type):
+def _store_token_if_blacklist_enabled(token):
     # If the blacklist isn't enabled, do nothing
-    if not _blacklist_enabled():
+    if not _blacklist_enabled() or _blacklist_checks() is None:
         return
 
     # If configured to only check refresh tokens and this isn't a refresh token, return
-    if _blacklist_checks() == 'refresh' and token_type != 'refresh':
+    if _blacklist_checks() == 'refresh' and token['type'] != 'refresh':
         return
+
+    # TODO store data as json in the store (including jti, identity, and user claims)
 
     # Otherwise store the token in the blacklist (with current status of active)
     store = _get_blacklist_store()
     if _store_supports_ttl(store):
-        ttl = token_expire_delta + datetime.timedelta(minutes=15)
+        config = current_app.config
+        if token['type'] == 'access':
+            expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
+        else:
+            expire_delta = config.get('JWT_REFRESH_TOKEN_EXPIRES', REFRESH_EXPIRES)
+
+        ttl = expire_delta + datetime.timedelta(minutes=15)
         ttl_secs = ttl.total_seconds()
-        store.put(key=jti, value="active", ttl_secs=ttl_secs)
+        store.put(key=token['jti'], value="active", ttl_secs=ttl_secs)
     else:
-        store.put(key=jti, value="active")
+        store.put(key=token['jti'], value="active")

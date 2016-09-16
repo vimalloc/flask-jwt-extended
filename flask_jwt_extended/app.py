@@ -5,7 +5,7 @@ import simplekv.memory
 from flask import Flask, request, jsonify
 
 from flask_jwt_extended import JWTManager, jwt_required, fresh_jwt_required,\
-    authenticate, fresh_authenticate, refresh, jwt_identity, jwt_user_claims
+    create_refresh_access_tokens, create_fresh_access_token, refresh_access_token, jwt_identity, jwt_user_claims
 
 # Example users database
 USERS = {
@@ -27,16 +27,20 @@ app.debug = True
 app.secret_key = 'super-secret'
 
 # Enable JWT blacklist / token revoke
-#
+app.config['JWT_BLACKLIST_ENABLED'] = True
+
 # We are going to be using a simple in memory blacklist for this example. In
 # production, you will likely prefer something like redis (it can work with
 # multiple threads and processes, and supports automatic removal of expired
 # tokens so the blacklist doesn't blow up). Check here for available options:
 # http://pythonhosted.org/simplekv/
 blacklist_store = simplekv.memory.DictStore()
-app.config['JWT_BLACKLIST_ENABLED'] = True
 app.config['JWT_BLACKLIST_STORE'] = blacklist_store
-app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'  # only check blacklist for refresh tokens
+
+# Only check the blacklist for refresh token. Available options are:
+#   'all': Check blacklist for access and refresh tokens
+#   'refresh': Check blacklist only for refresh tokens
+app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
 
 # Optional configuration options
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # defaults to 15 minutes
@@ -90,7 +94,7 @@ def login():
     if USERS[username]['password'] != password:
         return jsonify({"msg": "Bad username or password"}), 401
 
-    return authenticate(identity=username)
+    return create_refresh_access_tokens(identity=username)
 
 
 # Endpoint for getting a fresh access token for a user
@@ -106,13 +110,13 @@ def fresh_login():
     if USERS[username]['password'] != password:
         return jsonify({"msg": "Bad username or password"}), 401
 
-    return fresh_authenticate(identity=username)
+    return create_fresh_access_token(identity=username)
 
 
 # Endpoint for generating a non-fresh access token from the refresh token
 @app.route('/refresh', methods=['POST'])
 def refresh_token():
-    return refresh()
+    return refresh_access_token()
 
 
 @app.route('/protected', methods=['GET'])

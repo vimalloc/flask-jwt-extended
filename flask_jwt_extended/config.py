@@ -21,6 +21,5 @@ BLACKLIST_ENABLED = False
 # See: http://pythonhosted.org/simplekv/index.html#simplekv.TimeToLiveMixin
 BLACKLIST_STORE = None
 
-# blacklist check requests. Possible values are all, refresh, and None
-# TODO when accessing this value in app.config, make sure it is one of the expected values
-BLACKLIST_TOKEN_CHECKS = None
+# blacklist check requests. Possible values are all and refresh
+BLACKLIST_TOKEN_CHECKS = 'refresh'

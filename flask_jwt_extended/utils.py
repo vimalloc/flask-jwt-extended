@@ -188,12 +188,14 @@ def _check_blacklist(jwt_data):
     token_type = jwt_data['type']
     jti = jwt_data['jti']
 
+    # Only check access tokens if BLACKLIST_TOKEN_CHECKS is set to 'all`
     if token_type == 'access' and _blacklist_checks() == 'all':
         token_status = store[jti]
         if token_status != 'active':
             raise RevokedTokenError('{} has been revoked'.format)
 
-    if token_type == 'refresh' and _blacklist_checks() in ('all', 'refresh'):
+    # Always check refresh tokens
+    if token_type == 'refresh':
         token_status = store[jti]
         if token_status != 'active':
             raise RevokedTokenError('{} has been revoked'.format)
@@ -264,7 +266,7 @@ def fresh_jwt_required(fn):
     return wrapper
 
 
-def authenticate(identity):
+def create_refresh_access_tokens(identity):
     # Token settings
     config = current_app.config
     access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
@@ -285,8 +287,21 @@ def authenticate(identity):
     return jsonify(ret), 200
 
 
+def create_fresh_access_token(identity):
+    # Token options
+    secret = _get_secret_key()
+    config = current_app.config
+    access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
+    algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
+    user_claims = current_app.jwt_manager.user_claims_callback(identity)
+    access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
+                                        fresh=True, user_claims=user_claims)
+    ret = {'access_token': access_token}
+    return jsonify(ret), 200
+
+
 @_handle_callbacks_on_error
-def refresh():
+def refresh_access_token():
     # Get the JWT
     jwt_data = _decode_jwt_from_request()
 
@@ -310,19 +325,6 @@ def refresh():
     return jsonify(ret), 200
 
 
-def fresh_authenticate(identity):
-    # Token options
-    secret = _get_secret_key()
-    config = current_app.config
-    access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
-    algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
-    user_claims = current_app.jwt_manager.user_claims_callback(identity)
-    access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
-                                        fresh=True, user_claims=user_claims)
-    ret = {'access_token': access_token}
-    return jsonify(ret), 200
-
-
 def _get_secret_key():
     key = current_app.config.get('SECRET_KEY', None)
     if not key:
@@ -339,7 +341,11 @@ def _get_blacklist_store():
 
 
 def _blacklist_checks():
-    return current_app.config.get('JWT_BLACKLIST_TOKEN_CHECKS', BLACKLIST_TOKEN_CHECKS)
+    config = current_app.config
+    check_type = config.get('JWT_BLACKLIST_TOKEN_CHECKS', BLACKLIST_TOKEN_CHECKS)
+    if check_type not in ('all', 'refresh'):
+        raise RuntimeError('Invalid option for JWT_BLACKLIST_TOKEN_CHECKS')
+    return check_type
 
 
 def _store_supports_ttl(store):

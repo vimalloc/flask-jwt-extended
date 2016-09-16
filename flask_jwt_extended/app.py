@@ -5,7 +5,8 @@ import simplekv.memory
 from flask import Flask, request, jsonify
 
 from flask_jwt_extended import JWTManager, jwt_required, fresh_jwt_required,\
-    create_refresh_access_tokens, create_fresh_access_token, refresh_access_token, jwt_identity, jwt_user_claims
+    create_refresh_access_tokens, create_fresh_access_token, refresh_access_token,\
+    jwt_identity, jwt_claims
 
 # Example users database
 USERS = {
@@ -26,6 +27,11 @@ app = Flask(__name__)
 app.debug = True
 app.secret_key = 'super-secret'
 
+# Optional configuration options for flask_jwt_extended
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # defaults to 15 minutes
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)  # defaults to 30 days
+app.config['JWT_ALGORITHM'] = 'HS512'  # Default to HS256
+
 # Enable JWT blacklist / token revoke
 app.config['JWT_BLACKLIST_ENABLED'] = True
 
@@ -42,15 +48,10 @@ app.config['JWT_BLACKLIST_STORE'] = blacklist_store
 #   'refresh': Check blacklist only for refresh tokens
 app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
 
-# Optional configuration options
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # defaults to 15 minutes
-app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)  # defaults to 30 days
-app.config['JWT_ALGORITHM'] = 'HS512'  # Default to HS256
-
 jwt = JWTManager(app)
 
 
-# Function to add custom claims to the JWT (optional)
+# Function to add custom claims to the JWT (optional).
 @jwt.user_claims_loader
 def my_claims(identity):
     return {
@@ -82,7 +83,7 @@ def my_expired_response():
 
 
 # Endpoint for authing a user
-@app.route('/auth', methods=['POST'])
+@app.route('/auth/login', methods=['POST'])
 def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
@@ -98,7 +99,7 @@ def login():
 
 
 # Endpoint for getting a fresh access token for a user
-@app.route('/fresh-auth', methods=['POST'])
+@app.route('/auth/fresh-login', methods=['POST'])
 def fresh_login():
     username = request.json.get('username', None)
     password = request.json.get('username', None)
@@ -114,7 +115,7 @@ def fresh_login():
 
 
 # Endpoint for generating a non-fresh access token from the refresh token
-@app.route('/refresh', methods=['POST'])
+@app.route('/auth/refresh', methods=['POST'])
 def refresh_token():
     return refresh_access_token()
 
@@ -122,16 +123,20 @@ def refresh_token():
 @app.route('/protected', methods=['GET'])
 @jwt_required
 def non_fresh_protected():
-    ip = jwt_user_claims['ip']
-    msg = '{} says hello from {}'.format(jwt_identity, ip)
+    ip = jwt_claims['ip']  # Access data stored in custom claims on the JWT
+    username = jwt_identity  # Access identity through jwt_identity proxy
+
+    msg = '{} says hello from {}'.format(username, ip)
     return jsonify({'msg': msg})
 
 
 @app.route('/protected-fresh', methods=['GET'])
 @fresh_jwt_required
 def fresh_protected():
-    ip = jwt_user_claims['ip']
-    msg = '{} says hello from {} (fresh)'.format(jwt_identity, ip)
+    ip = jwt_claims['ip']  # Access data stored in custom claims on the JWT
+    username = jwt_identity  # Access identity through jwt_identity proxy
+
+    msg = '{} says hello from {} (fresh)'.format(username, ip)
     return jsonify({'msg': msg})
 
 if __name__ == '__main__':

@@ -7,7 +7,6 @@ import jwt
 from werkzeug.local import LocalProxy
 from flask import request, jsonify, current_app
 try:
-    # see: http://flask.pocoo.org/docs/0.11/extensiondev/
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:
     from flask import _request_ctx_stack as ctx_stack
@@ -22,7 +21,7 @@ from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
 jwt_identity = LocalProxy(lambda: _get_identity())
 
 # Proxy for getting the dictionary of custom user claims in this JWT
-jwt_user_claims = LocalProxy(lambda: _get_user_claims())
+jwt_claims = LocalProxy(lambda: _get_user_claims())
 
 
 def _get_identity():

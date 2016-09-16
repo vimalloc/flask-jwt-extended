@@ -15,8 +15,8 @@ except ImportError:
 from flask_jwt_extended.config import ALGORITHM, REFRESH_EXPIRES, ACCESS_EXPIRES, \
     BLACKLIST_ENABLED, BLACKLIST_STORE, BLACKLIST_TOKEN_CHECKS
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
-    InvalidHeaderError, NoAuthHeaderError
-
+    InvalidHeaderError, NoAuthHeaderError, WrongTokenError, RevokedTokenError, \
+    FreshTokenRequired
 
 # Proxy for accessing the identity of the JWT in this context
 jwt_identity = LocalProxy(lambda: _get_identity())
@@ -133,12 +133,7 @@ def _decode_jwt(token, secret, algorithm):
     return data
 
 
-def _verify_jwt_from_request(secret):
-    """
-    Returns the encoded JWT string from the request
-
-    :return: Encoded jwt string, or None if it does not exist
-    """
+def _decode_jwt_from_request():
     # Verify we have the auth header
     auth_header = request.headers.get('Authorization', None)
     if not auth_header:
@@ -154,7 +149,54 @@ def _verify_jwt_from_request(secret):
         raise InvalidHeaderError(msg)
 
     token = parts[1]
+    secret = _get_secret_key()
     return _decode_jwt(token, secret, 'HS256')
+
+
+def _handle_callbacks_on_error(fn):
+    """
+    Helper decorator that will catch any exceptions we expect to encounter
+    when dealing with a JWT, and call the appropriate callback function for
+    handling that error. Callback functions can be set in using the *_loader
+    methods in jwt_manager.
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        m = current_app.jwt_manager
+
+        try:
+            return fn(*args, **kwargs)
+        except NoAuthHeaderError:
+            return m.unauthorized_callback()
+        except jwt.ExpiredSignatureError:
+            return m.expired_token_callback()
+        except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError,
+                WrongTokenError) as e:
+            return m.invalid_token_callback(str(e))
+        except RevokedTokenError:
+            return m.blacklisted_token_callback()
+        except FreshTokenRequired:
+            return m.token_needs_refresh_callback()
+    return wrapper
+
+
+def _check_blacklist(jwt_data):
+    if not _blacklist_enabled():
+        return
+
+    store = _get_blacklist_store()
+    token_type = jwt_data['type']
+    jti = jwt_data['jti']
+
+    if token_type == 'access' and _blacklist_checks() == 'all':
+        token_status = store[jti]
+        if token_status != 'active':
+            raise RevokedTokenError('{} has been revoked'.format)
+
+    if token_type == 'refresh' and _blacklist_checks() in ('all', 'refresh'):
+        token_status = store[jti]
+        if token_status != 'active':
+            raise RevokedTokenError('{} has been revoked'.format)
 
 
 def jwt_required(fn):
@@ -167,35 +209,18 @@ def jwt_required(fn):
 
     :param fn: The view function to decorate
     """
+    @_handle_callbacks_on_error
     @wraps(fn)
     def wrapper(*args, **kwargs):
         # Attempt to decode the token
-        try:
-            secret = _get_secret_key()
-            jwt_data = _verify_jwt_from_request(secret)
-        except NoAuthHeaderError:
-            return current_app.jwt_manager.unauthorized_callback()
-        except jwt.ExpiredSignatureError as e:
-            return current_app.jwt_manager.expired_token_callback()
-        except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
-            return current_app.jwt_manager.invalid_token_callback(str(e))
+        jwt_data = _decode_jwt_from_request()
 
         # Verify this is an access token
         if jwt_data['type'] != 'access':
-            err_msg = 'Only access tokens can access this endpoint'
-            return current_app.jwt_manager.invalid_token_callback(err_msg)
+            raise WrongTokenError('Only access tokens can access this endpoint')
 
-        # TODO move this into common helper function that raises exception if
-        #      the token is blacklisted. Probably other common code I could do
-        #      this to as well
-        #
-        # If setup to check every request, see if this token has been revoked
-        if _blacklist_enabled() and _blacklist_checks() == 'all':
-            store = _get_blacklist_store()
-            jti = jwt_data['jti']
-            token_status = store[jti]
-            if token_status != 'active':
-                return current_app.jwt_manager.blacklisted_token_callback()
+        # See if the token has been revoked (based on blacklist options)
+        _check_blacklist(jwt_data)
 
         # Save the jwt in the context so that it can be accessed later by
         # the various endpoints that is using this decorator
@@ -214,34 +239,22 @@ def fresh_jwt_required(fn):
 
     :param fn: The view function to decorate
     """
+    @_handle_callbacks_on_error
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        try:
-            secret = _get_secret_key()
-            jwt_data = _verify_jwt_from_request(secret)
-        except NoAuthHeaderError:
-            return current_app.jwt_manager.unauthorized_callback()
-        except jwt.ExpiredSignatureError as e:
-            return current_app.jwt_manager.expired_token_callback()
-        except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
-            return current_app.jwt_manager.invalid_token_callback(str(e))
+        # Attempt to decode the token
+        jwt_data = _decode_jwt_from_request()
 
         # Verify this is an access token
         if jwt_data['type'] != 'access':
-            err_msg = 'Only access tokens can access this endpoint'
-            return current_app.jwt_manager.invalid_token_callback(err_msg)
+            raise WrongTokenError('Only access tokens can access this endpoint')
 
-        # If setup to check every request, see if this token has been revoked
-        if _blacklist_enabled() and _blacklist_checks() == 'all':
-            store = _get_blacklist_store()
-            jti = jwt_data['jti']
-            token_status = store[jti]
-            if token_status != 'active':
-                return current_app.jwt_manager.blacklisted_token_callback()
+        # See if the token has been revoked (based on blacklist options)
+        _check_blacklist(jwt_data)
 
         # Check if the token is fresh
         if not jwt_data['fresh']:
-            return current_app.jwt_manager.token_needs_refresh_callback()
+            raise FreshTokenRequired('Fresh token required')
 
         # Save the jwt in the context so that it can be accessed later by
         # the various endpoints that is using this decorator
@@ -272,37 +285,23 @@ def authenticate(identity):
     return jsonify(ret), 200
 
 
+@_handle_callbacks_on_error
 def refresh():
-    # Token options
-    secret = _get_secret_key()
-    config = current_app.config
-    access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
-    algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
-
-    # Get the token
-    try:
-        jwt_data = _verify_jwt_from_request(secret)
-    except NoAuthHeaderError:
-        return current_app.jwt_manager.unauthorized_callback()
-    except jwt.ExpiredSignatureError as e:
-        return current_app.jwt_manager.expired_token_callback()
-    except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError) as e:
-        return current_app.jwt_manager.invalid_token_callback(str(e))
+    # Get the JWT
+    jwt_data = _decode_jwt_from_request()
 
     # verify this is a refresh token
     if jwt_data['type'] != 'refresh':
-        err_msg = 'Only refresh tokens can access this endpoint'
-        return current_app.jwt_manager.invalid_token_callback(err_msg)
+        raise WrongTokenError('Only refresh tokens can access this endpoint')
 
     # If blacklisting is enabled, see if this token has been revoked
-    if _blacklist_enabled():
-        store = _get_blacklist_store()
-        jti = jwt_data['jti']
-        token_status = store[jti]
-        if token_status != 'active':
-            return current_app.jwt_manager.blacklisted_token_callback()
+    _check_blacklist(jwt_data)
 
     # Create and return the new access token
+    config = current_app.config
+    access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
+    algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
+    secret = _get_secret_key()
     user_claims = current_app.jwt_manager.user_claims_callback(jwt_data['identity'])
     identity = jwt_data['identity']
     access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
@@ -317,7 +316,6 @@ def fresh_authenticate(identity):
     config = current_app.config
     access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
     algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
-
     user_claims = current_app.jwt_manager.user_claims_callback(identity)
     access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
                                         fresh=True, user_claims=user_claims)

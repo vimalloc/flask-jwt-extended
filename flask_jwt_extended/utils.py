@@ -326,6 +326,10 @@ def refresh_access_token():
     return jsonify(ret), 200
 
 
+# TODO Move blacklist stuff to it's own file
+# TODO Decorator for blacklist function calls to check if it's enabled in the config
+# TODO Move create auth api to it's own file
+
 def get_stored_tokens():
     if not _blacklist_enabled():
         raise RuntimeError("Blacklist must be enabled to list tokens")

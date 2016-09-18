@@ -136,8 +136,10 @@ def revoke_jwt(jti):
 
     if revoke:
         revoke_token(jti)
+        return jsonify({"msg": "Token successfully revoked"})
     else:
         unrevoke_token(jti)
+        return jsonify({"msg": "Token successfully unrevoked"})
 
 
 # Endpoint for generating a non-fresh access token from the refresh token

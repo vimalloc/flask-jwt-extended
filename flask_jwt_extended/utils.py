@@ -190,14 +190,15 @@ def _check_blacklist(token):
 
     # Only check access tokens if BLACKLIST_TOKEN_CHECKS is set to 'all`
     if token_type == 'access' and _blacklist_checks() == 'all':
-        stored_data = json.loads(store.get(jti))
-        if stored_data['revoked'] != 'active':
+
+        stored_data = json.loads(store.get(jti).decode('utf-8'))
+        if stored_data['revoked']:
             raise RevokedTokenError('Token has been revoked')
 
     # Always check refresh tokens
     if token_type == 'refresh':
-        stored_data = json.loads(store.get(jti))
-        if stored_data['revoked'] != 'active':
+        stored_data = json.loads(store.get(jti).decode('utf-8'))
+        if stored_data['revoked']:
             raise RevokedTokenError('Token has been revoked')
 
 
@@ -330,7 +331,7 @@ def get_stored_tokens():
         raise RuntimeError("Blacklist must be enabled to list tokens")
 
     store = _get_blacklist_store()
-    return [json.loads(store.get(jti)) for jti in store.iter_keys()]
+    return [json.loads(store.get(jti).decode('utf-8')) for jti in store.iter_keys()]
 
 
 def _update_token(jti, revoked):
@@ -339,7 +340,8 @@ def _update_token(jti, revoked):
 
     store = _get_blacklist_store()
     try:
-        token = store.get(jti)
+        stored_data = json.loads(store.get(jti).decode('utf-8'))
+        token = stored_data['token']
         _store_token(token, revoked)
     except KeyError:
         # Token does not exist in the store. Could have been automatically
@@ -347,7 +349,7 @@ def _update_token(jti, revoked):
         # memcached), or could have never been in the store, which probably
         # indicates a bug in the callers code.
         # TODO should this raise an error? Or silently return?
-        return
+        raise
 
 
 def revoke_token(jti):
@@ -366,7 +368,7 @@ def _get_secret_key():
 
 
 def _blacklist_enabled():
-    return current_app.config.get('JWT_BLACKLIST', BLACKLIST_ENABLED)
+    return current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
 
 
 def _get_blacklist_store():
@@ -417,13 +419,13 @@ def _store_token(token, revoked):
         'token': token,
         'last_used': _utc_datetime_to_ts(datetime.datetime.utcnow()),
         'revoked': revoked
-    })
+    }).encode('utf-8')
 
     store = _get_blacklist_store()
     if _store_supports_ttl(store):
         # Add 15 minutes to token ttl to account for possible time drift
         ttl = _get_token_ttl(token) + datetime.timedelta(minutes=15)
         ttl_secs = ttl.total_seconds()
-        store.put(key=token['jti'], value=data_to_store, ttl_secs=ttl_secs)
+        store.put(token['jti'], data_to_store, ttl_secs=ttl_secs)
     else:
-        store.put(key=token['jti'], value=data_to_store)
+        store.put(token['jti'], data_to_store)

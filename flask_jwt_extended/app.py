@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify
 
 from flask_jwt_extended import JWTManager, jwt_required, fresh_jwt_required,\
     create_refresh_access_tokens, create_fresh_access_token, refresh_access_token,\
-    jwt_identity, jwt_claims
+    jwt_identity, jwt_claims, revoke_token, unrevoke_token, get_stored_tokens
 
 # Example users database
 USERS = {
@@ -114,13 +114,30 @@ def fresh_login():
     return create_fresh_access_token(identity=username)
 
 
-# TODO Endpoint for revoking a token
+# Endpoint for listing tokens
+@app.route('/auth/tokens', methods=['GET'])
+def list_tokens():
+    # TODO you should put some extra protection on this, so a user can only
+    #      view their tokens, or some extra privillage roles so an admin can
+    #      view everyones token
+    return jsonify(get_stored_tokens()), 200
 
 
-# TODO Endpoint for un-revoking a token
+# Endpoint for revoking and unrevoking tokens
+@app.route('/auth/tokens/<string:jti>', methods=['PUT'])
+def revoke_jwt(jti):
+    # TODO you should put some extra protection on this, so a user can only
+    #      modify their tokens
+    revoke = request.json.get('revoke', None)
+    if revoke is None:
+        return jsonify({'msg': "Missing json argument: 'revoke'"}), 422
+    if not isinstance(revoke, bool):
+        return jsonify({'msg': "revoke' must be a boolean"}), 422
 
-
-# TODO Endpoint for listing tokens
+    if revoke:
+        revoke_token(jti)
+    else:
+        unrevoke_token(jti)
 
 
 # Endpoint for generating a non-fresh access token from the refresh token

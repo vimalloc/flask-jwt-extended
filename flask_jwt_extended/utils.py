@@ -1,3 +1,4 @@
+import calendar
 import datetime
 import json
 import uuid
@@ -77,7 +78,7 @@ def _encode_access_token(identity, secret, algorithm, token_expire_delta,
         'user_claims': user_claims,
     }
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
-    _store_token_if_blacklist_enabled(token_data)
+    _store_token(token_data, revoked=False)
     return encoded_token
 
 
@@ -102,7 +103,7 @@ def _encode_refresh_token(identity, secret, algorithm, token_expire_delta):
         'type': 'refresh',
     }
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
-    _store_token_if_blacklist_enabled(token_data)
+    _store_token(token_data, revoked=False)
     return encoded_token
 
 
@@ -179,25 +180,25 @@ def _handle_callbacks_on_error(fn):
     return wrapper
 
 
-def _check_blacklist(jwt_data):
+def _check_blacklist(token):
     if not _blacklist_enabled():
         return
 
     store = _get_blacklist_store()
-    token_type = jwt_data['type']
-    jti = jwt_data['jti']
+    token_type = token['type']
+    jti = token['jti']
 
     # Only check access tokens if BLACKLIST_TOKEN_CHECKS is set to 'all`
     if token_type == 'access' and _blacklist_checks() == 'all':
-        token_status = store[jti]
-        if token_status != 'active':
-            raise RevokedTokenError('{} has been revoked'.format)
+        stored_data = json.loads(store.get(jti))
+        if stored_data['revoked'] != 'active':
+            raise RevokedTokenError('Token has been revoked')
 
     # Always check refresh tokens
     if token_type == 'refresh':
-        token_status = store[jti]
-        if token_status != 'active':
-            raise RevokedTokenError('{} has been revoked'.format)
+        stored_data = json.loads(store.get(jti))
+        if stored_data['revoked'] != 'active':
+            raise RevokedTokenError('Token has been revoked')
 
 
 def jwt_required(fn):
@@ -220,7 +221,7 @@ def jwt_required(fn):
         if jwt_data['type'] != 'access':
             raise WrongTokenError('Only access tokens can access this endpoint')
 
-        # See if the token has been revoked (based on blacklist options)
+        # If blacklisting is enabled, see if this token has been revoked
         _check_blacklist(jwt_data)
 
         # Save the jwt in the context so that it can be accessed later by
@@ -250,7 +251,7 @@ def fresh_jwt_required(fn):
         if jwt_data['type'] != 'access':
             raise WrongTokenError('Only access tokens can access this endpoint')
 
-        # See if the token has been revoked (based on blacklist options)
+        # If blacklisting is enabled, see if this token has been revoked
         _check_blacklist(jwt_data)
 
         # Check if the token is fresh
@@ -324,6 +325,39 @@ def refresh_access_token():
     return jsonify(ret), 200
 
 
+def get_stored_tokens():
+    if not _blacklist_enabled():
+        raise RuntimeError("Blacklist must be enabled to list tokens")
+
+    store = _get_blacklist_store()
+    return [json.loads(store.get(jti)) for jti in store.iter_keys()]
+
+
+def _update_token(jti, revoked):
+    if not _blacklist_enabled():
+        raise RuntimeError("Blacklist must be enabled to revoke a token")
+
+    store = _get_blacklist_store()
+    try:
+        token = store.get(jti)
+        _store_token(token, revoked)
+    except KeyError:
+        # Token does not exist in the store. Could have been automatically
+        # removed from the store via ttl expiring # (in case of redis or
+        # memcached), or could have never been in the store, which probably
+        # indicates a bug in the callers code.
+        # TODO should this raise an error? Or silently return?
+        return
+
+
+def revoke_token(jti):
+    return _update_token(jti, revoked=True)
+
+
+def unrevoke_token(jti):
+    return _update_token(jti, revoked=False)
+
+
 def _get_secret_key():
     key = current_app.config.get('SECRET_KEY', None)
     if not key:
@@ -351,28 +385,45 @@ def _store_supports_ttl(store):
     return getattr(store, 'ttl_support', False)
 
 
-def _store_token_if_blacklist_enabled(token):
+def _utc_datetime_to_ts(dt):
+    return calendar.timegm(dt.utctimetuple())
+
+
+def _ts_to_utc_datetime(ts):
+    datetime.datetime.utcfromtimestamp(ts)
+
+
+def _get_token_ttl(token):
+    expires = token['exp']
+    now = datetime.datetime.utcnow()
+    delta = expires - now
+
+    # If the token is already expired, return that it has a ttl of 0
+    if delta.total_seconds() < 0:
+        return datetime.timedelta(0)
+    return delta
+
+
+def _store_token(token, revoked):
     # If the blacklist isn't enabled, do nothing
-    if not _blacklist_enabled() or _blacklist_checks() is None:
+    if not _blacklist_enabled():
         return
 
-    # If configured to only check refresh tokens and this isn't a refresh token, return
+    # If configured to only check refresh tokens and this isn't a one, do nothing
     if _blacklist_checks() == 'refresh' and token['type'] != 'refresh':
         return
 
-    # TODO store data as json in the store (including jti, identity, and user claims)
+    data_to_store = json.dumps({
+        'token': token,
+        'last_used': _utc_datetime_to_ts(datetime.datetime.utcnow()),
+        'revoked': revoked
+    })
 
-    # Otherwise store the token in the blacklist (with current status of active)
     store = _get_blacklist_store()
     if _store_supports_ttl(store):
-        config = current_app.config
-        if token['type'] == 'access':
-            expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
-        else:
-            expire_delta = config.get('JWT_REFRESH_TOKEN_EXPIRES', REFRESH_EXPIRES)
-
-        ttl = expire_delta + datetime.timedelta(minutes=15)
+        # Add 15 minutes to token ttl to account for possible time drift
+        ttl = _get_token_ttl(token) + datetime.timedelta(minutes=15)
         ttl_secs = ttl.total_seconds()
-        store.put(key=token['jti'], value="active", ttl_secs=ttl_secs)
+        store.put(key=token['jti'], value=data_to_store, ttl_secs=ttl_secs)
     else:
-        store.put(key=token['jti'], value="active")
+        store.put(key=token['jti'], value=data_to_store)

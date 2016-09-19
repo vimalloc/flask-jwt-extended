@@ -35,7 +35,7 @@ class JWTManager:
 
         # Function that will be called when a revoked token attempts to access
         # a protected endpoint
-        self.blacklisted_token_callback = lambda: (
+        self.revoked_token_callback = lambda: (
             jsonify({'msg': 'Token has been revoked'}), 401
         )
 
@@ -113,7 +113,7 @@ class JWTManager:
         self.token_needs_refresh_callback = callback
         return callback
 
-    def blacklist_token_loader(self, callback):
+    def revoked_token_loader(self, callback):
         """
         Sets the callback method to be called if a blacklisted (revoked) token
         attempt to access a protected endpoint
@@ -123,5 +123,5 @@ class JWTManager:
 
         Callback must be a function that takes no arguments.
         """
-        self.blacklisted_token_callback = callback
+        self.revoked_token_callback = callback
         return callback

@@ -319,7 +319,6 @@ def refresh_access_token():
     return jsonify(ret), 200
 
 
-# TODO Move create auth api to it's own file
 def _get_secret_key():
     key = current_app.config.get('SECRET_KEY', None)
     if not key:

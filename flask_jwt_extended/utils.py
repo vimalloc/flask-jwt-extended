@@ -1,7 +1,7 @@
-import calendar
 import datetime
 import json
 import uuid
+
 from functools import wraps
 
 import jwt
@@ -13,10 +13,11 @@ except ImportError:
     from flask import _request_ctx_stack as ctx_stack
 
 from flask_jwt_extended.config import ALGORITHM, REFRESH_EXPIRES, ACCESS_EXPIRES, \
-    BLACKLIST_ENABLED, BLACKLIST_STORE, BLACKLIST_TOKEN_CHECKS
+    BLACKLIST_ENABLED
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthHeaderError, WrongTokenError, RevokedTokenError, \
     FreshTokenRequired
+from flask_jwt_extended.blacklist import check_if_token_revoked, store_token
 
 # Proxy for accessing the identity of the JWT in this context
 jwt_identity = LocalProxy(lambda: _get_identity())
@@ -78,7 +79,11 @@ def _encode_access_token(identity, secret, algorithm, token_expire_delta,
         'user_claims': user_claims,
     }
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
-    _store_token(token_data, revoked=False)
+
+    # If blacklisting is enabled, store this token in our key-value store
+    blacklist_enabled = current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+    if blacklist_enabled:
+        store_token(token_data, revoked=False)
     return encoded_token
 
 
@@ -103,7 +108,11 @@ def _encode_refresh_token(identity, secret, algorithm, token_expire_delta):
         'type': 'refresh',
     }
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
-    _store_token(token_data, revoked=False)
+
+    # If blacklisting is enabled, store this token in our key-value store
+    blacklist_enabled = current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+    if blacklist_enabled:
+        store_token(token_data, revoked=False)
     return encoded_token
 
 
@@ -180,28 +189,6 @@ def _handle_callbacks_on_error(fn):
     return wrapper
 
 
-def _check_blacklist(token):
-    if not _blacklist_enabled():
-        return
-
-    store = _get_blacklist_store()
-    token_type = token['type']
-    jti = token['jti']
-
-    # Only check access tokens if BLACKLIST_TOKEN_CHECKS is set to 'all`
-    if token_type == 'access' and _blacklist_checks() == 'all':
-
-        stored_data = json.loads(store.get(jti).decode('utf-8'))
-        if stored_data['revoked']:
-            raise RevokedTokenError('Token has been revoked')
-
-    # Always check refresh tokens
-    if token_type == 'refresh':
-        stored_data = json.loads(store.get(jti).decode('utf-8'))
-        if stored_data['revoked']:
-            raise RevokedTokenError('Token has been revoked')
-
-
 def jwt_required(fn):
     """
     If you decorate a vew with this, it will ensure that the requester has a valid
@@ -223,7 +210,9 @@ def jwt_required(fn):
             raise WrongTokenError('Only access tokens can access this endpoint')
 
         # If blacklisting is enabled, see if this token has been revoked
-        _check_blacklist(jwt_data)
+        blacklist_enabled = current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+        if blacklist_enabled:
+            check_if_token_revoked(jwt_data)
 
         # Save the jwt in the context so that it can be accessed later by
         # the various endpoints that is using this decorator
@@ -253,7 +242,9 @@ def fresh_jwt_required(fn):
             raise WrongTokenError('Only access tokens can access this endpoint')
 
         # If blacklisting is enabled, see if this token has been revoked
-        _check_blacklist(jwt_data)
+        blacklist_enabled = current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+        if blacklist_enabled:
+            check_if_token_revoked(jwt_data)
 
         # Check if the token is fresh
         if not jwt_data['fresh']:
@@ -311,7 +302,9 @@ def refresh_access_token():
         raise WrongTokenError('Only refresh tokens can access this endpoint')
 
     # If blacklisting is enabled, see if this token has been revoked
-    _check_blacklist(jwt_data)
+    blacklist_enabled = current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+    if blacklist_enabled:
+        check_if_token_revoked(jwt_data)
 
     # Create and return the new access token
     config = current_app.config
@@ -326,110 +319,9 @@ def refresh_access_token():
     return jsonify(ret), 200
 
 
-# TODO Move blacklist stuff to it's own file
-# TODO Decorator for blacklist function calls to check if it's enabled in the config
 # TODO Move create auth api to it's own file
-
-def get_stored_tokens():
-    if not _blacklist_enabled():
-        raise RuntimeError("Blacklist must be enabled to list tokens")
-
-    store = _get_blacklist_store()
-    return [json.loads(store.get(jti).decode('utf-8')) for jti in store.iter_keys()]
-
-
-def _update_token(jti, revoked):
-    if not _blacklist_enabled():
-        raise RuntimeError("Blacklist must be enabled to revoke a token")
-
-    store = _get_blacklist_store()
-    try:
-        stored_data = json.loads(store.get(jti).decode('utf-8'))
-        token = stored_data['token']
-        _store_token(token, revoked)
-    except KeyError:
-        # Token does not exist in the store. Could have been automatically
-        # removed from the store via ttl expiring # (in case of redis or
-        # memcached), or could have never been in the store, which probably
-        # indicates a bug in the callers code.
-        # TODO should this raise an error? Or silently return?
-        raise
-
-
-def revoke_token(jti):
-    return _update_token(jti, revoked=True)
-
-
-def unrevoke_token(jti):
-    return _update_token(jti, revoked=False)
-
-
 def _get_secret_key():
     key = current_app.config.get('SECRET_KEY', None)
     if not key:
         raise RuntimeError('flask SECRET_KEY must be set')
     return key
-
-
-def _blacklist_enabled():
-    return current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
-
-
-def _get_blacklist_store():
-    return current_app.config.get('JWT_BLACKLIST_STORE', BLACKLIST_STORE)
-
-
-def _blacklist_checks():
-    config = current_app.config
-    check_type = config.get('JWT_BLACKLIST_TOKEN_CHECKS', BLACKLIST_TOKEN_CHECKS)
-    if check_type not in ('all', 'refresh'):
-        raise RuntimeError('Invalid option for JWT_BLACKLIST_TOKEN_CHECKS')
-    return check_type
-
-
-def _store_supports_ttl(store):
-    return getattr(store, 'ttl_support', False)
-
-
-def _utc_datetime_to_ts(dt):
-    return calendar.timegm(dt.utctimetuple())
-
-
-def _ts_to_utc_datetime(ts):
-    datetime.datetime.utcfromtimestamp(ts)
-
-
-def _get_token_ttl(token):
-    expires = token['exp']
-    now = datetime.datetime.utcnow()
-    delta = expires - now
-
-    # If the token is already expired, return that it has a ttl of 0
-    if delta.total_seconds() < 0:
-        return datetime.timedelta(0)
-    return delta
-
-
-def _store_token(token, revoked):
-    # If the blacklist isn't enabled, do nothing
-    if not _blacklist_enabled():
-        return
-
-    # If configured to only check refresh tokens and this isn't a one, do nothing
-    if _blacklist_checks() == 'refresh' and token['type'] != 'refresh':
-        return
-
-    data_to_store = json.dumps({
-        'token': token,
-        'last_used': _utc_datetime_to_ts(datetime.datetime.utcnow()),
-        'revoked': revoked
-    }).encode('utf-8')
-
-    store = _get_blacklist_store()
-    if _store_supports_ttl(store):
-        # Add 15 minutes to token ttl to account for possible time drift
-        ttl = _get_token_ttl(token) + datetime.timedelta(minutes=15)
-        ttl_secs = ttl.total_seconds()
-        store.put(token['jti'], data_to_store, ttl_secs=ttl_secs)
-    else:
-        store.put(token['jti'], data_to_store)

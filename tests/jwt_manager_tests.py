@@ -157,8 +157,3 @@ class TestJWTManager(unittest.TestCase):
 
             self.assertEquals(status_code, 422)
             self.assertEquals(data, {'err': 'Nice knowing you!'})
-
-# TODO make a not somewhere that json does not support integers as keys
-#      (verify that it will silently convert it to a string) and let the user
-#      know that they may need to convert it back to an int
-

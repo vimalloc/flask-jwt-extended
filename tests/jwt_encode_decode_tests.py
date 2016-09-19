@@ -9,7 +9,7 @@ from flask_jwt_extended.utils import _encode_access_token, _encode_refresh_token
     _decode_jwt
 
 
-class TestJWTUtils(unittest.TestCase):
+class JWTEncodeDecodeTests(unittest.TestCase):
 
     def setUp(self):
         self.app = Flask(__name__)

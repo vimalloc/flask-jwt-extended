@@ -6,14 +6,15 @@ from flask import Flask, request, jsonify
 
 from flask_jwt_extended import JWTManager, jwt_required, fresh_jwt_required,\
     create_refresh_access_tokens, create_fresh_access_token, refresh_access_token,\
-    jwt_identity, jwt_claims, revoke_token, unrevoke_token, get_stored_tokens
+    jwt_identity, jwt_claims, revoke_token, unrevoke_token, get_stored_tokens, \
+    get_all_stored_tokens
 
 # Example users database
 USERS = {
     'test1': {
         'id': 1,
         'password': 'abc123',
-        'type': 'restricted'
+        'type': 'technician'
     },
     'test2': {
         'id': 2,
@@ -111,26 +112,27 @@ def fresh_login():
     if USERS[username]['password'] != password:
         return jsonify({"msg": "Bad username or password"}), 401
 
-    # TODO change all these to simply return the data, you are in charge or
-    #      getting it to your frontend
     return create_fresh_access_token(identity=username)
 
 
 # Endpoint for generating a non-fresh access token from the refresh token
 @app.route('/auth/refresh', methods=['POST'])
 def refresh_token():
-    # TODO make this either a url that is configured in the app.config, or a
-    #      decorator, or something. This feels super awkward to use atm
     return refresh_access_token()
 
 
 # Endpoint for listing tokens
-@app.route('/auth/tokens', methods=['GET'])
-def list_tokens():
-    # TODO you should put some extra protection on this, so a user can only
-    #      view their tokens, or some extra privillage roles so an admin can
-    #      view everyones token
-    return jsonify(get_stored_tokens()), 200
+@app.route('/auth/tokens/<string:identity>', methods=['GET'])
+def list_identity_tokens(identity):
+    return jsonify(get_stored_tokens(identity)), 200
+
+
+# Endpoint for listing all tokens. In your app, you should either not expose
+# this, or put some addition security on top of it so only trusted users,
+# administrators, etc can access it
+@app.route('/auth/tokens')
+def list_all_tokens(identity):
+    return jsonify(get_all_stored_tokens()), 200
 
 
 # Endpoint for revoking and unrevoking tokens
@@ -168,7 +170,7 @@ def fresh_protected():
     user_type = jwt_claims['type']  # Access data stored in custom claims on the JWT
     username = jwt_identity  # Access identity through jwt_identity proxy
 
-    msg = '(fresh token required) {} is a[n] {}'.format(username, user_type)
+    msg = '(fresh token required) {} is a {}'.format(username, user_type)
     return jsonify({'msg': msg})
 
 if __name__ == '__main__':

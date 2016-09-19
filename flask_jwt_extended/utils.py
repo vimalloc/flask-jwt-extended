@@ -54,8 +54,6 @@ def _encode_access_token(identity, secret, algorithm, token_expire_delta,
     :return: Encoded JWT
     """
     # Verify that all of our custom data we are encoding is what we expect
-    if user_claims is None:
-        user_claims = {}
     if not isinstance(user_claims, dict):
         raise JWTEncodeError('user_claims must be a dict')
     if not isinstance(fresh, bool):

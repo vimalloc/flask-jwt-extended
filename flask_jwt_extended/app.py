@@ -111,7 +111,17 @@ def fresh_login():
     if USERS[username]['password'] != password:
         return jsonify({"msg": "Bad username or password"}), 401
 
+    # TODO change all these to simply return the data, you are in charge or
+    #      getting it to your frontend
     return create_fresh_access_token(identity=username)
+
+
+# Endpoint for generating a non-fresh access token from the refresh token
+@app.route('/auth/refresh', methods=['POST'])
+def refresh_token():
+    # TODO make this either a url that is configured in the app.config, or a
+    #      decorator, or something. This feels super awkward to use atm
+    return refresh_access_token()
 
 
 # Endpoint for listing tokens
@@ -125,7 +135,7 @@ def list_tokens():
 
 # Endpoint for revoking and unrevoking tokens
 @app.route('/auth/tokens/<string:jti>', methods=['PUT'])
-def revoke_jwt(jti):
+def change_jwt_revoke_state(jti):
     # TODO you should put some extra protection on this, so a user can only
     #      modify their tokens
     revoke = request.json.get('revoke', None)
@@ -142,29 +152,23 @@ def revoke_jwt(jti):
         return jsonify({"msg": "Token successfully unrevoked"})
 
 
-# Endpoint for generating a non-fresh access token from the refresh token
-@app.route('/auth/refresh', methods=['POST'])
-def refresh_token():
-    return refresh_access_token()
-
-
 @app.route('/protected', methods=['GET'])
 @jwt_required
 def non_fresh_protected():
     ip = jwt_claims['ip']  # Access data stored in custom claims on the JWT
     username = jwt_identity  # Access identity through jwt_identity proxy
 
-    msg = '{} says hello from {}'.format(username, ip)
+    msg = '{} initially logged in at {}'.format(username, ip)
     return jsonify({'msg': msg})
 
 
 @app.route('/protected-fresh', methods=['GET'])
 @fresh_jwt_required
 def fresh_protected():
-    ip = jwt_claims['ip']  # Access data stored in custom claims on the JWT
+    user_type = jwt_claims['type']  # Access data stored in custom claims on the JWT
     username = jwt_identity  # Access identity through jwt_identity proxy
 
-    msg = '{} says hello from {} (fresh)'.format(username, ip)
+    msg = '(fresh token required) {} is a[n] {}'.format(username, user_type)
     return jsonify({'msg': msg})
 
 if __name__ == '__main__':

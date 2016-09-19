@@ -121,8 +121,9 @@ def refresh_token():
     return refresh_access_token()
 
 
-# Endpoint for listing tokens
-@app.route('/auth/tokens/<string:identity>', methods=['GET'])
+# Endpoint for listing tokens. If you used an int for the identity (such as the
+# database primary key), change <identity> to <int:identity>
+@app.route('/auth/tokens/<identity>', methods=['GET'])
 def list_identity_tokens(identity):
     return jsonify(get_stored_tokens(identity)), 200
 

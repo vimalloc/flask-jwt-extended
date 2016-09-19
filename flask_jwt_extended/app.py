@@ -38,12 +38,12 @@ app.config['JWT_BLACKLIST_ENABLED'] = True
 # We are going to be using a simple in memory blacklist for this example. In
 # production, you will likely prefer something like redis (it can work with
 # multiple threads and processes, and supports automatic removal of expired
-# tokens so the blacklist doesn't blow up). Check here for available options:
-# http://pythonhosted.org/simplekv/
+# tokens so the blacklist doesn't blow up). Check here for available storage
+# options: http://pythonhosted.org/simplekv/
 blacklist_store = simplekv.memory.DictStore()
 app.config['JWT_BLACKLIST_STORE'] = blacklist_store
 
-# Only check the blacklist for refresh token. Available options are:
+# Which tokens to check against the blacklist. Default is 'refresh'. Options are:
 #   'all': Check blacklist for access and refresh tokens
 #   'refresh': Check blacklist only for refresh tokens
 app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
@@ -51,7 +51,7 @@ app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
 jwt = JWTManager(app)
 
 
-# Function to add custom claims to the JWT (optional).
+# Function to add your own data (claims) to the JWT (optional).
 @jwt.user_claims_loader
 def my_claims(identity):
     return {

@@ -90,7 +90,6 @@ def login():
     if username is None or password is None:
         return jsonify({"msg": "Missing username or password"}), 422
 
-    import pdb; pdb.set_trace()
     if username not in USERS:
         return jsonify({"msg": "Bad username or password"}), 401
     if USERS[username]['password'] != password:
@@ -103,7 +102,7 @@ def login():
 @app.route('/auth/fresh-login', methods=['POST'])
 def fresh_login():
     username = request.json.get('username', None)
-    password = request.json.get('password', None)
+    password = request.json.get('username', None)
     if username is None or password is None:
         return jsonify({"msg": "Missing username or password"}), 422
 

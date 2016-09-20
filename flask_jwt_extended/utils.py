@@ -182,7 +182,7 @@ def _handle_callbacks_on_error(fn):
                 WrongTokenError) as e:
             return m.invalid_token_callback(str(e))
         except RevokedTokenError:
-            return m.blacklisted_token_callback()
+            return m.revoked_token_callback()
         except FreshTokenRequired:
             return m.token_needs_refresh_callback()
     return wrapper

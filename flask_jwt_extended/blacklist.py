@@ -39,7 +39,7 @@ def _utc_datetime_to_ts(dt):
 
 
 def _ts_to_utc_datetime(ts):
-    datetime.datetime.utcfromtimestamp(ts)
+    return datetime.datetime.utcfromtimestamp(ts)
 
 
 def _store_supports_ttl(store):
@@ -56,7 +56,7 @@ def _get_token_ttl(token):
     Returns a datetime.timdelta() of how long this token has left to live before
     it is expired
     """
-    expires = token['exp']
+    expires = _ts_to_utc_datetime(token['exp'])
     now = datetime.datetime.utcnow()
     delta = expires - now
 
@@ -117,7 +117,7 @@ def get_stored_tokens(identity):
     # TODO this is *super* inefficient. Come up with a better way
     store = get_blacklist_store()
     data = [json.loads(store.get(jti).decode('utf-8')) for jti in store.iter_keys()]
-    return [d for d in data if d['identity'] == identity]
+    return [d for d in data if d['token']['identity'] == identity]
 
 
 @_verify_blacklist_enabled

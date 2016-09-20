@@ -132,7 +132,7 @@ def list_identity_tokens(identity):
 # this, or put some addition security on top of it so only trusted users,
 # administrators, etc can access it
 @app.route('/auth/tokens')
-def list_all_tokens(identity):
+def list_all_tokens():
     return jsonify(get_all_stored_tokens()), 200
 
 

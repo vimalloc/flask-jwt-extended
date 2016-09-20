@@ -13,7 +13,7 @@ except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as ctx_stack
 
 from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
-    get_algorithm, get_blacklist_enabled
+    get_algorithm, get_blacklist_enabled, get_blacklist_checks
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthHeaderError, WrongTokenError, RevokedTokenError, \
     FreshTokenRequired
@@ -78,9 +78,10 @@ def _encode_access_token(identity, secret, algorithm, token_expire_delta,
     }
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
 
-    # If blacklisting is enabled, store this token in our key-value store
+    # If blacklisting is enabled and configured to store access and refresh tokens,
+    # add this token to the store
     blacklist_enabled = get_blacklist_enabled()
-    if blacklist_enabled:
+    if blacklist_enabled and get_blacklist_checks() == 'all':
         store_token(token_data, revoked=False)
     return encoded_token
 

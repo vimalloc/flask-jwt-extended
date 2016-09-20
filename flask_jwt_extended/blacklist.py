@@ -167,7 +167,7 @@ def store_token(token, revoked):
 
     store = get_blacklist_store()
 
-    if _store_supports_ttl(store):
+    if _store_supports_ttl(store):  # pragma: no cover
         # Add 15 minutes to ttl to account for possible time drift
         ttl = _get_token_ttl(token) + datetime.timedelta(minutes=15)
         ttl_secs = ttl.total_seconds()

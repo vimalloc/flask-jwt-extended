@@ -4,7 +4,10 @@ Flask==0.11.1
 itsdangerous==0.24
 Jinja2==2.8
 MarkupSafe==0.23
+pluggy==0.3.1
+py==1.4.31
 PyJWT==1.4.2
 simplekv==0.10.0
+tox==2.3.1
+virtualenv==15.0.3
 Werkzeug==0.11.11
-wheel==0.24.0

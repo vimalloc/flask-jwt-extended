@@ -19,14 +19,8 @@ from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     FreshTokenRequired
 from flask_jwt_extended.blacklist import check_if_token_revoked, store_token
 
-# Proxy for accessing the identity of the JWT in this context
-jwt_identity = LocalProxy(lambda: _get_identity())
 
-# Proxy for getting the dictionary of custom user claims in this JWT
-jwt_claims = LocalProxy(lambda: _get_user_claims())
-
-
-def _get_identity():
+def get_jwt_identity():
     """
     Returns the identity of the JWT in this context. If no JWT is present,
     None is returned.
@@ -34,7 +28,7 @@ def _get_identity():
     return getattr(ctx_stack.top, 'jwt_identity', None)
 
 
-def _get_user_claims():
+def get_jwt_claims():
     """
     Returns the dictionary of custom use claims in this JWT. If no custom user
     claims are present, an empty dict is returned

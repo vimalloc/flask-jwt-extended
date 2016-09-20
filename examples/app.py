@@ -6,8 +6,8 @@ from flask import Flask, request, jsonify
 
 from flask_jwt_extended import JWTManager, jwt_required, fresh_jwt_required,\
     create_refresh_access_tokens, create_fresh_access_token, refresh_access_token,\
-    jwt_identity, jwt_claims, revoke_token, unrevoke_token, get_stored_tokens, \
-    get_all_stored_tokens
+    get_jwt_identity, get_jwt_claims, revoke_token, unrevoke_token, \
+    get_stored_tokens, get_all_stored_tokens
 
 # Example users database
 USERS = {
@@ -168,8 +168,8 @@ def non_fresh_protected():
 @app.route('/protected-fresh', methods=['GET'])
 @fresh_jwt_required
 def fresh_protected():
-    user_type = jwt_claims['type']  # Access data stored in custom claims on the JWT
-    username = jwt_identity  # Access identity through jwt_identity proxy
+    user_type = get_jwt_claims()['type']  # Access data stored in custom claims on the JWT
+    username = get_jwt_identity()  # Access identity through jwt_identity proxy
 
     msg = '(fresh token required) {} is a {}'.format(username, user_type)
     return jsonify({'msg': msg})

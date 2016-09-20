@@ -4,7 +4,8 @@ import unittest
 from datetime import timedelta
 
 from flask import Flask, jsonify
-from flask_jwt_extended.utils import _encode_access_token
+from flask_jwt_extended.utils import _encode_access_token, get_jwt_claims, \
+    get_jwt_identity
 from flask_jwt_extended import JWTManager, create_refresh_access_tokens, \
     refresh_access_token, create_fresh_access_token, fresh_jwt_required, \
     jwt_required
@@ -244,3 +245,27 @@ class TestEndpoints(unittest.TestCase):
         status_code = response.status_code
         self.assertEqual(status_code, 422)
         self.assertIn('msg', data)
+
+    def test_jwt_identity_claims(self):
+        # Setup custom claims
+        @self.jwt_manager.user_claims_loader
+        def custom_claims(identity):
+            return {'foo': 'bar'}
+
+        @self.app.route('/claims')
+        @jwt_required
+        def claims():
+            return jsonify({
+                'username': get_jwt_identity(),
+                'claims': get_jwt_claims()
+            })
+
+        # Login
+        response = self.client.post('/auth/login')
+        data = json.loads(response.get_data(as_text=True))
+        access_token = data['access_token']
+
+        # Test our custom endpoint
+        status, data = self._jwt_get('/claims', access_token)
+        self.assertEqual(status, 200)
+        self.assertEqual(data, {'username': 'test', 'claims': {'foo': 'bar'}})

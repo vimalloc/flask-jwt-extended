@@ -6,7 +6,8 @@ from datetime import timedelta
 import simplekv.memory
 from flask import Flask, jsonify, request
 from flask_jwt_extended.blacklist import _get_token_ttl
-from flask_jwt_extended.utils import _encode_refresh_token, _decode_jwt
+from flask_jwt_extended.utils import _encode_refresh_token, _decode_jwt, \
+    fresh_jwt_required
 
 from flask_jwt_extended import JWTManager, create_refresh_access_tokens, \
     get_all_stored_tokens, get_stored_tokens, revoke_token, unrevoke_token, \
@@ -59,6 +60,11 @@ class TestEndpoints(unittest.TestCase):
         @self.app.route('/protected', methods=['POST'])
         @jwt_required
         def protected():
+            return jsonify({"hello": "world"})
+
+        @self.app.route('/protected-fresh', methods=['POST'])
+        @fresh_jwt_required
+        def protected_fresh():
             return jsonify({"hello": "world"})
 
     def _login(self, username):
@@ -187,10 +193,16 @@ class TestEndpoints(unittest.TestCase):
         status, data = self._jwt_post('/protected', access_token)
         self.assertEqual(status, 200)
         self.assertEqual(data, {'hello': 'world'})
+        status, data = self._jwt_post('/protected-fresh', access_token)
+        self.assertEqual(status, 200)
+        self.assertEqual(data, {'hello': 'world'})
 
         # Verify we can no longer access endpoint after revoking
         self._jwt_post('/auth/revoke/{}'.format(access_jti))
         status, data = self._jwt_post('/protected', access_token)
+        self.assertEqual(status, 401)
+        self.assertIn('msg', data)
+        status, data = self._jwt_post('/protected-fresh', access_token)
         self.assertEqual(status, 401)
         self.assertIn('msg', data)
 
@@ -204,6 +216,9 @@ class TestEndpoints(unittest.TestCase):
         # Verify original token can access endpoint after unrevoking
         self._jwt_post('/auth/unrevoke/{}'.format(access_jti))
         status, data = self._jwt_post('/protected', access_token)
+        self.assertEqual(status, 200)
+        self.assertEqual(data, {'hello': 'world'})
+        status, data = self._jwt_post('/protected-fresh', access_token)
         self.assertEqual(status, 200)
         self.assertEqual(data, {'hello': 'world'})
 

@@ -2,14 +2,11 @@
 import calendar
 import datetime
 import json
-
-from flask_jwt_extended.exceptions import RevokedTokenError
 from functools import wraps
 
-from flask import current_app
-
-from flask_jwt_extended.config import BLACKLIST_ENABLED, BLACKLIST_STORE, \
-    BLACKLIST_TOKEN_CHECKS
+from flask_jwt_extended.config import get_blacklist_checks, \
+    get_blacklist_store, get_blacklist_enabled
+from flask_jwt_extended.exceptions import RevokedTokenError
 
 
 def _verify_blacklist_enabled(fn):
@@ -19,19 +16,17 @@ def _verify_blacklist_enabled(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        config = current_app.config
-
-        blacklist_enabled = config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+        blacklist_enabled = get_blacklist_enabled()
         if not blacklist_enabled:
             err = 'JWT_BLACKLIST_ENABLED must be True to access this functionality'
             raise RuntimeError(err)
 
-        store = current_app.config.get('JWT_BLACKLIST_STORE', BLACKLIST_STORE)
+        store = get_blacklist_store()
         if store is None:
             err = 'JWT_BLACKLIST_STORE must be set to access this functionality'
             raise RuntimeError(err)
 
-        check_type = config.get('JWT_BLACKLIST_TOKEN_CHECKS', BLACKLIST_TOKEN_CHECKS)
+        check_type = get_blacklist_checks()
         if check_type not in ('all', 'refresh'):
             raise RuntimeError('Invalid option for JWT_BLACKLIST_TOKEN_CHECKS')
 
@@ -72,7 +67,7 @@ def _get_token_ttl(token):
 
 
 def _get_token_from_store(jti):
-    store = current_app.config.get('JWT_BLACKLIST_STORE', BLACKLIST_STORE)
+    store = get_blacklist_store()
     stored_str = store.get(jti).decode('utf-8')
     stored_data = json.loads(stored_str)
     return stored_data
@@ -120,7 +115,7 @@ def get_stored_tokens(identity):
     TODO
     """
     # TODO this is *super* inefficient. Come up with a better way
-    store = current_app.config.get('JWT_BLACKLIST_STORE', BLACKLIST_STORE)
+    store = get_blacklist_store()
     data = [json.loads(store.get(jti).decode('utf-8')) for jti in store.iter_keys()]
     return [d for d in data if d['identity'] == identity]
 
@@ -132,7 +127,7 @@ def get_all_stored_tokens():
 
     TODO
     """
-    store = current_app.config.get('JWT_BLACKLIST_STORE', BLACKLIST_STORE)
+    store = get_blacklist_store()
     return [json.loads(store.get(jti).decode('utf-8')) for jti in store.iter_keys()]
 
 
@@ -141,10 +136,8 @@ def check_if_token_revoked(token):
     """
     Checks if the given token has been revoked.
     """
-    config = current_app.config
-
-    store = config.get('JWT_BLACKLIST_STORE', BLACKLIST_STORE)
-    check_type = config.get('JWT_BLACKLIST_TOKEN_CHECKS', BLACKLIST_TOKEN_CHECKS)
+    store = get_blacklist_store()
+    check_type = get_blacklist_checks()
     token_type = token['type']
     jti = token['jti']
 
@@ -172,7 +165,7 @@ def store_token(token, revoked):
         'revoked': revoked
     }).encode('utf-8')
 
-    store = current_app.config.get('JWT_BLACKLIST_STORE', BLACKLIST_STORE)
+    store = get_blacklist_store()
 
     if _store_supports_ttl(store):
         # Add 15 minutes to ttl to account for possible time drift

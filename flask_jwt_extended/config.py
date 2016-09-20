@@ -1,10 +1,13 @@
 import datetime
+from flask import current_app
+
+# Defaults
 
 # How long an access token will live before it expires.
-ACCESS_EXPIRES = datetime.timedelta(minutes=15)
+ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=15)
 
 # How long the refresh token will live before it expires
-REFRESH_EXPIRES = datetime.timedelta(days=30)
+REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)
 
 # What algorithm to use to sign the token. See here for a list of options:
 # https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py
@@ -23,3 +26,27 @@ BLACKLIST_STORE = None
 
 # blacklist check requests. Possible values are all and refresh
 BLACKLIST_TOKEN_CHECKS = 'refresh'
+
+
+def get_access_expires():
+    return current_app.config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_TOKEN_EXPIRES)
+
+
+def get_refresh_expires():
+    return current_app.config.get('JWT_REFRESH_TOKEN_EXPIRES', REFRESH_TOKEN_EXPIRES)
+
+
+def get_algorithm():
+    return current_app.config.get('JWT_ALGORITHM', ALGORITHM)
+
+
+def get_blacklist_enabled():
+    return current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+
+
+def get_blacklist_store():
+    return current_app.config.get('JWT_BLACKLIST_STORE', BLACKLIST_STORE)
+
+
+def get_blacklist_checks():
+    return current_app.config.get('JWT_BLACKLIST_TOKEN_CHECKS', BLACKLIST_TOKEN_CHECKS)

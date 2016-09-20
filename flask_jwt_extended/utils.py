@@ -12,8 +12,8 @@ try:
 except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as ctx_stack
 
-from flask_jwt_extended.config import ALGORITHM, REFRESH_EXPIRES, ACCESS_EXPIRES, \
-    BLACKLIST_ENABLED
+from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
+    get_algorithm, get_blacklist_enabled
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthHeaderError, WrongTokenError, RevokedTokenError, \
     FreshTokenRequired
@@ -79,7 +79,7 @@ def _encode_access_token(identity, secret, algorithm, token_expire_delta,
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
 
     # If blacklisting is enabled, store this token in our key-value store
-    blacklist_enabled = current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+    blacklist_enabled = get_blacklist_enabled()
     if blacklist_enabled:
         store_token(token_data, revoked=False)
     return encoded_token
@@ -108,7 +108,7 @@ def _encode_refresh_token(identity, secret, algorithm, token_expire_delta):
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
 
     # If blacklisting is enabled, store this token in our key-value store
-    blacklist_enabled = current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+    blacklist_enabled = get_blacklist_enabled()
     if blacklist_enabled:
         store_token(token_data, revoked=False)
     return encoded_token
@@ -208,7 +208,7 @@ def jwt_required(fn):
             raise WrongTokenError('Only access tokens can access this endpoint')
 
         # If blacklisting is enabled, see if this token has been revoked
-        blacklist_enabled = current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+        blacklist_enabled = get_blacklist_enabled()
         if blacklist_enabled:
             check_if_token_revoked(jwt_data)
 
@@ -240,7 +240,7 @@ def fresh_jwt_required(fn):
             raise WrongTokenError('Only access tokens can access this endpoint')
 
         # If blacklisting is enabled, see if this token has been revoked
-        blacklist_enabled = current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+        blacklist_enabled = get_blacklist_enabled()
         if blacklist_enabled:
             check_if_token_revoked(jwt_data)
 
@@ -258,10 +258,9 @@ def fresh_jwt_required(fn):
 
 def create_refresh_access_tokens(identity):
     # Token settings
-    config = current_app.config
-    access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
-    refresh_expire_delta = config.get('JWT_REFRESH_TOKEN_EXPIRES', REFRESH_EXPIRES)
-    algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
+    access_expire_delta = get_access_expires()
+    refresh_expire_delta = get_refresh_expires()
+    algorithm = get_algorithm()
     secret = _get_secret_key()
     user_claims = current_app.jwt_manager.user_claims_callback(identity)
 
@@ -280,9 +279,8 @@ def create_refresh_access_tokens(identity):
 def create_fresh_access_token(identity):
     # Token options
     secret = _get_secret_key()
-    config = current_app.config
-    access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
-    algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
+    access_expire_delta = get_access_expires()
+    algorithm = get_algorithm()
     user_claims = current_app.jwt_manager.user_claims_callback(identity)
     access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
                                         fresh=True, user_claims=user_claims)
@@ -300,14 +298,14 @@ def refresh_access_token():
         raise WrongTokenError('Only refresh tokens can access this endpoint')
 
     # If blacklisting is enabled, see if this token has been revoked
-    blacklist_enabled = current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
+    blacklist_enabled = get_blacklist_enabled()
     if blacklist_enabled:
         check_if_token_revoked(jwt_data)
 
     # Create and return the new access token
     config = current_app.config
-    access_expire_delta = config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_EXPIRES)
-    algorithm = config.get('JWT_ALGORITHM', ALGORITHM)
+    access_expire_delta = get_access_expires()
+    algorithm = get_algorithm()
     secret = _get_secret_key()
     user_claims = current_app.jwt_manager.user_claims_callback(jwt_data['identity'])
     identity = jwt_data['identity']

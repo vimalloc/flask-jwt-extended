@@ -3,7 +3,7 @@ from flask import jsonify
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:
-    from flask import _request_ctx_stack as ctx_stack
+    from flask import _request_ctx_stack as ctx_stack  # pragma: no cover
 
 
 class JWTManager:

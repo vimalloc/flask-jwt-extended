@@ -91,6 +91,10 @@ class JWTEncodeDecodeTests(unittest.TestCase):
                 _encode_access_token('user1', 'secret', 'HS256',
                                      timedelta(hours=1), True, user_claims)
 
+            with self.assertRaises(JWTEncodeError):
+                _encode_access_token('user1', 'secret', 'HS256',
+                                     timedelta(hours=1), 'not_a_bool', {})
+
     def test_encode_refresh_token(self):
         secret = 'super-totally-secret-key'
         algorithm = 'HS256'

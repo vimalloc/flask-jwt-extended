@@ -30,8 +30,9 @@ class TestJWTManager(unittest.TestCase):
         self.assertIsInstance(jwt_manager, JWTManager)
 
     def test_default_user_claims_callback(self):
+        identity = 'foobar'
         m = JWTManager(self.app)
-        assert m.user_claims_callback() == {}
+        assert m.user_claims_callback(identity) == {}
 
     def test_default_expired_token_callback(self):
         with self.app.test_request_context():
@@ -80,13 +81,14 @@ class TestJWTManager(unittest.TestCase):
             self.assertEquals(data, {'msg': 'Token has been revoked'})
 
     def test_custom_user_claims_callback(self):
+        identity = 'foobar'
         m = JWTManager(self.app)
 
         @m.user_claims_loader
-        def custom_user_claims():
+        def custom_user_claims(identity):
             return {'foo': 'bar'}
 
-        assert m.user_claims_callback() == {'foo': 'bar'}
+        assert m.user_claims_callback(identity) == {'foo': 'bar'}
 
     def test_custom_expired_token_callback(self):
         with self.app.test_request_context():

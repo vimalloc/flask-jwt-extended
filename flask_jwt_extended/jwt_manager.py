@@ -9,7 +9,7 @@ except ImportError:
 class JWTManager:
     def __init__(self, app=None):
         # Function that will be called to add custom user claims to a JWT.
-        self.user_claims_callback = lambda: {}
+        self.user_claims_callback = lambda _: {}
 
         # Function that will be called when an expired token is received
         self.expired_token_callback = lambda: (

@@ -299,7 +299,6 @@ def refresh_access_token():
         check_if_token_revoked(jwt_data)
 
     # Create and return the new access token
-    config = current_app.config
     access_expire_delta = get_access_expires()
     algorithm = get_algorithm()
     secret = _get_secret_key()

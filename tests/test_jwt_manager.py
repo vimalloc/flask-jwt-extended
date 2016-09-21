@@ -62,10 +62,10 @@ class TestJWTManager(unittest.TestCase):
             self.assertEqual(status_code, 401)
             self.assertEqual(data, {'msg': 'Missing Authorization Header'})
 
-    def test_default_token_needs_refresh_callback(self):
+    def test_default_needs_fresh_token_callback(self):
         with self.app.test_request_context():
             m = JWTManager(self.app)
-            result = m.token_needs_refresh_callback()
+            result = m.needs_fresh_token_callback()
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 401)
@@ -133,15 +133,15 @@ class TestJWTManager(unittest.TestCase):
             self.assertEqual(status_code, 200)
             self.assertEqual(data, {'err': 'GOTTA LOGIN FOOL'})
 
-    def test_custom_token_needs_refresh_callback(self):
+    def test_custom_needs_fresh_token_callback(self):
         with self.app.test_request_context():
             m = JWTManager(self.app)
 
-            @m.token_needs_refresh_loader
+            @m.needs_fresh_token_loader
             def custom_token_needs_refresh():
                 return jsonify({'sub_status': 101}), 200
 
-            result = m.token_needs_refresh_callback()
+            result = m.needs_fresh_token_callback()
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 200)

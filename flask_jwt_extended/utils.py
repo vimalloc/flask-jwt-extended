@@ -179,7 +179,7 @@ def _handle_callbacks_on_error(fn):
         except RevokedTokenError:
             return m.revoked_token_callback()
         except FreshTokenRequired:
-            return m.token_needs_refresh_callback()
+            return m.needs_fresh_token_callback()
     return wrapper
 
 

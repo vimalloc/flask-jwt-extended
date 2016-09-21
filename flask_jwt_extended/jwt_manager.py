@@ -29,7 +29,7 @@ class JWTManager:
 
         # Function that will be called when attempting to access a fresh_jwt_required
         # endpoint with a valid token that is not fresh
-        self.token_needs_refresh_callback = lambda: (
+        self.needs_fresh_token_callback = lambda: (
             jsonify({'msg': 'Fresh token required'}), 401
         )
 
@@ -100,7 +100,7 @@ class JWTManager:
         self.unauthorized_callback = callback
         return callback
 
-    def token_needs_refresh_loader(self, callback):
+    def needs_fresh_token_loader(self, callback):
         """
         Sets the callback method to be called if a valid and non-fresh token
         attempts to access an endpoint protected with @fresh_jwt_required.
@@ -110,7 +110,7 @@ class JWTManager:
 
         Callback must be a function that takes no arguments.
         """
-        self.token_needs_refresh_callback = callback
+        self.needs_fresh_token_callback = callback
         return callback
 
     def revoked_token_loader(self, callback):

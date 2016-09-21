@@ -19,8 +19,8 @@ python setup.py install
 # Usage
 Examples coming tomorrow :)
 
-# Testing
-Run all the unit tests with tox. This will test against python2.7, 3.3, 3.4, and 3.5:
+# Testing and Code Coverage
+We run all the unit tests with tox. This will test against python2.7, and 3.5 (although not tested, python3.3 and 3.4 should also be fully supported). This will also print out a code coverage report.
 ```
 tox
 ```

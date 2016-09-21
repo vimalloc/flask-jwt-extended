@@ -5,6 +5,7 @@ import uuid
 from functools import wraps
 
 import jwt
+import six
 from werkzeug.local import LocalProxy
 from flask import request, jsonify, current_app
 try:
@@ -121,7 +122,7 @@ def _decode_jwt(token, secret, algorithm):
     # ext, iat, and nbf are all verified by pyjwt. We just need to make sure
     # that the custom claims we put in the token are present
     data = jwt.decode(token, secret, algorithm=algorithm)
-    if 'jti' not in data or not isinstance(data['jti'], str):
+    if 'jti' not in data or not isinstance(data['jti'], six.string_types):
         raise JWTDecodeError("Missing or invalid claim: jti")
     if 'identity' not in data:
         raise JWTDecodeError("Missing claim: identity")

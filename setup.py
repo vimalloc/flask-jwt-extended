@@ -13,11 +13,11 @@ setup(name='Flask-JWT-Extended',
       author_email='landogbland@gmail.com',
       description='Extended JWT integration with Flask',
       long_description='Extended JWT integration with Flask',
-      keywords = ['flask', 'jwt', 'json web token']
+      keywords = ['flask', 'jwt', 'json web token'],
       py_modules=['flask_jwt_extended'],
       zip_safe=False,
       platforms='any',
-      install_requires=['Flask', 'PyJWT', 'simplekv'],
+      install_requires=['Flask', 'PyJWT', 'simplekv', 'six'],
       classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Web Environment',

@@ -1,9 +1,13 @@
 # Flask-JWT-Extended
 Flask-JWT-Extended adds support for using JSON Web Tokens (JWT) to Flask for protecting views.
 
-This has built in support for entirely stateless 'vanilla' JSON Web Tokens. It also has optional [refresh tokens] (https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/), token freshness (reuqires users to re-authenticate if they haven't in a while when accessing critical views), and optional token revokation (stateful).
+This has several optional features built it to make working with JSON Web Tokens
+easier. These include:
 
-Token revokation makes no assumption about your underlying storage for revoked tokens. It uses [simplekv] (https://github.com/mbr/simplekv) to utilize the underlying storage of your choice.
+* Support for adding custom claims to JSON Web Tokens
+* [Refresh tokens] (https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/)
+* Token freshness and separate view decorators to only allow fresh tokens
+* Token revoking
 
 # Installation
 The easiest way to start working with this extension with pip:
@@ -48,6 +52,12 @@ if __name__ == '__main__':
     app.run()
 ```
 
+To access a **jwt_required** protected view, all we have to do is send an authorization
+head with the request that include the token. The header looks like this:
+```
+Authorization: Bearer <access_token>
+```
+
 We can see this in action using CURL:
 ```
 $ curl --write-out "%{http_code}\n"  http://localhost:5000/protected
@@ -70,14 +80,14 @@ $ curl --write-out "%{http_code}\n" -H "Authorization: Bearer $ACCESS" http://lo
 }
 200
 ```
-However, this is only the tip of the iceberg for what we can do
 
-
-### Adding Custom Claims to the Access Token
+### Adding Custom Data (Claims) to the Access Token
 You may want to store additional information in the access token. Perhaps you want
 to save the access roles this user has so you can access them in the view functions
 (without having to make a database call each time). This can be done with the 
-user_claims_loader, and access with the 'get_jwt_claims()' method in a protected endpoint
+**user_claims_loader** decorator, and accessed later with the 'get_jwt_claims()'
+method (in a protected endpoint).
+
 ```python
 from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, \
@@ -125,8 +135,8 @@ if __name__ == '__main__':
 Flask-JWT-Extended supports [refresh tokens] (https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/)
 out of the box. These are longer lived token which cannot access a jwt_required protected
 endpoint, but can be used to create new access tokens once an old access token has expired.
-By setting the access tokens to a shorter lifetime (see Options bellow), and utilizing
-fresh tokenks for critical endpoint (see Fresh Tokens bellow) we can help reduce the
+By setting the access tokens to a shorter lifetime (see Options below), and utilizing
+fresh tokens for critical views (see Fresh Tokens below) we can help reduce the
 damage done if an access token is stolen. Here is an example on how to use them:
 
 ```python
@@ -172,33 +182,30 @@ def protected():
 if __name__ == '__main__':
     app.run()
 ```
-As you can see, there are a few things different in this example. First and formost
-is the create_refresh_token method, which as the name implies, will generate a new
-refresh token. Second is the @jwt_refresh_token_required decorator. This will
+As you can see, there are a few things different in this example. First and foremost
+is the **create_refresh_token** method, which as the name implies, will generate a new
+refresh token. Second is the **jwt_refresh_token_required** decorator. This will
 protect a view so that it can only be accessed if a valid refresh token is supplied
 in the request (an access token cannot access this view). Finally, we have the
-method get_jwt_identity. This will return the identity of the token used to access
+method **get_jwt_identity**. This will return the identity of the token used to access
 this endpoint (and works for both access and refresh tokens).
 
-We can now this refresh token to generate new access tokens without the user having
-to login with their username and passwords all the time. Neat. Now lets look at
-token freshness to see how we can improve upon this further.
 
 ### Token Freshness
-We have the idea of token freshness built into this system. In a nutshell, you can
+We have the idea of token freshness built into this extension. In a nutshell, you can
 choose to mark some access tokens as fresh and others as non-fresh, and a 
-fresh_jwt_required decorator to only allow fresh tokens to access some views.
+**fresh_jwt_required** decorator to only allow fresh tokens to access some views.
 
 This is useful for allowing fresh logins to do some critical things (maybe change
 a password, or complete an online purchase), but to deny those features to
 non-fresh tokens without verifying their username/password. This still allows your
 users to access any of the normal jwt_protected endpoints while using a non-fresh
-token. Using these wisely can lead to a more secure site, without creating
-unnecessarily bad users experiences by having to re-login all the time.
+token. Using these can lead to a more secure site, without creating a burden
+on the users experiences by forcing them to re-authenticate all the time.
 
 The provided API gives you the power to use the token freshness however you may
 want to. A very natural way to do this would be to mark a token as fresh when they
-first login, mark any tokens generated with the refresh token to be not fresh,
+first login, mark any tokens generated with the refresh token to as not fresh,
 and provide one more endpoint for generating new fresh tokens (via re-authing)
 without generating a new refresh token to go with it.
 ```python
@@ -256,23 +263,25 @@ def protected():
 
 @app.route('/protected-fresh', methods=['GET'])
 @fresh_jwt_required
-def protected():
+def protected_fresh():
     username = get_jwt_identity()
     return jsonify({'hello': 'from {}'.format(username)}), 200
 
 if __name__ == '__main__':
     app.run()
 ```
-The only real things to note here is the new @fresh_jwt_required decorator, and
-the optional 'fresh=' keyword passed to the 'create_access_token' methods.
+As you can see here, there is an optional **fresh** keyword argument in the
+**create_access_token** method, which will control the token freshness. This,
+in combination with the **fresh_jwt_required** decorator can protect your critical
+views with only fresh tokens.
 
 ### Changing Default Behaviors
-We provide what we think are sensible behaivors when attempting to access a protected
-endpoint. If the endpoint could not be used for any reason (missing/expired/invalid/etc
-access token) we will return json in the format of {'msg': <why accesing endpoint failed>}
-along with an appropiate http status code (generally 401 or 422). However, you may want
-to cusomize what is sent back in these cases. We can do that with the jwt_manager
-'loader' functions. 
+We provide what we think are sensible behaviors when attempting to access a protected
+endpoint. If the endpoint could not be used for any reason (missing/expired/invalid
+access token, etc) we will return json in the format of {'msg': <why accesing endpoint failed>}
+along with an appropriate http status code (generally 401 or 422). However, you may want
+to customize what is returned for a given case. We can do that with the jwt_manager
+**_loader** functions. 
 ```python
 from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token
@@ -311,7 +320,7 @@ if __name__ == '__main__':
     app.run()
 ```
 Now if an expired token tries to access the protected endpoint, we will get the
-json we specified back instead of our default behaivor.
+json we specified back instead of the default implementation.
 
 The available loader functions are:
 * expired_token_loader
@@ -340,27 +349,26 @@ will only check refresh tokens, and 'all' which will check refresh and access to
 to 'refresh'
 
 ### Blacklist and Token Revoking
-This supports blacklisting and token revoking out of the box. This will allow you
-to revoke a specific token so a user can no longer access your endpoints, without
-having to change your secret key and thus revoke all the users tokens. In order
+This supports optional blacklisting and token revoking out of the box. This will allow you
+to revoke a specific token so a user can no longer access your endpoints. In order
 to revoke a token, we need some storage where we can save a list of all the tokens
-we have created, as well as if they have been blacklisted or not. In order to make
+we have created, as well as if they have been revoked or not. In order to make
 the underlying storage as agnostic as possible, we use [simplekv] (http://pythonhosted.org/simplekv/)
-to provide assess to a variaty of backends.
+to provide assess to a variety of backends.
 
 In production, it is important to use a backend that can have some sort of
 persistent storage, so we don't forget that we revoked a token, as well as
 something that can be safely used by the multiple thread and processes running
 your application. At present we believe redis is a good fit for this (it has the
 added benefit of removing expired tokens from the store automatically, so it
-wont blow up into something huge). But the choice is of course yours.
+wont blow up into something huge). The choice is of course yours.
 
 We also have to make a choice of if we want to check the blacklist against all
 requests, or only against refresh token requests. There are pros and cons to either
 way (extra overhead on jwt_required endpoints vs someone being able to use an
 access token freely until it expires). In this example, we are going to only check
 refresh tokens, and set the access tokes to a small expires time to help minimize
-damange that could be done.
+damage that could be done with a stolen access token.
 ```python
 from datetime import timedelta
 

@@ -52,7 +52,7 @@ def protected():
 
 @app.route('/protected-fresh', methods=['GET'])
 @fresh_jwt_required
-def protected():
+def protected_fresh():
     username = get_jwt_identity()
     return jsonify({'hello': 'from {}'.format(username)}), 200
 

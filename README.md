@@ -3,10 +3,10 @@ Flask-JWT-Extended adds support for using JSON Web Tokens (JWT) to Flask for pro
 
 This has built in support for entirely stateless 'vanilla' JSON Web Tokens. It also has optional [refresh tokens] (https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/), token freshness (reuqires users to re-authenticate if they haven't in a while when accessing critical views), and optional token revokation (stateful).
 
-Token revokation makes no assumption about your underlying storage for revoked tokens. It utilizes [simplekv] (https://github.com/mbr/simplekv) to utilize the underlying storage of your choice.
+Token revokation makes no assumption about your underlying storage for revoked tokens. It uses [simplekv] (https://github.com/mbr/simplekv) to utilize the underlying storage of your choice.
 
 # Installation
-The easiest way to start working with this extension is (coming tomorrow):
+The easiest way to start working with this extension is (THIS WILL BE IN PIP IN A FEW HOURS):
 ```
 pip install flask-jwt-extended
 ```
@@ -24,9 +24,6 @@ We run all the unit tests with tox. This will test against python2.7, and 3.5 (a
 ```
 tox
 ```
-
-# Code coverage
-TODO
 
 # Documentation
 Readthedocs coming soon!

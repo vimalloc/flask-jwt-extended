@@ -6,7 +6,7 @@ This has built in support for entirely stateless 'vanilla' JSON Web Tokens. It a
 Token revokation makes no assumption about your underlying storage for revoked tokens. It uses [simplekv] (https://github.com/mbr/simplekv) to utilize the underlying storage of your choice.
 
 # Installation
-The easiest way to start working with this extension is (THIS WILL BE IN PIP IN A FEW HOURS):
+The easiest way to start working with this extension with pip:
 ```
 pip install flask-jwt-extended
 ```

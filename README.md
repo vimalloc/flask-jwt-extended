@@ -278,7 +278,7 @@ views with only fresh tokens.
 ### Changing Default Behaviors
 We provide what we think are sensible behaviors when attempting to access a protected
 endpoint. If the endpoint could not be used for any reason (missing/expired/invalid
-access token, etc) we will return json in the format of {'msg': <why accesing endpoint failed>}
+access token, etc) we will return json in the format of **{'msg': 'why accesing endpoint failed'}**
 along with an appropriate http status code (generally 401 or 422). However, you may want
 to customize what is returned for a given case. We can do that with the jwt_manager
 **_loader** functions. 
@@ -323,11 +323,14 @@ Now if an expired token tries to access the protected endpoint, we will get the
 json we specified back instead of the default implementation.
 
 The available loader functions are:
-* expired_token_loader
-* invalid_token_loader  (function takes one arg, which is an error string of why its invalid)
-* unauthorized_loader
-* needs_fresh_token_loader
-* revoked_token_loader  (see Blacklist and Token Revoking bellow)
+
+| Decorator | Description | Callback Function Arguments | 
+| --------- | ----------- | --------------------------- |
+|expired_token_loader | Function to call when an expired token accesses a protected view | None |
+|invalid_token_loader | Function to call when an invalid token accesses a protected view | Takes one argument, which is an error string of why it is invalid|
+|unauthorized_loader | Functino to call when a request with no JWT accesses a protected view | None|
+|needs_fresh_token_loader | Function to call when a non-fresh token access a **fresh_jwt_required** view | None |
+|revoked_token_loader | Function to call when a revoked token accesses a protected view | None |
 
 ### Options
 You can change many options for how this extension works via 
@@ -335,18 +338,15 @@ You can change many options for how this extension works via
 app.config[OPTION_NAME] = new_options
 ```
 The available options are:
-* JWT_ACCESS_TOKEN_EXPIRES: datetime.timedelta of how long an access token should
-live before it expires (Defaults to 15 minutes)
-* JWT_REFRESH_TOKEN_EXPIRES: datetime.timedelta of how long a refresh token should
-live before it expires (Defaults to 30 days)
-* JWT_ALGORITHM: Which algorithm to use with the JWT. See [here] (https://pyjwt.readthedocs.io/en/latest/algorithms.html)
-for options (Defaults to HS256)
-* JWT_BLACKLIST_ENABLED: If token blacklist/revoking should be enabled (Default False)
-* JWT_BLACKLIST_STORE: Where to save blacklisted tokens. See [here] (http://pythonhosted.org/simplekv/)
-for options (Default None)
-* JWT_BLACKLIST_CHECKS: What tokens to check against the blacklist. Options are 'refresh' which
-will only check refresh tokens, and 'all' which will check refresh and access tokens. Defaults
-to 'refresh'
+
+| Name   | Description | Options | Default|
+| ------ | ----------- | ------- | ------ |
+|JWT_ACCESS_TOKEN_EXPIRES | How long an access token should live | datetime.timedelta | 15 minutes|
+|JWT_REFRESH_TOKEN_EXPIRES | How long a refresh token should live | datetime.timedelta | 30 days |
+|JWT_ALGORITHM | Which algorithm to use with the JWT.  [See here] (https://pyjwt.readthedocs.io/en/latest/algorithms.html) | HS256 |
+|JWT_BLACKLIST_ENABLED | If token blacklist/revoking should be enabled | Boolean | False |
+|JWT_BLACKLIST_STORE | Where to save blacklisted tokens. [See here] (http://pythonhosted.org/simplekv/) | None |
+|JWT_BLACKLIST_CHECKS | What token types to check against the blacklist. | 'refresh', 'all' | 'refresh' |
 
 ### Blacklist and Token Revoking
 This supports optional blacklisting and token revoking out of the box. This will allow you

@@ -5,9 +5,9 @@ import simplekv.memory
 from flask import Flask, request, jsonify
 
 from flask_jwt_extended import JWTManager, jwt_required, fresh_jwt_required,\
-    create_refresh_access_tokens, create_fresh_access_token, refresh_access_token,\
     get_jwt_identity, get_jwt_claims, revoke_token, unrevoke_token, \
-    get_stored_tokens, get_all_stored_tokens
+    get_stored_tokens, get_all_stored_tokens, create_access_token, \
+    create_refresh_token, jwt_refresh_token_required
 
 # Example users database
 USERS = {
@@ -33,7 +33,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # defaults to 15 mi
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)  # defaults to 30 days
 app.config['JWT_ALGORITHM'] = 'HS512'  # Default to HS256
 
-# Enable JWT blacklist / token revoke
+# Enable JWT blacklist / token revoke (default disabled)
 app.config['JWT_BLACKLIST_ENABLED'] = True
 
 # We are going to be using a simple in memory blacklist for this example. In
@@ -96,7 +96,11 @@ def login():
     if USERS[username]['password'] != password:
         return jsonify({"msg": "Bad username or password"}), 401
 
-    return create_refresh_access_tokens(identity=username)
+    ret = {
+        'access_token': create_access_token(username, fresh=True),
+        'refresh_token': create_refresh_token(username)
+    }
+    return jsonify(ret), 200
 
 
 # Endpoint for getting a fresh access token for a user
@@ -112,13 +116,17 @@ def fresh_login():
     if USERS[username]['password'] != password:
         return jsonify({"msg": "Bad username or password"}), 401
 
-    return create_fresh_access_token(identity=username)
+    ret = {'access_token': create_access_token(username, fresh=False)}
+    return jsonify(ret), 200
 
 
 # Endpoint for generating a non-fresh access token from the refresh token
 @app.route('/auth/refresh', methods=['POST'])
+@jwt_refresh_token_required
 def refresh_token():
-    return refresh_access_token()
+    username = get_jwt_identity()
+    ret = {'access_token': create_access_token(username, fresh=False)}
+    return jsonify(ret), 200
 
 
 # Endpoint for listing tokens. If you used an int for the identity (such as the
@@ -138,9 +146,8 @@ def list_all_tokens():
 
 # Endpoint for revoking and unrevoking tokens
 @app.route('/auth/tokens/<string:jti>', methods=['PUT'])
+@jwt_required
 def change_jwt_revoke_state(jti):
-    # TODO you should put some extra protection on this, so a user can only
-    #      modify their tokens
     revoke = request.json.get('revoke', None)
     if revoke is None:
         return jsonify({'msg': "Missing json argument: 'revoke'"}), 422
@@ -158,8 +165,8 @@ def change_jwt_revoke_state(jti):
 @app.route('/protected', methods=['GET'])
 @jwt_required
 def non_fresh_protected():
-    ip = jwt_claims['ip']  # Access data stored in custom claims on the JWT
-    username = jwt_identity  # Access identity through jwt_identity proxy
+    ip = get_jwt_claims()['ip']  # Access data stored in custom claims on the JWT
+    username = get_jwt_identity()  # Access identity through jwt_identity proxy
 
     msg = '{} initially logged in at {}'.format(username, ip)
     return jsonify({'msg': msg})

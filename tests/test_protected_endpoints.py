@@ -6,8 +6,8 @@ from datetime import timedelta
 from flask import Flask, jsonify
 from flask_jwt_extended.utils import _encode_access_token, get_jwt_claims, \
     get_jwt_identity
-from flask_jwt_extended import JWTManager, create_refresh_access_tokens, \
-    refresh_access_token, create_fresh_access_token, fresh_jwt_required, \
+from flask_jwt_extended import JWTManager, create_refresh_token, \
+    jwt_refresh_token_required, create_access_token, fresh_jwt_required, \
     jwt_required
 
 
@@ -27,15 +27,23 @@ class TestEndpoints(unittest.TestCase):
 
         @self.app.route('/auth/login', methods=['POST'])
         def login():
-            return create_refresh_access_tokens(identity='test')
+            ret = {
+                'access_token': create_access_token('test', fresh=True),
+                'refresh_token': create_refresh_token('test')
+            }
+            return jsonify(ret), 200
 
         @self.app.route('/auth/refresh', methods=['POST'])
+        @jwt_refresh_token_required
         def refresh():
-            return refresh_access_token()
+            username = get_jwt_identity()
+            ret = {'access_token': create_access_token(username, fresh=False)}
+            return jsonify(ret), 200
 
         @self.app.route('/auth/fresh-login', methods=['POST'])
         def fresh_login():
-            return create_fresh_access_token(identity='test')
+            ret = {'access_token': create_access_token('test', fresh=True)}
+            return jsonify(ret), 200
 
         @self.app.route('/protected')
         @jwt_required
@@ -159,7 +167,8 @@ class TestEndpoints(unittest.TestCase):
 
         @app.route('/login', methods=['POST'])
         def login():
-            return create_fresh_access_token('foobar')
+            ret = {'access_token': create_access_token('test', fresh=True)}
+            return jsonify(ret), 200
 
         with self.assertRaises(RuntimeError):
             client.post('/login')

@@ -252,62 +252,55 @@ def fresh_jwt_required(fn):
     return wrapper
 
 
-def create_refresh_access_tokens(identity):
+def jwt_refresh_token_required(fn):
+    """
+    If you decorate a view with this, it will insure that the requester has a
+    valid JWT refresh token before calling the actual view. If the token is
+    invalid, expired, not present, etc, the appropiate callback will be called
+    """
+    @_handle_callbacks_on_error
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        # Get the JWT
+        jwt_data = _decode_jwt_from_request()
+
+        # verify this is a refresh token
+        if jwt_data['type'] != 'refresh':
+            raise WrongTokenError('Only refresh tokens can access this endpoint')
+
+        # If blacklisting is enabled, see if this token has been revoked
+        blacklist_enabled = get_blacklist_enabled()
+        if blacklist_enabled:
+            check_if_token_revoked(jwt_data)
+
+        # Save the jwt in the context so that it can be accessed later by
+        # the various endpoints that is using this decorator
+        ctx_stack.top.jwt_identity = jwt_data['identity']
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+def create_refresh_token(identity):
     # Token settings
-    access_expire_delta = get_access_expires()
     refresh_expire_delta = get_refresh_expires()
     algorithm = get_algorithm()
     secret = _get_secret_key()
-    user_claims = current_app.jwt_manager.user_claims_callback(identity)
 
     # Actually make the tokens
-    access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
-                                        fresh=True, user_claims=user_claims)
     refresh_token = _encode_refresh_token(identity, secret, algorithm,
                                           refresh_expire_delta)
-    ret = {
-        'access_token': access_token,
-        'refresh_token': refresh_token
-    }
-    return jsonify(ret), 200
+    return refresh_token
 
 
-def create_fresh_access_token(identity):
+def create_access_token(identity, fresh=True):
     # Token options
     secret = _get_secret_key()
     access_expire_delta = get_access_expires()
     algorithm = get_algorithm()
     user_claims = current_app.jwt_manager.user_claims_callback(identity)
     access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
-                                        fresh=True, user_claims=user_claims)
-    ret = {'access_token': access_token}
-    return jsonify(ret), 200
-
-
-@_handle_callbacks_on_error
-def refresh_access_token():
-    # Get the JWT
-    jwt_data = _decode_jwt_from_request()
-
-    # verify this is a refresh token
-    if jwt_data['type'] != 'refresh':
-        raise WrongTokenError('Only refresh tokens can access this endpoint')
-
-    # If blacklisting is enabled, see if this token has been revoked
-    blacklist_enabled = get_blacklist_enabled()
-    if blacklist_enabled:
-        check_if_token_revoked(jwt_data)
-
-    # Create and return the new access token
-    access_expire_delta = get_access_expires()
-    algorithm = get_algorithm()
-    secret = _get_secret_key()
-    user_claims = current_app.jwt_manager.user_claims_callback(jwt_data['identity'])
-    identity = jwt_data['identity']
-    access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
-                                        fresh=False, user_claims=user_claims)
-    ret = {'access_token': access_token}
-    return jsonify(ret), 200
+                                        fresh=fresh, user_claims=user_claims)
+    return access_token
 
 
 def _get_secret_key():

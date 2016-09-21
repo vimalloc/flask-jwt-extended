@@ -7,11 +7,11 @@ import simplekv.memory
 from flask import Flask, jsonify, request
 from flask_jwt_extended.blacklist import _get_token_ttl
 from flask_jwt_extended.utils import _encode_refresh_token, _decode_jwt, \
-    fresh_jwt_required
+    fresh_jwt_required, get_jwt_identity
 
-from flask_jwt_extended import JWTManager, create_refresh_access_tokens, \
+from flask_jwt_extended import JWTManager, create_access_token, \
     get_all_stored_tokens, get_stored_tokens, revoke_token, unrevoke_token, \
-    jwt_required, refresh_access_token
+    jwt_required,create_refresh_token, jwt_refresh_token_required
 
 
 class TestEndpoints(unittest.TestCase):
@@ -27,7 +27,11 @@ class TestEndpoints(unittest.TestCase):
         @self.app.route('/auth/login', methods=['POST'])
         def login():
             username = request.json['username']
-            return create_refresh_access_tokens(identity=username)
+            ret = {
+                'access_token': create_access_token(username, fresh=True),
+                'refresh_token': create_refresh_token(username)
+            }
+            return jsonify(ret), 200
 
         @self.app.route('/auth/tokens/<identity>', methods=['GET'])
         def list_identity_tokens(identity):
@@ -54,8 +58,11 @@ class TestEndpoints(unittest.TestCase):
                 return jsonify({"msg": "Token not found"}), 404
 
         @self.app.route('/auth/refresh', methods=['POST'])
+        @jwt_refresh_token_required
         def refresh():
-            return refresh_access_token()
+            username = get_jwt_identity()
+            ret = {'access_token': create_access_token(username, fresh=False)}
+            return jsonify(ret), 200
 
         @self.app.route('/protected', methods=['POST'])
         @jwt_required

@@ -321,7 +321,23 @@ The available loader functions are:
 * revoked_token_loader  (see Blacklist and Token Revoking bellow)
 
 ### Options
-TODO
+You can change many options for how this extension works via 
+```python
+app.config[OPTION_NAME] = new_options
+```
+The available options are:
+* JWT_ACCESS_TOKEN_EXPIRES: datetime.timedelta of how long an access token should
+live before it expires (Defaults to 15 minutes)
+* JWT_REFRESH_TOKEN_EXPIRES: datetime.timedelta of how long a refresh token should
+live before it expires (Defaults to 30 days)
+* JWT_ALGORITHM: Which algorithm to use with the JWT. See [here] (https://pyjwt.readthedocs.io/en/latest/algorithms.html)
+for options (Defaults to HS256)
+* JWT_BLACKLIST_ENABLED: If token blacklist/revoking should be enabled (Default False)
+* JWT_BLACKLIST_STORE: Where to save blacklisted tokens. See [here] (http://pythonhosted.org/simplekv/)
+for options (Default None)
+* JWT_BLACKLIST_CHECKS: What tokens to check against the blacklist. Options are 'refresh' which
+will only check refresh tokens, and 'all' which will check refresh and access tokens. Defaults
+to 'refresh'
 
 ### Blacklist and Token Revoking
 TODO

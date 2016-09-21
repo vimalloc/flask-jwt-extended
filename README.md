@@ -79,7 +79,8 @@ endpoint, but can be used to create new access tokens once an old access token h
 By setting the access tokens to a shorter lifetime (see Options bellow), and utilizing
 fresh tokenks for critical endpoint (see Fresh Tokens bellow) we can help reduce the
 damage done if an access token is stolen. Here is an example on how to use them:
-```
+
+```python
 from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, \
     jwt_refresh_token_required, create_refresh_token, get_jwt_identity
@@ -135,7 +136,86 @@ to login with their username and passwords all the time. Neat. Now lets look at
 token freshness to see how we can improve upon this further.
 
 ### Token Freshness
-TODO
+We have the idea of token freshness built into this system. In a nutshell, you can
+choose to mark some access tokens as fresh and others as non-fresh, and a 
+fresh_jwt_required decorator to only allow fresh tokens to access some views.
+
+This is useful for allowing fresh logins to do some critical things (maybe change
+a password, or complete an online purchase), but to deny those features to
+non-fresh tokens without verifying their username/password. This still allows your
+users to access any of the normal jwt_protected endpoints while using a non-fresh
+token. Using these wisely can lead to a more secure site, without creating
+unnecessarily bad users experiences by having to re-login all the time.
+
+The provided API gives you the power to use the token freshness however you may
+want to. A very natural way to do this would be to mark a token as fresh when they
+first login, mark any tokens generated with the refresh token to be not fresh,
+and provide one more endpoint for generating new fresh tokens (via re-authing)
+without generating a new refresh token to go with it.
+```python
+from flask import Flask, jsonify, request
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, \
+    jwt_refresh_token_required, create_refresh_token, get_jwt_identity, \
+    fresh_jwt_required
+
+app = Flask(__name__)
+app.secret_key = 'super-secret'  # Change this!
+jwt = JWTManager(app)
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+    if username != 'test' and password != 'test':
+        return jsonify({"msg": "Bad username or password"}), 401
+
+    ret = {
+        'access_token': create_access_token(identity=username, fresh=True),
+        'refresh_token': create_refresh_token(identity=username)
+    }
+    return jsonify(ret), 200
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+    if username != 'test' and password != 'test':
+        return jsonify({"msg": "Bad username or password"}), 401
+
+    ret = {'access_token': create_access_token(identity=username, fresh=True)}
+    return jsonify(ret), 200
+
+
+@app.route('/refresh', methods=['POST'])
+@jwt_refresh_token_required
+def refresh():
+    current_user = get_jwt_identity()
+    ret = {
+        'access_token': create_access_token(identity=current_user, fresh=False)
+    }
+    return jsonify(ret), 200
+
+
+@app.route('/protected', methods=['GET'])
+@jwt_required
+def protected():
+    username = get_jwt_identity()
+    return jsonify({'hello': 'from {}'.format(username)}), 200
+
+
+@app.route('/protected-fresh', methods=['GET'])
+@fresh_jwt_required
+def protected():
+    username = get_jwt_identity()
+    return jsonify({'hello': 'from {}'.format(username)}), 200
+
+if __name__ == '__main__':
+    app.run()
+```
+The only real things to note here is the new @fresh_jwt_required decorator, and
+the optional 'fresh=' keyword passed to the 'create_access_token' methods.
 
 ### Changing Default Behaviors
 TODO

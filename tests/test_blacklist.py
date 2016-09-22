@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import simplekv.memory
 from flask import Flask, jsonify, request
-from flask_jwt_extended.blacklist import _get_token_ttl
+from flask_jwt_extended.blacklist import _get_token_ttl, get_stored_token
 from flask_jwt_extended.utils import _encode_refresh_token, _decode_jwt, \
     fresh_jwt_required, get_jwt_identity
 
@@ -32,6 +32,13 @@ class TestEndpoints(unittest.TestCase):
                 'refresh_token': create_refresh_token(username)
             }
             return jsonify(ret), 200
+
+        @self.app.route('/auth/token/<identity>', methods=['GET'])
+        def get_single_token(identity):
+            try:
+                return jsonify(get_stored_token(identity)), 200
+            except KeyError:
+                return jsonify({"msg": "token not found"}), 404
 
         @self.app.route('/auth/tokens/<identity>', methods=['GET'])
         def list_identity_tokens(identity):
@@ -358,3 +365,23 @@ class TestEndpoints(unittest.TestCase):
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 200)
         self.assertEqual(len(data), 0)
+
+    def test_get_stored_token(self):
+        self._login('test1')
+        response = self.client.get('/auth/tokens')
+        data = json.loads(response.get_data(as_text=True))
+        refresh_jti = data[0]['token']['jti']
+
+        response = self.client.get('/auth/token/{}'.format(refresh_jti))
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 200)
+        self.assertIn('token', data)
+        self.assertIn('revoked', data)
+        self.assertIn('last_used', data)
+
+        response = self.client.get('/auth/token/404notokenfound')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 404)
+        self.assertIn('msg', data)

@@ -74,17 +74,10 @@ def _get_token_from_store(jti):
 
 
 def _update_token(jti, revoked):
-    try:
-        stored_data = _get_token_from_store(jti)
-        token = stored_data['token']
-        store_token(token, revoked)
-    except KeyError:
-        # Token does not exist in the store. Could have been automatically
-        # removed from the store via ttl expiring # (in case of redis or
-        # memcached), or could have never been in the store, which probably
-        # indicates a bug in the callers code.
-        # TODO should this raise an error? Or silently return?
-        raise
+    # Raises a KeyError if the token is not found in the store
+    stored_data = _get_token_from_store(jti)
+    token = stored_data['token']
+    store_token(token, revoked)
 
 
 @_verify_blacklist_enabled
@@ -105,6 +98,11 @@ def unrevoke_token(jti):
     :param jti: The jti of the token to revoke
     """
     _update_token(jti, revoked=False)
+
+
+@_verify_blacklist_enabled
+def get_stored_token(jti):
+    return _get_token_from_store(jti)
 
 
 @_verify_blacklist_enabled

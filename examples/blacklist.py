@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, jwt_required, \
     get_jwt_identity, revoke_token, unrevoke_token, \
     get_stored_tokens, get_all_stored_tokens, create_access_token, \
-    create_refresh_token, jwt_refresh_token_required
+    create_refresh_token, jwt_refresh_token_required, get_stored_token
 
 # Setup flask
 app = Flask(__name__)
@@ -18,7 +18,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=5)
 
 # Enable and configure the JWT blacklist / token revoke. We are using an in
 # memory store for this example. In production, you should use something
-# else (csuch as redis, memcached, sqlalchemy). See here for options:
+# persistant (such as redis, memcached, sqlalchemy). See here for options:
 # http://pythonhosted.org/simplekv/
 app.config['JWT_BLACKLIST_ENABLED'] = True
 app.config['JWT_BLACKLIST_STORE'] = simplekv.memory.DictStore()
@@ -60,33 +60,40 @@ def list_identity_tokens():
 
 
 # Endpoint for listing all tokens. In your app, you should either not expose
-# this, or put some addition security on top of it so only trusted users,
+# this endpoint, or put some addition security on top of it so only trusted users,
 # (administrators, etc) can access it
 @app.route('/auth/all-tokens')
 def list_all_tokens():
     return jsonify(get_all_stored_tokens()), 200
 
 
-# Endpoint for revoking a token
+# Endpoint for allowing users to revoke their tokens
 @app.route('/auth/tokens/revoke/<string:jti>', methods=['PUT'])
 @jwt_required
 def change_jwt_revoke_state(jti):
+    username = get_jwt_identity()
     try:
+        token_data = get_stored_token(jti)
+        if token_data['token']['identity'] != username:
+            raise KeyError
         revoke_token(jti)
         return jsonify({"msg": "Token successfully revoked"}), 200
     except KeyError:
-        return jsonify({'msg': 'Token not foun'}), 404
+        return jsonify({'msg': 'Token not found'}), 404
 
 
-# Endpoint for un-revoking a token
 @app.route('/auth/tokens/unrevoke/<string:jti>', methods=['PUT'])
 @jwt_required
-def change_jwt_revoke_state(jti):
+def change_jwt_unrevoke_state(jti):
+    username = get_jwt_identity()
     try:
+        token_data = get_stored_token(jti)
+        if token_data['token']['identity'] != username:
+            raise KeyError
         unrevoke_token(jti)
         return jsonify({"msg": "Token successfully unrevoked"}), 200
     except KeyError:
-        return jsonify({'msg': 'Token not foun'}), 404
+        return jsonify({'msg': 'Token not found'}), 404
 
 
 @app.route('/protected', methods=['GET'])

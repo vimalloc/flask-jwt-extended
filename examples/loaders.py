@@ -6,7 +6,9 @@ app.secret_key = 'super-secret'  # Change this!
 jwt = JWTManager(app)
 
 
-@jwt.expired_token_callback
+# Use the expired_token_loader to call this function whenever an expired but
+# otherwise valid access token tries to access an endpoint
+@jwt.expired_token_loader
 def my_expired_token_callback():
     return jsonify({
         'status': 401,

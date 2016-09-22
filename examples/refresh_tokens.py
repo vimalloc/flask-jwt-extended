@@ -14,6 +14,8 @@ def login():
     if username != 'test' and password != 'test':
         return jsonify({"msg": "Bad username or password"}), 401
 
+    # Use create_access_token() and create_refresh_token() to create our
+    # access and refresh tokens
     ret = {
         'access_token': create_access_token(identity=username),
         'refresh_token': create_refresh_token(identity=username)
@@ -21,6 +23,11 @@ def login():
     return jsonify(ret), 200
 
 
+# The jwt_refresh_token_required decorator insures a valid refresh token is
+# present in the request before calling this endpoint. We can use the
+# get_jwt_identity() function to get the identity of the refresh toke, and use
+# the create_access_token() function again to make a new access token for this
+# identity.
 @app.route('/refresh', methods=['POST'])
 @jwt_refresh_token_required
 def refresh():

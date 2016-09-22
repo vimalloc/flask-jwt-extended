@@ -378,7 +378,7 @@ class TestEndpoints(unittest.TestCase):
         self.assertEqual(status_code, 200)
         self.assertIn('token', data)
         self.assertIn('revoked', data)
-        self.assertIn('last_used', data)
+        self.assertEqual(len(data), 2)
 
         response = self.client.get('/auth/token/404notokenfound')
         status_code = response.status_code

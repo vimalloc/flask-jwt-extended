@@ -34,10 +34,6 @@ def _verify_blacklist_enabled(fn):
     return wrapper
 
 
-def _utc_datetime_to_ts(dt):
-    return calendar.timegm(dt.utctimetuple())
-
-
 def _ts_to_utc_datetime(ts):
     return datetime.datetime.utcfromtimestamp(ts)
 
@@ -159,7 +155,6 @@ def store_token(token, revoked):
     """
     data_to_store = json.dumps({
         'token': token,
-        'last_used': _utc_datetime_to_ts(datetime.datetime.utcnow()),
         'revoked': revoked
     }).encode('utf-8')
 

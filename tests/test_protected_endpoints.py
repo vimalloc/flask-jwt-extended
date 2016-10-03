@@ -62,8 +62,8 @@ class TestEndpoints(unittest.TestCase):
         data = json.loads(response.get_data(as_text=True))
         return status_code, data
 
-    def _jwt_get(self, url, jwt):
-        auth_header = 'Bearer {}'.format(jwt)
+    def _jwt_get(self, url, jwt, auth_header='Bearer'):
+        auth_header = '{} {}'.format(auth_header, jwt).strip()
         response = self.client.get(url, headers={'Authorization': auth_header})
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
@@ -278,3 +278,23 @@ class TestEndpoints(unittest.TestCase):
         status, data = self._jwt_get('/claims', access_token)
         self.assertEqual(status, 200)
         self.assertEqual(data, {'username': 'test', 'claims': {'foo': 'bar'}})
+
+    def test_different_auth_header(self):
+        response = self.client.post('/auth/login')
+        data = json.loads(response.get_data(as_text=True))
+        access_token = data['access_token']
+
+        self.app.config['JWT_AUTH_HEADER'] = 'JWT'
+        status, data = self._jwt_get('/protected', access_token, auth_header='JWT')
+        self.assertEqual(data, {'msg': 'hello world'})
+        self.assertEqual(status, 200)
+
+        self.app.config['JWT_AUTH_HEADER'] = ''
+        status, data = self._jwt_get('/protected', access_token, auth_header='')
+        self.assertEqual(data, {'msg': 'hello world'})
+        self.assertEqual(status, 200)
+
+        self.app.config['JWT_AUTH_HEADER'] = ''
+        status, data = self._jwt_get('/protected', access_token, auth_header='Bearer')
+        self.assertIn('msg', data)
+        self.assertEqual(status, 422)

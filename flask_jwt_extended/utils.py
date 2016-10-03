@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as ctx_stack
 
 from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
-    get_algorithm, get_blacklist_enabled, get_blacklist_checks
+    get_algorithm, get_blacklist_enabled, get_blacklist_checks, get_auth_header
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthHeaderError, WrongTokenError, RevokedTokenError, \
     FreshTokenRequired
@@ -143,15 +143,19 @@ def _decode_jwt_from_request():
         raise NoAuthHeaderError("Missing Authorization Header")
 
     # Make sure the header is valid
+    expected_header = get_auth_header()
     parts = auth_header.split()
-    if parts[0] != 'Bearer':
-        msg = "Badly formatted authorization header. Should be 'Bearer <JWT>'"
-        raise InvalidHeaderError(msg)
-    elif len(parts) != 2:
-        msg = "Badly formatted authorization header. Should be 'Bearer <JWT>'"
-        raise InvalidHeaderError(msg)
+    if not expected_header:
+        if len(parts) != 1:
+            msg = "Badly formatted authorization header. Should be '<JWT>'"
+            raise InvalidHeaderError(msg)
+        token = parts[0]
+    else:
+        if parts[0] != expected_header or len(parts) != 2:
+            msg = "Bad authorization header. Expected '{} <JWT>'".format(expected_header)
+            raise InvalidHeaderError(msg)
+        token = parts[1]
 
-    token = parts[1]
     secret = _get_secret_key()
     algorithm = get_algorithm()
     return _decode_jwt(token, secret, algorithm)

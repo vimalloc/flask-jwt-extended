@@ -3,6 +3,9 @@ from flask import current_app
 
 # Defaults
 
+# Authorize header type, what we are expecting to see in the auth header
+AUTH_HEADER = 'Bearer'
+
 # How long an access token will live before it expires.
 ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=15)
 
@@ -26,6 +29,10 @@ BLACKLIST_STORE = None
 
 # blacklist check requests. Possible values are all and refresh
 BLACKLIST_TOKEN_CHECKS = 'refresh'
+
+
+def get_auth_header():
+    return current_app.config.get('JWT_AUTH_HEADER', AUTH_HEADER)
 
 
 def get_access_expires():

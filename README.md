@@ -359,6 +359,7 @@ The available options are:
 
 | Name   | Description | Options | Default|
 | ------ | ----------- | ------- | ------ |
+|JWT_AUTH_HEADER | What to use in the authorization header (ex: Bearer <access_token>) | Any string (empty string to have it just be the access token in the authorization header) | 'Bearer' |
 |JWT_ACCESS_TOKEN_EXPIRES | How long an access token should live | datetime.timedelta | 15 minutes|
 |JWT_REFRESH_TOKEN_EXPIRES | How long a refresh token should live | datetime.timedelta | 30 days |
 |JWT_ALGORITHM | Which algorithm to use with the JWT. | [See here] (https://pyjwt.readthedocs.io/en/latest/algorithms.html) | HS256 |

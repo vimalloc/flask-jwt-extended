@@ -153,7 +153,8 @@ def _decode_jwt_from_request():
 
     token = parts[1]
     secret = _get_secret_key()
-    return _decode_jwt(token, secret, 'HS256')
+    algorithm = get_algorithm()
+    return _decode_jwt(token, secret, algorithm)
 
 
 def _handle_callbacks_on_error(fn):

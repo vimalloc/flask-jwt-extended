@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 import sphinx_rtd_theme
-
+import sys, os
 # flask-jwt-extended documentation build configuration file, created by
 # sphinx-quickstart on Thu Oct  6 13:07:36 2016.
 #
@@ -18,9 +18,14 @@ import sphinx_rtd_theme
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
+
+
 # sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../../..'))
+sys.path.insert(0, os.path.abspath('../flask_jwt_extended/'))
+# sys.path.insert(0, os.path.abspath('../../flask-jwt-extended/flask_jwt_extended/'))
+
+print sys.path
 
 # -- General configuration ------------------------------------------------
 
@@ -31,8 +36,13 @@ import sphinx_rtd_theme
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
-
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary'
+]
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

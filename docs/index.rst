@@ -18,7 +18,7 @@ Welcome to flask-jwt-extended's documentation!
    changing_default_behavior
    options
    blacklist_and_token_revoking
-   testing_and_code_coverage
+   testing_and_coverage
 
 
 

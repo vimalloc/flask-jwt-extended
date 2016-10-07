@@ -1,46 +1,67 @@
 import datetime
 from flask import current_app
 
-# Defaults
-
-# Authorize header type, what we are expecting to see in the auth header
-AUTH_HEADER = 'Bearer'
-
-# How long an access token will live before it expires.
-ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=15)
-
-# How long the refresh token will live before it expires
-REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)
-
-# What algorithm to use to sign the token. See here for a list of options:
-# https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py
-ALGORITHM = 'HS256'
-
-# Blacklist enabled
-BLACKLIST_ENABLED = False
-
+# TODO move this to the docs
 # blacklist storage options (simplekv). If using a storage option that supports
 # the simplekv.TimeToLiveMixin (example: redis, memcached), the TTL will be
 # automatically set to 15 minutes after the token expires (to account for
 # clock drift between different jwt providers/consumers).
 #
 # See: http://pythonhosted.org/simplekv/index.html#simplekv.TimeToLiveMixin
+
+
+# Where to look for the JWT. Available options are cookie and header
+REQUEST_JWT_LOCATION = 'header'
+
+# Options for where to get the JWT if using a header approach
+HEADER_NAME = 'Authorization'
+HEADER_TYPE = 'Bearer'
+
+# Options for where to get and handling JWTs if using a cookie approach
+COOKIE_ACCESS_TOKEN_NAME = 'access_token'
+COOKIE_REFRESH_TOKEN_NAME = 'refresh_token'
+COOKIE_CSRF_DOUBLE_SUBMIT = False
+COOKIE_XSRF_ACCESS_NAME = 'xsrf_access_token'
+COOKIE_XSRF_REFRESH_NAME = 'xsrf_refresh_token'
+
+# How long an a token will live before they expire.
+ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=15)
+REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)
+
+# What algorithm to use to sign the token. See here for a list of options:
+# https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py (note that
+# public private key is not yet supported)
+ALGORITHM = 'HS256'
+
+# Options for blacklisting/revoking tokens
+BLACKLIST_ENABLED = False
 BLACKLIST_STORE = None
-
-# blacklist check requests. Possible values are all and refresh
-BLACKLIST_TOKEN_CHECKS = 'refresh'
+BLACKLIST_TOKEN_CHECKS = 'refresh'  # valid options are 'all', and 'refresh'
 
 
-def get_auth_header():
-    return current_app.config.get('JWT_AUTH_HEADER', AUTH_HEADER)
+def get_jwt_header_name():
+    name = current_app.config.get('JWT_HEADER_NAME', HEADER_NAME)
+    if not name:
+        raise RuntimeError("JWT_HEADER_NAME must be set")
+    return name
+
+
+def get_jwt_header_type():
+    return current_app.config.get('JWT_HEADER_TYPE', HEADER_TYPE)
 
 
 def get_access_expires():
-    return current_app.config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_TOKEN_EXPIRES)
+    delta = current_app.config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_TOKEN_EXPIRES)
+    if not isinstance(delta, datetime.timedelta):
+        raise RuntimeError('JWT_ACCESS_TOKEN_EXPIRES must be a datetime.timedelta')
+    return delta
 
 
 def get_refresh_expires():
-    return current_app.config.get('JWT_REFRESH_TOKEN_EXPIRES', REFRESH_TOKEN_EXPIRES)
+    delta = current_app.config.get('JWT_REFRESH_TOKEN_EXPIRES', REFRESH_TOKEN_EXPIRES)
+    if not isinstance(delta, datetime.timedelta):
+        raise RuntimeError('JWT_REFRESH_TOKEN_EXPIRES must be a datetime.timedelta')
+    return delta
 
 
 def get_algorithm():

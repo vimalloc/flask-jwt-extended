@@ -62,9 +62,9 @@ class TestEndpoints(unittest.TestCase):
         data = json.loads(response.get_data(as_text=True))
         return status_code, data
 
-    def _jwt_get(self, url, jwt, auth_header='Bearer'):
-        auth_header = '{} {}'.format(auth_header, jwt).strip()
-        response = self.client.get(url, headers={'Authorization': auth_header})
+    def _jwt_get(self, url, jwt, header_name='Authorization', header_type='Bearer'):
+        header_type = '{} {}'.format(header_type, jwt).strip()
+        response = self.client.get(url, headers={header_name: header_type})
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         return status_code, data
@@ -279,22 +279,32 @@ class TestEndpoints(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(data, {'username': 'test', 'claims': {'foo': 'bar'}})
 
-    def test_different_auth_header(self):
+    def test_different_headers(self):
         response = self.client.post('/auth/login')
         data = json.loads(response.get_data(as_text=True))
         access_token = data['access_token']
 
-        self.app.config['JWT_AUTH_HEADER'] = 'JWT'
-        status, data = self._jwt_get('/protected', access_token, auth_header='JWT')
+        self.app.config['JWT_HEADER_TYPE'] = 'JWT'
+        status, data = self._jwt_get('/protected', access_token, header_type='JWT')
         self.assertEqual(data, {'msg': 'hello world'})
         self.assertEqual(status, 200)
 
-        self.app.config['JWT_AUTH_HEADER'] = ''
-        status, data = self._jwt_get('/protected', access_token, auth_header='')
+        self.app.config['JWT_HEADER_TYPE'] = ''
+        status, data = self._jwt_get('/protected', access_token, header_type='')
         self.assertEqual(data, {'msg': 'hello world'})
         self.assertEqual(status, 200)
 
-        self.app.config['JWT_AUTH_HEADER'] = ''
-        status, data = self._jwt_get('/protected', access_token, auth_header='Bearer')
+        self.app.config['JWT_HEADER_TYPE'] = ''
+        status, data = self._jwt_get('/protected', access_token, header_type='Bearer')
         self.assertIn('msg', data)
         self.assertEqual(status, 422)
+
+        self.app.config['JWT_HEADER_TYPE'] = 'Bearer'
+        self.app.config['JWT_HEADER_NAME'] = 'Auth'
+        status, data = self._jwt_get('/protected', access_token, header_name='Auth')
+        self.assertIn('msg', data)
+        self.assertEqual(status, 401)
+
+        status, data = self._jwt_get('/protected', access_token, header_name='Authorization')
+        self.assertEqual(data, {'msg': 'hello world'})
+        self.assertEqual(status, 200)

@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as ctx_stack
 
 from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
-    get_algorithm, get_blacklist_enabled, get_blacklist_checks, get_auth_header
+    get_algorithm, get_blacklist_enabled, get_blacklist_checks, get_jwt_header_type
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthHeaderError, WrongTokenError, RevokedTokenError, \
     FreshTokenRequired
@@ -143,7 +143,7 @@ def _decode_jwt_from_request():
         raise NoAuthHeaderError("Missing Authorization Header")
 
     # Make sure the header is valid
-    expected_header = get_auth_header()
+    expected_header = get_jwt_header_type()
     parts = auth_header.split()
     if not expected_header:
         if len(parts) != 1:

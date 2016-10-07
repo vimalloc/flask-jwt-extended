@@ -1,20 +1,24 @@
 import datetime
 import json
+import os
 import uuid
-
 from functools import wraps
 
+import binascii
 import jwt
 import six
-from werkzeug.local import LocalProxy
-from flask import request, jsonify, current_app
+from flask import request, current_app
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as ctx_stack
 
 from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
-    get_algorithm, get_blacklist_enabled, get_blacklist_checks, get_jwt_header_type
+    get_algorithm, get_blacklist_enabled, get_blacklist_checks, get_jwt_header_type, \
+    get_access_cookie_name, get_cookie_secure, get_access_cookie_path, \
+    get_cookie_csrf_protect, get_access_csrf_cookie_name, \
+    get_refresh_cookie_name, get_refresh_cookie_path, \
+    get_refresh_csrf_cookie_name
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthHeaderError, WrongTokenError, RevokedTokenError, \
     FreshTokenRequired
@@ -35,6 +39,11 @@ def get_jwt_claims():
     claims are present, an empty dict is returned
     """
     return getattr(ctx_stack.top, 'jwt_user_claims', {})
+
+
+# TODO set csrf token in jwt when creating tokens (if enabled)
+def _create_xsrf_token():
+    return binascii.hexlify(os.urandom(60))
 
 
 def _encode_access_token(identity, secret, algorithm, token_expire_delta,
@@ -303,6 +312,7 @@ def create_access_token(identity, fresh=True):
     access_expire_delta = get_access_expires()
     algorithm = get_algorithm()
     user_claims = current_app.jwt_manager.user_claims_callback(identity)
+
     access_token = _encode_access_token(identity, secret, algorithm, access_expire_delta,
                                         fresh=fresh, user_claims=user_claims)
     return access_token
@@ -313,3 +323,56 @@ def _get_secret_key():
     if not key:
         raise RuntimeError('flask SECRET_KEY must be set')
     return key
+
+
+def _get_csrf_token(encoded_token):
+    secret = _get_secret_key()
+    algorithm = get_algorithm()
+    token = _decode_jwt(encoded_token, secret, algorithm)
+    try:
+        return token['csrf']
+    except KeyError:
+        raise RuntimeError('JWT does not have csrf token set. Is '
+                           'JWT_COOKIE_CSRF_PROTECT set to True?')
+
+
+def set_access_cookies(response, encoded_access_token):
+    """
+    Takes a flask response object, and configures it to set the encoded access
+    token in a cookie (as well as a csrf access cookie if enabled)
+    """
+    # Set the access JWT in the cookie
+    response.set_cookie(get_access_cookie_name(),
+                        value=encoded_access_token,
+                        secure=get_cookie_secure(),
+                        httponly=True,
+                        path=get_access_cookie_path())
+
+    # If enabled, set the csrf double submit access cookie
+    if get_cookie_csrf_protect():
+        response.set_cookie(get_access_csrf_cookie_name(),
+                            value=_get_csrf_token(encoded_access_token),
+                            secure=get_cookie_secure(),
+                            httponly=False,
+                            path=get_access_cookie_path())
+
+
+def set_refresh_cookie(response, encoded_refresh_token):
+    """
+    Takes a flask response object, and configures it to set the encoded refresh
+    token in a cookie (as well as a csrf refresh cookie if enabled)
+    """
+    # Set the refresh JWT in the cookie
+    response.set_cookie(get_refresh_cookie_name(),
+                        value=encoded_refresh_token,
+                        secure=get_cookie_secure(),
+                        httponly=True,
+                        path=get_refresh_cookie_path())
+
+    # If enabled, set the csrf double submit refresh cookie
+    if get_cookie_csrf_protect():
+        response.set_cookie(get_refresh_csrf_cookie_name(),
+                            value=_get_csrf_token(encoded_refresh_token),
+                            secure=get_cookie_secure(),
+                            httponly=False,
+                            path=get_refresh_cookie_path())

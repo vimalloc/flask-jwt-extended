@@ -20,6 +20,7 @@ Welcome to flask-jwt-extended's documentation!
    blacklist_and_token_revoking
    testing_and_coverage
 
+   documentation
 
 
 

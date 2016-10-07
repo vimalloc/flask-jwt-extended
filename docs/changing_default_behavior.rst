@@ -51,10 +51,10 @@ We provide what we think are sensible behaviors when attempting to access a prot
 Loader functions are:
 ************************************
 
-.. automodule:: jwt_manager.py
+.. autoclass:: flask_jwt_extended.jwt_manager.JWTManager
   :members:
-
-.. literalinclude:: ../flask_jwt_extended/jwt_manager.py
-  :language: python
-  :emphasize-lines: 60-122
-  :linenos:
+..
+.. .. literalinclude:: ../flask_jwt_extended/jwt_manager.py
+..   :language: python
+..   :emphasize-lines: 60-122
+..   :linenos:

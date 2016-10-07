@@ -1,6 +1,5 @@
 Babel==2.3.4
 Flask==0.11.1
-Flask-JWT-Extended==0.0.2
 Jinja2==2.8
 MarkupSafe==0.23
 PyJWT==1.4.2
@@ -34,4 +33,3 @@ tox==2.3.1
 virtualenv==15.0.3
 watchdog==0.8.3
 wheel==0.29.0
-wsgiref==0.1.2

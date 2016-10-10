@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, \
-    jwt_refresh_token_required, create_refresh_token, get_jwt_identity
+from flask_jwt_extended import JWTManager, jwt_required, \
+    create_access_token, jwt_refresh_token_required, \
+    create_refresh_token, get_jwt_identity
 
 app = Flask(__name__)
 app.secret_key = 'super-secret'  # Change this!
@@ -23,11 +24,11 @@ def login():
     return jsonify(ret), 200
 
 
-# The jwt_refresh_token_required decorator insures a valid refresh token is
-# present in the request before calling this endpoint. We can use the
-# get_jwt_identity() function to get the identity of the refresh toke, and use
-# the create_access_token() function again to make a new access token for this
-# identity.
+# The jwt_refresh_token_required decorator insures a valid refresh
+# token is present in the request before calling this endpoint. We
+# can use the get_jwt_identity() function to get the identity of
+# the refresh toke, and use the create_access_token() function again
+# to make a new access token for this identity.
 @app.route('/refresh', methods=['POST'])
 @jwt_refresh_token_required
 def refresh():

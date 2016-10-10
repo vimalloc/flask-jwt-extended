@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 #
-import sphinx_rtd_theme
 import sys, os
 # flask-jwt-extended documentation build configuration file, created by
 # sphinx-quickstart on Thu Oct  6 13:07:36 2016.
@@ -20,12 +19,9 @@ import sys, os
 #
 
 
-# sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../../..'))
 sys.path.insert(0, os.path.abspath('../flask_jwt_extended/'))
-# sys.path.insert(0, os.path.abspath('../../flask-jwt-extended/flask_jwt_extended/'))
-
-print sys.path
+sys.path.append(os.path.join(os.path.dirname(__file__), '_themes'))
 
 # -- General configuration ------------------------------------------------
 
@@ -114,7 +110,7 @@ exclude_patterns = []
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+# pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -131,7 +127,8 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+#html_theme = 'sphinx_rtd_theme'
+html_theme = 'flask'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

@@ -193,6 +193,8 @@ def _decode_jwt_from_cookies(type):
     algorithm = get_algorithm()
     token = _decode_jwt(token, secret, algorithm)
 
+    # TODO use a safe string comparison here, to prevent timing attacks on the
+    #      csrf token
     if get_cookie_csrf_protect():
         csrf = request.headers.get(csrf_header_key, None)
         if not csrf or csrf != token['csrf']:

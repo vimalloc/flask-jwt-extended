@@ -1,13 +1,15 @@
 from flask import Flask, jsonify, request
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token
+from flask_jwt_extended import JWTManager, jwt_required,\
+    create_access_token
 
 app = Flask(__name__)
 app.secret_key = 'super-secret'  # Change this!
 jwt = JWTManager(app)
 
 
-# Use the expired_token_loader to call this function whenever an expired but
-# otherwise valid access token tries to access an endpoint
+# Use the expired_token_loader to call this function whenever an
+# expired but # otherwise valid access token tries to access
+# an endpoint
 @jwt.expired_token_loader
 def my_expired_token_callback():
     return jsonify({

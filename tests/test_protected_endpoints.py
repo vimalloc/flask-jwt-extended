@@ -5,14 +5,10 @@ from datetime import timedelta
 
 from flask import Flask, jsonify
 from flask_jwt_extended.utils import _encode_access_token, get_jwt_claims, \
-    get_jwt_identity
+    get_jwt_identity, set_refresh_cookie, set_access_cookies
 from flask_jwt_extended import JWTManager, create_refresh_token, \
     jwt_refresh_token_required, create_access_token, fresh_jwt_required, \
     jwt_required
-
-
-# TODO test that config options in app.config successfully override defaults
-# TODO move getting config options as helper methods in config.py
 
 
 class TestEndpoints(unittest.TestCase):
@@ -308,3 +304,206 @@ class TestEndpoints(unittest.TestCase):
         status, data = self._jwt_get('/protected', access_token, header_name='Authorization')
         self.assertEqual(data, {'msg': 'hello world'})
         self.assertEqual(status, 200)
+
+
+class TestEndpointsWithCookies(unittest.TestCase):
+
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.app.secret_key = 'super=secret'
+        self.app.config['JWT_TOKEN_LOCATION'] = 'cookies'
+        self.app.config['JWT_ACCESS_COOKIE_PATH'] = '/api/'
+        self.app.config['JWT_REFRESH_COOKIE_PATH'] = '/auth/refresh'
+        self.jwt_manager = JWTManager(self.app)
+        self.client = self.app.test_client()
+
+        @self.app.route('/auth/login', methods=['POST'])
+        def login():
+            # Create the tokens we will be sending back to the user
+            access_token = create_access_token(identity='test')
+            refresh_token = create_refresh_token(identity='test')
+
+            # Set the JWTs and the CSRF double submit protection cookies in this response
+            resp = jsonify({'login': True})
+            set_access_cookies(resp, access_token)
+            set_refresh_cookie(resp, refresh_token)
+            return resp, 200
+
+        @self.app.route('/auth/refresh', methods=['POST'])
+        @jwt_refresh_token_required
+        def refresh():
+            username = get_jwt_identity()
+            access_token = create_access_token(username, fresh=False)
+            resp = jsonify({'refresh': True})
+            set_access_cookies(resp, access_token)
+            return resp, 200
+
+        @self.app.route('/api/protected')
+        @jwt_required
+        def protected():
+            return jsonify({'msg': "hello world"})
+
+    def _jwt_post(self, url, jwt):
+        response = self.client.post(url, content_type='application/json',
+                                    headers={'Authorization': 'Bearer {}'.format(jwt)})
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        return status_code, data
+
+    def _jwt_get(self, url, jwt, header_name='Authorization', header_type='Bearer'):
+        header_type = '{} {}'.format(header_type, jwt).strip()
+        response = self.client.get(url, headers={header_name: header_type})
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        return status_code, data
+
+    def _login(self):
+        resp = self.client.post('/auth/login')
+        index = 1
+
+        access_cookie_str = resp.headers[index][1]
+        access_cookie_key = access_cookie_str.split('=')[0]
+        access_cookie_value = "".join(access_cookie_str.split('=')[1:])
+        self.client.set_cookie('localhost', access_cookie_key, access_cookie_value)
+        index += 1
+
+        if self.app.config['JWT_COOKIE_CSRF_PROTECT']:
+            access_csrf_str = resp.headers[index][1]
+            access_csrf_key = access_csrf_str.split('=')[0]
+            access_csrf_value = "".join(access_csrf_str.split('=')[1:])
+            self.client.set_cookie('localhost', access_csrf_key, access_csrf_value)
+            index += 1
+            access_csrf = access_csrf_value.split(';')[0]
+        else:
+            access_csrf = ""
+
+        refresh_cookie_str = resp.headers[index][1]
+        refresh_cookie_key = refresh_cookie_str.split('=')[0]
+        refresh_cookie_value = "".join(refresh_cookie_str.split('=')[1:])
+        self.client.set_cookie('localhost', refresh_cookie_key, refresh_cookie_value)
+        index += 1
+
+        if self.app.config['JWT_COOKIE_CSRF_PROTECT']:
+            refresh_csrf_str = resp.headers[index][1]
+            refresh_csrf_key = refresh_csrf_str.split('=')[0]
+            refresh_csrf_value = "".join(refresh_csrf_str.split('=')[1:])
+            self.client.set_cookie('localhost', refresh_csrf_key, refresh_csrf_value)
+            refresh_csrf = refresh_csrf_value.split(';')[0]
+        else:
+            refresh_csrf = ""
+
+        return access_csrf, refresh_csrf
+
+    def test_headers(self):
+        # Try with default options
+        resp = self.client.post('/auth/login')
+        access_cookie = resp.headers[1][1]
+        access_csrf = resp.headers[2][1]
+        refresh_cookie = resp.headers[3][1]
+        refresh_csrf = resp.headers[4][1]
+        self.assertIn('access_token_cookie', access_cookie)
+        self.assertIn('csrf_access_token', access_csrf)
+        self.assertIn('Path=/api/', access_csrf)
+        self.assertIn('refresh_token_cookie', refresh_cookie)
+        self.assertIn('csrf_refresh_token', refresh_csrf)
+        self.assertIn('Path=/auth/refresh', refresh_csrf)
+
+        # Try with overwritten options
+        self.app.config['JWT_ACCESS_COOKIE_NAME'] = 'new_access_cookie'
+        self.app.config['JWT_REFRESH_COOKIE_NAME'] = 'new_refresh_cookie'
+        self.app.config['JWT_ACCESS_CSRF_COOKIE_NAME'] = 'x_csrf_access_token'
+        self.app.config['JWT_REFRESH_CSRF_COOKIE_NAME'] = 'x_csrf_refresh_token'
+        self.app.config['JWT_ACCESS_COOKIE_PATH'] = None
+        self.app.config['JWT_REFRESH_COOKIE_PATH'] = None
+
+        resp = self.client.post('/auth/login')
+        access_cookie = resp.headers[1][1]
+        access_csrf = resp.headers[2][1]
+        refresh_cookie = resp.headers[3][1]
+        refresh_csrf = resp.headers[4][1]
+        self.assertIn('new_access_cookie', access_cookie)
+        self.assertIn('x_csrf_access_token', access_csrf)
+        self.assertNotIn('Path=/', access_csrf)
+        self.assertIn('new_refresh_cookie', refresh_cookie)
+        self.assertIn('x_csrf_refresh_token', refresh_csrf)
+        self.assertNotIn('Path=/', refresh_csrf)
+
+    def test_endpoints_with_cookies(self):
+        self.app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+
+        # Try access without logging in
+        response = self.client.get('/api/protected')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 401)
+        self.assertIn('msg', data)
+
+        # Try refresh without logging in
+        response = self.client.post('/auth/refresh')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 401)
+        self.assertIn('msg', data)
+
+        # Try with logging in
+        self._login()
+        response = self.client.get('/api/protected')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 200)
+        self.assertEqual(data, {'msg': 'hello world'})
+
+        # Try refresh without logging in
+        response = self.client.post('/auth/refresh')
+        access_cookie_str = response.headers[1][1]
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertIn('access_token_cookie', access_cookie_str)
+        self.assertEqual(status_code, 200)
+        self.assertEqual(data, {'refresh': True})
+
+        # Try accessing endpoint with newly refreshed token
+        access_cookie_key = access_cookie_str.split('=')[0]
+        access_cookie_value = "".join(access_cookie_str.split('=')[1:])
+        self.client.set_cookie('localhost', access_cookie_key, access_cookie_value)
+        response = self.client.get('/api/protected')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 200)
+        self.assertEqual(data, {'msg': 'hello world'})
+
+    def test_access_endpoints_with_cookies_and_csrf(self):
+        self.app.config['JWT_COOKIE_CSRF_PROTECT'] = True
+
+        # Try without logging in
+        response = self.client.get('/api/protected')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 401)
+        self.assertIn('msg', data)
+
+        # Login
+        access_csrf, refresh_csrf = self._login()
+
+        # Try with logging in but without double submit csrf protection
+        response = self.client.get('/api/protected')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 401)
+        self.assertIn('msg', data)
+
+        # Try with logged in and bad double submit token
+        response = self.client.get('/api/protected',
+                                   headers={'X-CSRF-ACCESS-TOKEN': 'banana'})
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 401)
+        self.assertIn('msg', data)
+
+        # Try with logged in and good double submit token
+        response = self.client.get('/api/protected',
+                                   headers={'X-CSRF-ACCESS-TOKEN': access_csrf})
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 200)
+        self.assertEqual(data, {'msg': 'hello world'})

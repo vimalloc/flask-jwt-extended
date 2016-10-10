@@ -18,9 +18,10 @@ from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
     get_access_cookie_name, get_cookie_secure, get_access_cookie_path, \
     get_cookie_csrf_protect, get_access_csrf_cookie_name, \
     get_refresh_cookie_name, get_refresh_cookie_path, \
-    get_refresh_csrf_cookie_name
+    get_refresh_csrf_cookie_name, get_token_location, \
+    get_access_csrf_header_name, get_refresh_csrf_header_name
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
-    InvalidHeaderError, NoAuthHeaderError, WrongTokenError, RevokedTokenError, \
+    InvalidHeaderError, NoAuthorizationError, WrongTokenError, RevokedTokenError, \
     FreshTokenRequired
 from flask_jwt_extended.blacklist import check_if_token_revoked, store_token
 
@@ -42,8 +43,8 @@ def get_jwt_claims():
 
 
 # TODO set csrf token in jwt when creating tokens (if enabled)
-def _create_xsrf_token():
-    return binascii.hexlify(os.urandom(60))
+def _create_csrf_token():
+    return str(uuid.uuid4())
 
 
 def _encode_access_token(identity, secret, algorithm, token_expire_delta,
@@ -80,6 +81,8 @@ def _encode_access_token(identity, secret, algorithm, token_expire_delta,
         'type': 'access',
         'user_claims': user_claims,
     }
+    if get_token_location() == 'cookies' and get_cookie_csrf_protect():
+        token_data['csrf'] = _create_csrf_token()
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
 
     # If blacklisting is enabled and configured to store access and refresh tokens,
@@ -110,6 +113,8 @@ def _encode_refresh_token(identity, secret, algorithm, token_expire_delta):
         'identity': identity,
         'type': 'refresh',
     }
+    if get_token_location() == 'cookies' and get_cookie_csrf_protect():
+        token_data['csrf'] = _create_csrf_token()
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
 
     # If blacklisting is enabled, store this token in our key-value store
@@ -142,14 +147,17 @@ def _decode_jwt(token, secret, algorithm):
             raise JWTDecodeError("Missing or invalid claim: fresh")
         if 'user_claims' not in data or not isinstance(data['user_claims'], dict):
             raise JWTDecodeError("Missing or invalid claim: user_claims")
+    if get_token_location() == 'cookies' and get_cookie_csrf_protect():
+        if 'csrf' not in data or not isinstance(data['csrf'], six.string_types):
+            raise JWTDecodeError("Missing or invalid claim: csrf")
     return data
 
 
-def _decode_jwt_from_request():
+def _decode_jwt_from_headers():
     # Verify we have the auth header
     auth_header = request.headers.get('Authorization', None)
     if not auth_header:
-        raise NoAuthHeaderError("Missing Authorization Header")
+        raise NoAuthorizationError("Missing Authorization Header")
 
     # Make sure the header is valid
     expected_header = get_jwt_header_type()
@@ -170,6 +178,37 @@ def _decode_jwt_from_request():
     return _decode_jwt(token, secret, algorithm)
 
 
+def _decode_jwt_from_cookies(type):
+    if type == 'access':
+        cookie_key = get_access_cookie_name()
+        csrf_header_key = get_access_csrf_header_name()
+    else:
+        cookie_key = get_refresh_cookie_name()
+        csrf_header_key = get_refresh_csrf_header_name()
+
+    token = request.cookies.get(cookie_key)
+    if not token:
+        raise NoAuthorizationError('Missing cookie "{}"'.format(cookie_key))
+    secret = _get_secret_key()
+    algorithm = get_algorithm()
+    token = _decode_jwt(token, secret, algorithm)
+
+    if get_cookie_csrf_protect():
+        csrf = request.headers.get(csrf_header_key, None)
+        if not csrf or csrf != token['csrf']:
+            raise NoAuthorizationError("Missing or invalid csrf double submit header")
+
+    return token
+
+
+def _decode_jwt_from_request(type):
+    token_location = get_token_location()
+    if token_location == 'headers':
+        return _decode_jwt_from_headers()
+    else:
+        return _decode_jwt_from_cookies(type)
+
+
 def _handle_callbacks_on_error(fn):
     """
     Helper decorator that will catch any exceptions we expect to encounter
@@ -183,7 +222,7 @@ def _handle_callbacks_on_error(fn):
 
         try:
             return fn(*args, **kwargs)
-        except NoAuthHeaderError:
+        except NoAuthorizationError:
             return m.unauthorized_callback()
         except jwt.ExpiredSignatureError:
             return m.expired_token_callback()
@@ -211,7 +250,7 @@ def jwt_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         # Attempt to decode the token
-        jwt_data = _decode_jwt_from_request()
+        jwt_data = _decode_jwt_from_request(type='access')
 
         # Verify this is an access token
         if jwt_data['type'] != 'access':
@@ -243,7 +282,7 @@ def fresh_jwt_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         # Attempt to decode the token
-        jwt_data = _decode_jwt_from_request()
+        jwt_data = _decode_jwt_from_request(type='access')
 
         # Verify this is an access token
         if jwt_data['type'] != 'access':
@@ -276,7 +315,7 @@ def jwt_refresh_token_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         # Get the JWT
-        jwt_data = _decode_jwt_from_request()
+        jwt_data = _decode_jwt_from_request(type='refresh')
 
         # verify this is a refresh token
         if jwt_data['type'] != 'refresh':
@@ -329,11 +368,7 @@ def _get_csrf_token(encoded_token):
     secret = _get_secret_key()
     algorithm = get_algorithm()
     token = _decode_jwt(encoded_token, secret, algorithm)
-    try:
-        return token['csrf']
-    except KeyError:
-        raise RuntimeError('JWT does not have csrf token set. Is '
-                           'JWT_COOKIE_CSRF_PROTECT set to True?')
+    return token['csrf']
 
 
 def set_access_cookies(response, encoded_access_token):

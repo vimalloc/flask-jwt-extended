@@ -26,7 +26,7 @@ class InvalidHeaderError(JWTExtendedException):
     pass
 
 
-class NoAuthHeaderError(JWTExtendedException):
+class NoAuthorizationError(JWTExtendedException):
     """
     An error getting header information from a request
     """

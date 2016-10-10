@@ -300,3 +300,33 @@ class JWTEncodeDecodeTests(unittest.TestCase):
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 _decode_jwt(encoded_token, 'secret', 'HS256')
+
+        # Missing and bad csrf tokens
+        self.app.config['JWT_TOKEN_LOCATION'] = 'cookies'
+        self.app.config['JWT_COOKIE_CSRF_PROTECTION'] = True
+        with self.app.test_request_context():
+            now = datetime.utcnow()
+            with self.assertRaises(JWTDecodeError):
+                token_data = {
+                    'exp': now + timedelta(minutes=5),
+                    'iat': now,
+                    'nbf': now,
+                    'jti': 'banana',
+                    'identity': 'banana',
+                    'type': 'refresh',
+                }
+                encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
+                _decode_jwt(encoded_token, 'secret', 'HS256')
+
+            with self.assertRaises(JWTDecodeError):
+                token_data = {
+                    'exp': now + timedelta(minutes=5),
+                    'iat': now,
+                    'nbf': now,
+                    'jti': 'banana',
+                    'identity': 'banana',
+                    'type': 'refresh',
+                    'csrf': True
+                }
+                encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
+                _decode_jwt(encoded_token, 'secret', 'HS256')

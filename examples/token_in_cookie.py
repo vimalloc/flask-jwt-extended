@@ -5,29 +5,36 @@ from flask_jwt_extended import JWTManager, jwt_required, create_access_token, \
     set_access_cookies, set_refresh_cookie
 
 
-# NOTE: This is being actively worked on, and is not complete yet. At present,
-#       this code will not work! It should be rolled out next week sometime
-
-
 app = Flask(__name__)
 app.secret_key = 'super-secret'  # Change this!
 jwt = JWTManager(app)
 
 
-# Configure application to store jwts in cookies with double submit csrf protection
-app.config['JWT_TOKEN_LOCATION'] = 'cookie'
-app.config['JWT_COOKIE_HTTPONLY'] = True
-app.config['JWT_COOKIE_SECURE'] = True
+# Configure application to store JWTs in cookies
+app.config['JWT_TOKEN_LOCATION'] = 'cookies'
+app.config['JWT_COOKIE_SECURE'] = False  # In prod this should likely be True
 
-app.config['JWT_ACCESS_COOKIE_NAME'] = 'access_token_cookie'
+# Set the cookie paths, so that you are only sending your access token cookie
+# to the access endpoints, and only sending your refresh token to the refresh
+# endpoint.
 app.config['JWT_ACCESS_COOKIE_PATH'] = '/api/'
-
-app.config['JWT_REFRESH_COOKIE_NAME'] = 'refresh_token_cookie'
 app.config['JWT_REFRESH_COOKIE_PATH'] = '/token/refresh'
 
+# Enable csrf double submit protection. Check out this for a simple overview
+# of what this is: http://stackoverflow.com/a/37396572/272689.
 app.config['JWT_COOKIE_CSRF_PROTECT'] = True
-app.config['JWT_ACCESS_CSRF_COOKIE_NAME'] = 'x_xsrf_access_token'
-app.config['JWT_REFRESH_CSRF_COOKIE_NAME'] = 'x_xsrf_refresh_token'
+
+
+# Now, whenever you make a request to a protected endpoint, you will need to
+# send in the access or refresh JWT via a cookie, as well as a custom header
+# which has the same csrf token that is in the cookie. You cannot access the
+# csrf token from the JWT, as httponly is set to true (and javascript thus
+# cannot see it), but you can get the JWT from a secondary cookie (that only
+# javascript on your site can access), and thus verify a csrf attack isn't
+# happening.
+#
+# You can modify the cookie name, csrf cookie name, and csrf header name via
+# various app.config options. Check the options page for details.
 
 
 @app.route('/token/auth', methods=['POST'])
@@ -35,17 +42,17 @@ def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
     if username != 'test' and password != 'test':
-        return jsonify({"msg": "Bad username or password"}), 401
+        return jsonify({'login': False}), 401
 
     # Create the tokens we will be sending back to the user
     access_token = create_access_token(identity=username)
     refresh_token = create_refresh_token(identity=username)
 
     # Set the JWTs and the CSRF double submit protection cookies in this response
-    resp = jsonify({'login': True}), 200
+    resp = jsonify({'login': True})
     set_access_cookies(resp, access_token)
     set_refresh_cookie(resp, refresh_token)
-    return resp
+    return resp, 200
 
 
 @app.route('/token/refresh', methods=['POST'])
@@ -56,9 +63,9 @@ def refresh():
     access_token = create_access_token(identity=current_user)
 
     # Set the access JWT and CSRF double submit protection cookies in this response
-    resp = jsonify({'refresh': True}), 200
+    resp = jsonify({'refresh': True})
     set_access_cookies(resp, access_token)
-    return resp
+    return resp, 200
 
 
 # We do not need to make any changes here, all of the protected endpoints will

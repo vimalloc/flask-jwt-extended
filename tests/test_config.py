@@ -10,8 +10,7 @@ from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
     get_token_location, get_cookie_secure, get_access_cookie_name, \
     get_refresh_cookie_name, get_access_cookie_path, get_refresh_cookie_path, \
     get_cookie_csrf_protect, get_access_csrf_cookie_name, \
-    get_refresh_csrf_cookie_name, get_access_csrf_header_name, \
-    get_refresh_csrf_header_name
+    get_refresh_csrf_cookie_name, get_csrf_header_name
 from flask_jwt_extended import JWTManager
 
 
@@ -24,7 +23,6 @@ class TestEndpoints(unittest.TestCase):
         JWTManager(self.app)
         self.client = self.app.test_client()
 
-    #57, 69, 73, 77, 81, 85, 89, 93, 97, 101, 105
     def test_default_configs(self):
         with self.app.test_request_context():
             self.assertEqual(get_token_location(), 'headers')
@@ -39,8 +37,7 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(get_cookie_csrf_protect(), True)
             self.assertEqual(get_access_csrf_cookie_name(), 'csrf_access_token')
             self.assertEqual(get_refresh_csrf_cookie_name(), 'csrf_refresh_token')
-            self.assertEqual(get_access_csrf_header_name(), 'X-CSRF-ACCESS-TOKEN')
-            self.assertEqual(get_refresh_csrf_header_name(), 'X-CSRF-REFRESH-TOKEN')
+            self.assertEqual(get_csrf_header_name(), 'X-CSRF-TOKEN')
 
             self.assertEqual(get_access_expires(), timedelta(minutes=15))
             self.assertEqual(get_refresh_expires(), timedelta(days=30))
@@ -62,8 +59,7 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_COOKIE_CSRF_PROTECT'] = False
         self.app.config['JWT_ACCESS_CSRF_COOKIE_NAME'] = 'banana1a'
         self.app.config['JWT_REFRESH_CSRF_COOKIE_NAME'] = 'banana2a'
-        self.app.config['JWT_ACCESS_CSRF_HEADER_NAME'] = 'banana1b'
-        self.app.config['JWT_REFRESH_CSRF_HEADER_NAME'] = 'banana2b'
+        self.app.config['JWT_CSRF_HEADER_NAME'] = 'bananaaaa'
 
         self.app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=5)
         self.app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)
@@ -85,8 +81,7 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(get_cookie_csrf_protect(), False)
             self.assertEqual(get_access_csrf_cookie_name(), 'banana1a')
             self.assertEqual(get_refresh_csrf_cookie_name(), 'banana2a')
-            self.assertEqual(get_access_csrf_header_name(), 'banana1b')
-            self.assertEqual(get_refresh_csrf_header_name(), 'banana2b')
+            self.assertEqual(get_csrf_header_name(), 'bananaaaa')
 
             self.assertEqual(get_access_expires(), timedelta(minutes=5))
             self.assertEqual(get_refresh_expires(), timedelta(days=7))

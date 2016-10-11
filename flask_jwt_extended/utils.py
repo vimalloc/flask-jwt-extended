@@ -18,7 +18,7 @@ from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
     get_cookie_csrf_protect, get_access_csrf_cookie_name, \
     get_refresh_cookie_name, get_refresh_cookie_path, \
     get_refresh_csrf_cookie_name, get_token_location, \
-    get_access_csrf_header_name, get_refresh_csrf_header_name
+    get_csrf_header_name
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthorizationError, WrongTokenError, RevokedTokenError, \
     FreshTokenRequired
@@ -179,10 +179,8 @@ def _decode_jwt_from_headers():
 def _decode_jwt_from_cookies(type):
     if type == 'access':
         cookie_key = get_access_cookie_name()
-        csrf_header_key = get_access_csrf_header_name()
     else:
         cookie_key = get_refresh_cookie_name()
-        csrf_header_key = get_refresh_csrf_header_name()
 
     token = request.cookies.get(cookie_key)
     if not token:
@@ -192,6 +190,7 @@ def _decode_jwt_from_cookies(type):
     token = _decode_jwt(token, secret, algorithm)
 
     if get_cookie_csrf_protect():
+        csrf_header_key = get_csrf_header_name()
         csrf = request.headers.get(csrf_header_key, None)
         if not csrf or not safe_str_cmp(csrf,  token['csrf']):
             raise NoAuthorizationError("Missing or invalid csrf double submit header")

@@ -1,14 +1,6 @@
 import datetime
 from flask import current_app
 
-# TODO move this to the docs
-# blacklist storage options (simplekv). If using a storage option that supports
-# the simplekv.TimeToLiveMixin (example: redis, memcached), the TTL will be
-# automatically set to 15 minutes after the token expires (to account for
-# clock drift between different jwt providers/consumers).
-#
-# See: http://pythonhosted.org/simplekv/index.html#simplekv.TimeToLiveMixin
-
 
 # TODO support for cookies and headers at the same time. This could be useful
 #      for using cookies in a web browser (more secure), and headers in a mobile
@@ -29,15 +21,11 @@ REFRESH_COOKIE_NAME = 'refresh_token_cookie'
 ACCESS_COOKIE_PATH = None
 REFRESH_COOKIE_PATH = None
 
-# TODO set domain for the cookie
-# TODO only one header for both access and refresh tokens, as we will only be
-#      checking one of those at a time
 # Options for using double submit for verifying CSRF tokens
 COOKIE_CSRF_PROTECT = True
 ACCESS_CSRF_COOKIE_NAME = 'csrf_access_token'
 REFRESH_CSRF_COOKIE_NAME = 'csrf_refresh_token'
-ACCESS_CSRF_HEADER_NAME = 'X-CSRF-ACCESS-TOKEN'
-REFRESH_CSRF_HEADER_NAME = 'X-CSRF-REFRESH-TOKEN'
+CSRF_HEADER_NAME = 'X-CSRF-TOKEN'
 
 # How long an a token will live before they expire.
 ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=15)
@@ -100,12 +88,8 @@ def get_refresh_csrf_cookie_name():
     return current_app.config.get('JWT_REFRESH_CSRF_COOKIE_NAME', REFRESH_CSRF_COOKIE_NAME)
 
 
-def get_access_csrf_header_name():
-    return current_app.config.get('JWT_ACCESS_CSRF_HEADER_NAME', ACCESS_CSRF_HEADER_NAME)
-
-
-def get_refresh_csrf_header_name():
-    return current_app.config.get('JWT_REFRESH_CSRF_HEADER_NAME', REFRESH_CSRF_HEADER_NAME)
+def get_csrf_header_name():
+    return current_app.config.get('JWT_CSRF_HEADER_NAME', CSRF_HEADER_NAME)
 
 
 def get_jwt_header_type():

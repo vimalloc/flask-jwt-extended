@@ -502,7 +502,7 @@ class TestEndpointsWithCookies(unittest.TestCase):
 
         # Try with logged in and good double submit token
         response = self.client.get('/api/protected',
-                                   headers={'X-CSRF-ACCESS-TOKEN': access_csrf})
+                                   headers={'X-CSRF-TOKEN': access_csrf})
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 200)

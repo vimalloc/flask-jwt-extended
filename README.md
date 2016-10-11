@@ -10,7 +10,7 @@ easier. These include:
 * Token revoking
 * Storing tokens in cookies and CSRF protection
 
-## Installation
+### Installation
 The easiest way to start working with this extension with pip:
 ```
 pip install flask-jwt-extended
@@ -21,11 +21,11 @@ If you prefer to install from source, you can clone this repo and run
 python setup.py install
 ```
 
-## Usage
+### Usage
 [View the documentation online] (http://flask-jwt-extended.readthedocs.io/en/latest/)
 
 
-## Testing and Code Coverage
+### Testing and Code Coverage
 We require 100% code coverage in our uint tests. We run all the unit tests with tox.
 This will test against python2.7, and 3.5 (although not tested, python3.3 and 3.4
 should also be fully supported). Running tox will print out a code coverage report
@@ -33,7 +33,7 @@ should also be fully supported). Running tox will print out a code coverage repo
 tox
 ```
 
-## Generating Documentation
+### Generating Documentation
 You can generate a local copy of the documentation. First, make sure you have
 the flask sphinx them install
 ```

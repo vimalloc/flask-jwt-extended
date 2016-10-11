@@ -11,17 +11,13 @@ Welcome to flask-jwt-extended's documentation!
 
    installation
    basic_usage
-
    add_custom_data_claims
    refresh_tokens
    token_freshness
    changing_default_behavior
    options
    blacklist_and_token_revoking
-   testing_and_coverage
-
-   documentation
-
+   tokens_in_cookies
 
 
 Indices and tables

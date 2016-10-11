@@ -29,6 +29,7 @@ REFRESH_COOKIE_NAME = 'refresh_token_cookie'
 ACCESS_COOKIE_PATH = None
 REFRESH_COOKIE_PATH = None
 
+# TODO set domain for the cookie
 # TODO only one header for both access and refresh tokens, as we will only be
 #      checking one of those at a time
 # Options for using double submit for verifying CSRF tokens

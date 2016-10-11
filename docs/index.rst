@@ -3,8 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to flask-jwt-extended's documentation!
-==============================================
+Flask JWT Extended's documentation
+==================================
+
+In here you will find examples of how to use Flask JWT Extended. Full API
+documentation is coming soon!
 
 .. toctree::
    :maxdepth: 2
@@ -18,11 +21,3 @@ Welcome to flask-jwt-extended's documentation!
    options
    blacklist_and_token_revoking
    tokens_in_cookies
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

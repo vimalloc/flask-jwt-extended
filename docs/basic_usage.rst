@@ -1,13 +1,13 @@
 Basic Usage
 ===========
 
-
 In its simplest form, there is not much to using flask_jwt_extended.
-
 
 .. literalinclude:: ../examples/simple.py
 
-To access a jwt_required protected view, all we have to do is send an authorization head with the request that include the token. The header looks like this:
+To access a jwt_required protected view, all we have to do is send in the
+JWT with the request. By default, this is done with an authorization header
+that looks like:
 
 .. code-block :: bash
 
@@ -35,3 +35,8 @@ We can see this in action using CURL:
   {
     "hello": "world"
   }
+
+NOTE: Remember to change the secret key of your application, and insure that no
+one is able to view it. The json web tokens are signed with the secret key, so
+if someone gets that, they can create arbitrary tokens, and in essence log in
+as any user.

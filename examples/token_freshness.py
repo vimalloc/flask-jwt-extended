@@ -29,10 +29,10 @@ def login():
 
 
 # Fresh login endpoint. This is designed to be used if we need to
-# make a fresh # token for a user (by verifying they have the
+# make a fresh token for a user (by verifying they have the
 # correct username and password). Unlike the standard login endpoint,
-# this will only return a new access token (so that we don't keep
-# generating new refresh tokens, which defeats their point)
+# this will only return a new access token, so that we don't keep
+# generating new refresh tokesn, which entirely defeats their point.
 @app.route('/fresh-login', methods=['POST'])
 def fresh_login():
     username = request.json.get('username', None)

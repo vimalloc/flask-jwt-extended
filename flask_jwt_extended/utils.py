@@ -1,13 +1,12 @@
 import datetime
 import json
-import os
 import uuid
 from functools import wraps
 
-import binascii
 import jwt
 import six
 from flask import request, current_app
+from werkzeug.security import safe_str_cmp
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
@@ -42,7 +41,6 @@ def get_jwt_claims():
     return getattr(ctx_stack.top, 'jwt_user_claims', {})
 
 
-# TODO set csrf token in jwt when creating tokens (if enabled)
 def _create_csrf_token():
     return str(uuid.uuid4())
 
@@ -193,11 +191,9 @@ def _decode_jwt_from_cookies(type):
     algorithm = get_algorithm()
     token = _decode_jwt(token, secret, algorithm)
 
-    # TODO use a safe string comparison here, to prevent timing attacks on the
-    #      csrf token
     if get_cookie_csrf_protect():
         csrf = request.headers.get(csrf_header_key, None)
-        if not csrf or csrf != token['csrf']:
+        if not csrf or not safe_str_cmp(csrf,  token['csrf']):
             raise NoAuthorizationError("Missing or invalid csrf double submit header")
 
     return token

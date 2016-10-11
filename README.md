@@ -13,12 +13,12 @@ easier. These include:
 ### Installation
 The easiest way to start working with this extension with pip:
 ```
-pip install flask-jwt-extended
+$ pip install flask-jwt-extended
 ```
 
 If you prefer to install from source, you can clone this repo and run
 ```
-python setup.py install
+$ python setup.py install
 ```
 
 ### Usage
@@ -30,17 +30,17 @@ We require 100% code coverage in our uint tests. We run all the unit tests with 
 This will test against python2.7, and 3.5 (although not tested, python3.3 and 3.4
 should also be fully supported). Running tox will print out a code coverage report
 ```
-tox
+$ tox
 ```
 
 ### Generating Documentation
 You can generate a local copy of the documentation. First, make sure you have
-the flask sphinx them install
+the flask sphinx theme cloned
 ```
-git submodule update --init
+$ git submodule update --init
 ```
 
 Then, in the docs directory, run
 ```
-make clean && make html
+$ make clean && make html
 ```

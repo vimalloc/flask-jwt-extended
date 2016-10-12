@@ -386,7 +386,7 @@ def set_access_cookies(response, encoded_access_token):
                             value=_get_csrf_token(encoded_access_token),
                             secure=get_cookie_secure(),
                             httponly=False,
-                            path=get_access_cookie_path())
+                            path='/')
 
 
 def set_refresh_cookie(response, encoded_refresh_token):
@@ -407,4 +407,4 @@ def set_refresh_cookie(response, encoded_refresh_token):
                             value=_get_csrf_token(encoded_refresh_token),
                             secure=get_cookie_secure(),
                             httponly=False,
-                            path=get_refresh_cookie_path())
+                            path='/')

@@ -403,10 +403,10 @@ class TestEndpointsWithCookies(unittest.TestCase):
         refresh_csrf = resp.headers[4][1]
         self.assertIn('access_token_cookie', access_cookie)
         self.assertIn('csrf_access_token', access_csrf)
-        self.assertIn('Path=/api/', access_csrf)
+        self.assertIn('Path=/', access_csrf)
         self.assertIn('refresh_token_cookie', refresh_cookie)
         self.assertIn('csrf_refresh_token', refresh_csrf)
-        self.assertIn('Path=/auth/refresh', refresh_csrf)
+        self.assertIn('Path=/', refresh_csrf)
 
         # Try with overwritten options
         self.app.config['JWT_ACCESS_COOKIE_NAME'] = 'new_access_cookie'
@@ -423,10 +423,10 @@ class TestEndpointsWithCookies(unittest.TestCase):
         refresh_csrf = resp.headers[4][1]
         self.assertIn('new_access_cookie', access_cookie)
         self.assertIn('x_csrf_access_token', access_csrf)
-        self.assertNotIn('Path=/', access_csrf)
+        self.assertIn('Path=/', access_csrf)
         self.assertIn('new_refresh_cookie', refresh_cookie)
         self.assertIn('x_csrf_refresh_token', refresh_csrf)
-        self.assertNotIn('Path=/', refresh_csrf)
+        self.assertIn('Path=/', refresh_csrf)
 
     def test_endpoints_with_cookies(self):
         self.app.config['JWT_COOKIE_CSRF_PROTECT'] = False

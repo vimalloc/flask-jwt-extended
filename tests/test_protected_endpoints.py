@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from flask import Flask, jsonify
 from flask_jwt_extended.utils import _encode_access_token, get_jwt_claims, \
-    get_jwt_identity, set_refresh_cookie, set_access_cookies
+    get_jwt_identity, set_refresh_cookies, set_access_cookies
 from flask_jwt_extended import JWTManager, create_refresh_token, \
     jwt_refresh_token_required, create_access_token, fresh_jwt_required, \
     jwt_required
@@ -326,7 +326,7 @@ class TestEndpointsWithCookies(unittest.TestCase):
             # Set the JWTs and the CSRF double submit protection cookies in this response
             resp = jsonify({'login': True})
             set_access_cookies(resp, access_token)
-            set_refresh_cookie(resp, refresh_token)
+            set_refresh_cookies(resp, refresh_token)
             return resp, 200
 
         @self.app.route('/auth/refresh', methods=['POST'])

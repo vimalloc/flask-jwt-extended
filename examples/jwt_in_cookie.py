@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, jwt_required, \
     create_access_token,  jwt_refresh_token_required, \
     create_refresh_token, get_jwt_identity, set_access_cookies, \
-    set_refresh_cookie
+    set_refresh_cookies
 
 # NOTE: This is just a basic example of how to enable cookies. This is
 #       vulnerable to CSRF attacks, and should not be used as is. See
@@ -46,7 +46,7 @@ def login():
     # Set the JWT cookies in the response
     resp = jsonify({'login': True})
     set_access_cookies(resp, access_token)
-    set_refresh_cookie(resp, refresh_token)
+    set_refresh_cookies(resp, refresh_token)
     return resp, 200
 
 

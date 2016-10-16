@@ -389,7 +389,7 @@ def set_access_cookies(response, encoded_access_token):
                             path='/')
 
 
-def set_refresh_cookie(response, encoded_refresh_token):
+def set_refresh_cookies(response, encoded_refresh_token):
     """
     Takes a flask response object, and configures it to set the encoded refresh
     token in a cookie (as well as a csrf refresh cookie if enabled)

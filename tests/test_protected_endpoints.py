@@ -1,9 +1,11 @@
 import json
 import time
 import unittest
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from flask import Flask, jsonify
+import jwt
+
 from flask_jwt_extended.utils import _encode_access_token, get_jwt_claims, \
     get_jwt_identity, set_refresh_cookies, set_access_cookies
 from flask_jwt_extended import JWTManager, create_refresh_token, \
@@ -16,6 +18,7 @@ class TestEndpoints(unittest.TestCase):
     def setUp(self):
         self.app = Flask(__name__)
         self.app.secret_key = 'super=secret'
+        self.app.config['JWT_ALGORITHM'] = 'HS256'
         self.app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=1)
         self.app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(seconds=1)
         self.jwt_manager = JWTManager(self.app)
@@ -245,6 +248,18 @@ class TestEndpoints(unittest.TestCase):
             token = _encode_access_token('foo', 'newsecret', 'HS256',
                                          timedelta(minutes=5), True, {})
         auth_header = "Bearer {}".format(token)
+        response = self.client.get('/protected', headers={'Authorization': auth_header})
+        data = json.loads(response.get_data(as_text=True))
+        status_code = response.status_code
+        self.assertEqual(status_code, 422)
+        self.assertIn('msg', data)
+
+        # Test with valid token that is missing required claims
+        now = datetime.utcnow()
+        token_data = {'exp': now + timedelta(minutes=5)}
+        encoded_token = jwt.encode(token_data, self.app.config['SECRET_KEY'],
+                                   self.app.config['JWT_ALGORITHM']).decode('utf-8')
+        auth_header = "Bearer {}".format(encoded_token)
         response = self.client.get('/protected', headers={'Authorization': auth_header})
         data = json.loads(response.get_data(as_text=True))
         status_code = response.status_code

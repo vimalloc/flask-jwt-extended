@@ -20,7 +20,7 @@ from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
     get_refresh_csrf_cookie_name, get_token_location, \
     get_csrf_header_name
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
-    InvalidHeaderError, NoAuthorizationError, WrongTokenError, RevokedTokenError, \
+    InvalidHeaderError, NoAuthorizationError, WrongTokenError, \
     FreshTokenRequired
 from flask_jwt_extended.blacklist import check_if_token_revoked, store_token
 
@@ -206,33 +206,6 @@ def _decode_jwt_from_request(type):
         return _decode_jwt_from_cookies(type)
 
 
-def _handle_callbacks_on_error(fn):
-    """
-    Helper decorator that will catch any exceptions we expect to encounter
-    when dealing with a JWT, and call the appropriate callback function for
-    handling that error. Callback functions can be set in using the *_loader
-    methods in jwt_manager.
-    """
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        m = current_app.jwt_manager
-
-        try:
-            return fn(*args, **kwargs)
-        except NoAuthorizationError:
-            return m.unauthorized_callback()
-        except jwt.ExpiredSignatureError:
-            return m.expired_token_callback()
-        except (InvalidHeaderError, jwt.InvalidTokenError, JWTDecodeError,
-                WrongTokenError) as e:
-            return m.invalid_token_callback(str(e))
-        except RevokedTokenError:
-            return m.revoked_token_callback()
-        except FreshTokenRequired:
-            return m.needs_fresh_token_callback()
-    return wrapper
-
-
 def jwt_required(fn):
     """
     If you decorate a vew with this, it will ensure that the requester has a valid
@@ -243,7 +216,6 @@ def jwt_required(fn):
 
     :param fn: The view function to decorate
     """
-    @_handle_callbacks_on_error
     @wraps(fn)
     def wrapper(*args, **kwargs):
         # Attempt to decode the token
@@ -275,7 +247,6 @@ def fresh_jwt_required(fn):
 
     :param fn: The view function to decorate
     """
-    @_handle_callbacks_on_error
     @wraps(fn)
     def wrapper(*args, **kwargs):
         # Attempt to decode the token
@@ -308,7 +279,6 @@ def jwt_refresh_token_required(fn):
     valid JWT refresh token before calling the actual view. If the token is
     invalid, expired, not present, etc, the appropiate callback will be called
     """
-    @_handle_callbacks_on_error
     @wraps(fn)
     def wrapper(*args, **kwargs):
         # Get the JWT

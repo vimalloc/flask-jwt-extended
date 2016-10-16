@@ -1,5 +1,9 @@
 from flask import jsonify
 
+from flask_jwt_extended.exceptions import JWTDecodeError, NoAuthorizationError, \
+    InvalidHeaderError, WrongTokenError, RevokedTokenError, FreshTokenRequired
+from jwt import ExpiredSignatureError, InvalidTokenError
+
 
 class JWTManager:
     def __init__(self, app=None):
@@ -7,30 +11,30 @@ class JWTManager:
         self.user_claims_callback = lambda _: {}
 
         # Function that will be called when an expired token is received
-        self.expired_token_callback = lambda: (
+        self._expired_token_callback = lambda: (
             jsonify({'msg': 'Token has expired'}), 401
         )
 
         # Function that will be called when an invalid token is received
-        self.invalid_token_callback = lambda err: (
+        self._invalid_token_callback = lambda err: (
             jsonify({'msg': err}), 422
         )
 
         # Function that will be called when attempting to access a protected
         # endpoint without a valid token
-        self.unauthorized_callback = lambda: (
+        self._unauthorized_callback = lambda: (
             jsonify({'msg': 'Missing Authorization Header'}), 401
         )
 
         # Function that will be called when attempting to access a fresh_jwt_required
         # endpoint with a valid token that is not fresh
-        self.needs_fresh_token_callback = lambda: (
+        self._needs_fresh_token_callback = lambda: (
             jsonify({'msg': 'Fresh token required'}), 401
         )
 
         # Function that will be called when a revoked token attempts to access
         # a protected endpoint
-        self.revoked_token_callback = lambda: (
+        self._revoked_token_callback = lambda: (
             jsonify({'msg': 'Token has been revoked'}), 401
         )
 
@@ -44,6 +48,38 @@ class JWTManager:
         Register this extension with the flask app
         """
         app.jwt_manager = self
+
+        @app.errorhandler(NoAuthorizationError)
+        def handle_auth_error(e):
+            return self._unauthorized_callback()
+
+        @app.errorhandler(ExpiredSignatureError)
+        def handle_expired_error(e):
+            return self._expired_token_callback()
+
+        @app.errorhandler(InvalidHeaderError)
+        def handle_invalid_header_error(e):
+            return self._invalid_token_callback(str(e))
+
+        @app.errorhandler(InvalidTokenError)
+        def handle_invalid_token_error(e):
+            return self._invalid_token_callback(str(e))
+
+        @app.errorhandler(JWTDecodeError)
+        def handle_jwt_decode_error(e):
+            return self._invalid_token_callback(str(e))
+
+        @app.errorhandler(WrongTokenError)
+        def handle_wrong_token_error(e):
+            return self._invalid_token_callback(str(e))
+
+        @app.errorhandler(RevokedTokenError)
+        def hanlde_revoked_token_error(e):
+            return self._revoked_token_callback()
+
+        @app.errorhandler(FreshTokenRequired)
+        def handle_fresh_token_required(e):
+            return self._needs_fresh_token_callback()
 
     def user_claims_loader(self, callback):
         """
@@ -66,7 +102,7 @@ class JWTManager:
 
         Callback must be a function that takes zero arguments.
         """
-        self.expired_token_callback = callback
+        self._expired_token_callback = callback
         return callback
 
     def invalid_token_loader(self, callback):
@@ -79,7 +115,7 @@ class JWTManager:
         Callback must be a function that takes only one argument, which is the
         error message of why the token is invalid.
         """
-        self.invalid_token_callback = callback
+        self._invalid_token_callback = callback
         return callback
 
     def unauthorized_loader(self, callback):
@@ -92,7 +128,7 @@ class JWTManager:
         Callback must be a function that takes only one argument, which is the
         error message of why the token is invalid.
         """
-        self.unauthorized_callback = callback
+        self._unauthorized_callback = callback
         return callback
 
     def needs_fresh_token_loader(self, callback):
@@ -105,7 +141,7 @@ class JWTManager:
 
         Callback must be a function that takes no arguments.
         """
-        self.needs_fresh_token_callback = callback
+        self._needs_fresh_token_callback = callback
         return callback
 
     def revoked_token_loader(self, callback):
@@ -118,5 +154,5 @@ class JWTManager:
 
         Callback must be a function that takes no arguments.
         """
-        self.revoked_token_callback = callback
+        self._revoked_token_callback = callback
         return callback

@@ -37,7 +37,7 @@ class TestJWTManager(unittest.TestCase):
     def test_default_expired_token_callback(self):
         with self.app.test_request_context():
             m = JWTManager(self.app)
-            result = m.expired_token_callback()
+            result = m._expired_token_callback()
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 401)
@@ -47,7 +47,7 @@ class TestJWTManager(unittest.TestCase):
         with self.app.test_request_context():
             m = JWTManager(self.app)
             err = "Test error"
-            result = m.invalid_token_callback(err)
+            result = m._invalid_token_callback(err)
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 422)
@@ -56,7 +56,7 @@ class TestJWTManager(unittest.TestCase):
     def test_default_unauthorized_callback(self):
         with self.app.test_request_context():
             m = JWTManager(self.app)
-            result = m.unauthorized_callback()
+            result = m._unauthorized_callback()
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 401)
@@ -65,7 +65,7 @@ class TestJWTManager(unittest.TestCase):
     def test_default_needs_fresh_token_callback(self):
         with self.app.test_request_context():
             m = JWTManager(self.app)
-            result = m.needs_fresh_token_callback()
+            result = m._needs_fresh_token_callback()
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 401)
@@ -74,7 +74,7 @@ class TestJWTManager(unittest.TestCase):
     def test_default_revoked_token_callback(self):
         with self.app.test_request_context():
             m = JWTManager(self.app)
-            result = m.revoked_token_callback()
+            result = m._revoked_token_callback()
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 401)
@@ -98,7 +98,7 @@ class TestJWTManager(unittest.TestCase):
             def custom_expired_token():
                 return jsonify({"res": "TOKEN IS EXPIRED FOOL"}), 422
 
-            result = m.expired_token_callback()
+            result = m._expired_token_callback()
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 422)
@@ -113,7 +113,7 @@ class TestJWTManager(unittest.TestCase):
             def custom_invalid_token(err):
                 return jsonify({"err": err}), 200
 
-            result = m.invalid_token_callback(err)
+            result = m._invalid_token_callback(err)
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 200)
@@ -127,7 +127,7 @@ class TestJWTManager(unittest.TestCase):
             def custom_unauthorized():
                 return jsonify({"err": "GOTTA LOGIN FOOL"}), 200
 
-            result = m.unauthorized_callback()
+            result = m._unauthorized_callback()
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 200)
@@ -141,7 +141,7 @@ class TestJWTManager(unittest.TestCase):
             def custom_token_needs_refresh():
                 return jsonify({'sub_status': 101}), 200
 
-            result = m.needs_fresh_token_callback()
+            result = m._needs_fresh_token_callback()
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 200)
@@ -154,7 +154,7 @@ class TestJWTManager(unittest.TestCase):
             @m.revoked_token_loader
             def custom_revoken_token():
                 return jsonify({"err": "Nice knowing you!"}), 422
-            result = m.revoked_token_callback()
+            result = m._revoked_token_callback()
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 422)

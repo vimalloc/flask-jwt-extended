@@ -33,7 +33,7 @@ We can see this in action using CURL:
 
   $ curl -H "Authorization: Bearer $ACCESS" http://localhost:5000/protected
   {
-    "hello": "world"
+    "hello" from": "test"
   }
 
 NOTE: Remember to change the secret key of your application, and insure that no

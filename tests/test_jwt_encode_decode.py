@@ -6,7 +6,8 @@ import jwt
 from flask import Flask
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError
 from flask_jwt_extended.utils import _encode_access_token, _encode_refresh_token, \
-    _decode_jwt
+    _decode_jwt, create_access_token
+from flask_jwt_extended.jwt_manager import JWTManager
 
 
 class JWTEncodeDecodeTests(unittest.TestCase):
@@ -330,3 +331,35 @@ class JWTEncodeDecodeTests(unittest.TestCase):
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 _decode_jwt(encoded_token, 'secret', 'HS256')
+
+    def test_create_access_token_with_object(self):
+        # Complex object to test building a JWT from. Normally if you are using
+        # this functionality, this is something that would be retrieved from
+        # disk somewhere (think sqlalchemy)
+        class TestObject:
+            def __init__(self, username, roles):
+                self.username = username
+                self.roles = roles
+
+        # Setup the flask stuff
+        app = Flask(__name__)
+        app.secret_key = 'super=secret'
+        app.config['JWT_ALGORITHM'] = 'HS256'
+        jwt = JWTManager(app)
+
+        @jwt.user_claims_loader
+        def custom_claims(object):
+            return {
+                'roles': object.roles
+            }
+
+        # Create the token using the complex object
+        with app.test_request_context():
+            user = TestObject(username='foo', roles=['bar', 'baz'])
+            token = create_access_token(identity=user,
+                                        identity_lookup=lambda obj: obj.username)
+
+            # Decode the token and make sure the values are set properly
+            token_data = _decode_jwt(token, app.secret_key, app.config['JWT_ALGORITHM'])
+            self.assertEqual(token_data['identity'], 'foo')
+            self.assertEqual(token_data['user_claims']['roles'], ['bar', 'baz'])

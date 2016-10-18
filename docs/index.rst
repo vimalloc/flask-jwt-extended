@@ -15,6 +15,7 @@ documentation is coming soon!
    installation
    basic_usage
    add_custom_data_claims
+   tokens_from_complex_object
    refresh_tokens
    token_freshness
    changing_default_behavior

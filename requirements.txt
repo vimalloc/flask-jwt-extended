@@ -1,6 +1,7 @@
 alabaster==0.7.9
 Babel==2.3.4
 click==6.6
+coverage==4.2
 docutils==0.12
 Flask==0.11.1
 imagesize==0.7.1

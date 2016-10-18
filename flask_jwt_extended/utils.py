@@ -378,3 +378,24 @@ def set_refresh_cookies(response, encoded_refresh_token):
                             secure=get_cookie_secure(),
                             httponly=False,
                             path='/')
+
+
+def unset_jwt_cookies(response):
+    """
+    Takes a flask response object, and configures it to unset (delete) the JWT
+    cookies. Basically, this is a logout helper method if using cookies to store
+    the JWT
+    """
+    response.set_cookie(get_refresh_cookie_name(),
+                        value='',
+                        expires=0,
+                        secure=get_cookie_secure(),
+                        httponly=True,
+                        path=get_refresh_cookie_path())
+    response.set_cookie(get_access_cookie_name(),
+                        value='',
+                        expires=0,
+                        secure=get_cookie_secure(),
+                        httponly=True,
+                        path=get_access_cookie_path())
+    return response

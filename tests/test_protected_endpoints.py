@@ -7,7 +7,7 @@ from flask import Flask, jsonify
 import jwt
 
 from flask_jwt_extended.utils import _encode_access_token, get_jwt_claims, \
-    get_jwt_identity, set_refresh_cookies, set_access_cookies
+    get_jwt_identity, set_refresh_cookies, set_access_cookies, unset_jwt_cookies
 from flask_jwt_extended import JWTManager, create_refresh_token, \
     jwt_refresh_token_required, create_access_token, fresh_jwt_required, \
     jwt_required
@@ -344,6 +344,12 @@ class TestEndpointsWithCookies(unittest.TestCase):
             set_refresh_cookies(resp, refresh_token)
             return resp, 200
 
+        @self.app.route('/auth/logout', methods=['POST'])
+        def logout():
+            resp = jsonify({'logout': True})
+            unset_jwt_cookies(resp)
+            return resp, 200
+
         @self.app.route('/auth/refresh', methods=['POST'])
         @jwt_refresh_token_required
         def refresh():
@@ -442,6 +448,13 @@ class TestEndpointsWithCookies(unittest.TestCase):
         self.assertIn('new_refresh_cookie', refresh_cookie)
         self.assertIn('x_csrf_refresh_token', refresh_csrf)
         self.assertIn('Path=/', refresh_csrf)
+
+        # Try logout headers
+        resp = self.client.post('/auth/logout')
+        refresh_cookie = resp.headers[1][1]
+        access_cookie = resp.headers[2][1]
+        self.assertIn('Expires=Thu, 01-Jan-1970', refresh_cookie)
+        self.assertIn('Expires=Thu, 01-Jan-1970', access_cookie)
 
     def test_endpoints_with_cookies(self):
         self.app.config['JWT_COOKIE_CSRF_PROTECT'] = False

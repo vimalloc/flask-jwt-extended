@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, jwt_required, \
     create_access_token,  jwt_refresh_token_required, \
     create_refresh_token, get_jwt_identity, set_access_cookies, \
-    set_refresh_cookies
+    set_refresh_cookies, unset_jwt_cookies
 
 # NOTE: This is just a basic example of how to enable cookies. This is
 #       vulnerable to CSRF attacks, and should not be used as is. See
@@ -63,6 +63,19 @@ def refresh():
     # Set the JWT access cookie in the response
     resp = jsonify({'refresh': True})
     set_access_cookies(resp, access_token)
+    return resp, 200
+
+
+# Because the JWTs are stored in an httponly cookie now, we cannot
+# log the user out by simply deleting the cookie in the frontend.
+# We need the backend to send us a response to delete the cookies
+# in order to logout. unset_jwt_cookies is a helper function to
+# do just that.
+@app.route('/token/remove', methods=['POST'])
+@jwt_required
+def logout():
+    resp = jsonify({'logout': True})
+    unset_jwt_cookies(resp)
     return resp, 200
 
 

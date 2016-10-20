@@ -18,6 +18,19 @@ The available options are:
                                   the JWT in via headers. Defaults to ``'Authorization'``
 ``JWT_HEADER_TYPE``               What type of header the JWT is in. Defaults to ``'Bearer'``. This can be
                                   an empty string, in which case the header only contains the JWT
+``JWT_COOKIE_SECURE``             If the secure flag should be set on your JWT cookies. This will only allow
+                                  the cookies to be sent over https. Defaults to ``False``, but in production
+                                  this should likely be set to ``True``.
+``JWT_ACCESS_COOKIE_NAME``        What the cookie that hold the access JWT will be called. Only used
+                                  when sending the JWT in via cookies. Defaults to ``access_token_cookie``
+``JWT_REFRESH_COOKIE_NAME``       What the cookie that hold the access JWT will be called. Only used
+                                  when sending the JWT in via cookies. Defaults to ``refresh_token_cookie``
+``JWT_ACCESS_COOKIE_PATH``        What ``path`` should be set for the access cookie. Defaults to ``None``, which
+                                  will cause this access tookie to be sent in with every request. Should be modified
+                                  for only the paths that need the access cookie
+``JWT_REFRESH_COOKIE_PATH``       What ``path`` should be set for the refresh cookie. Defaults to ``None``, which
+                                  will cause this access tookie to be sent in with every request. Should be modified
+                                  for only the paths that need the refresh cookie
 ``JWT_COOKIE_CSRF_PROTECT``       Enable/disable CSRF protection. Only used when sending the JWT in via cookies
 ``JWT_ACCESS_CSRF_COOKIE_NAME``   Name of the CSRF access cookie. Defaults to ``'csrf_access_token'``. Only used
                                   if using cookies with CSRF protection enabled
@@ -33,7 +46,7 @@ The available options are:
                                   <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_ for the options. Defaults
                                   to ``'HS256'``. Note that Asymmetric (Public-key) Algorithms are not currently supported.
 ``JWT_BLACKLIST_ENABLED``         Enable/disable token blackliting and revoking. Defaults to ``False``
-``JWT_BLACKLIST_STORE``           Where to save created and revoked tokens. `See here 
+``JWT_BLACKLIST_STORE``           Where to save created and revoked tokens. `See here
                                   <http://pythonhosted.org/simplekv/>`_ for options.
 ``JWT_BLACKLIST_CHECKS``          What token types to check against the blacklist. Options are
                                   ``'refresh'`` or  ``'all'``. Defaults to ``'refresh'``

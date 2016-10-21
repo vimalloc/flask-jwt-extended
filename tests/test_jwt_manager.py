@@ -32,7 +32,7 @@ class TestJWTManager(unittest.TestCase):
     def test_default_user_claims_callback(self):
         identity = 'foobar'
         m = JWTManager(self.app)
-        assert m.user_claims_callback(identity) == {}
+        assert m._user_claims_callback(identity) == {}
 
     def test_default_expired_token_callback(self):
         with self.app.test_request_context():
@@ -88,7 +88,7 @@ class TestJWTManager(unittest.TestCase):
         def custom_user_claims(identity):
             return {'foo': 'bar'}
 
-        assert m.user_claims_callback(identity) == {'foo': 'bar'}
+        assert m._user_claims_callback(identity) == {'foo': 'bar'}
 
     def test_custom_expired_token_callback(self):
         with self.app.test_request_context():

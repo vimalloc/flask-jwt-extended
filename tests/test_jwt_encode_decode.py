@@ -336,7 +336,7 @@ class JWTEncodeDecodeTests(unittest.TestCase):
         # Complex object to test building a JWT from. Normally if you are using
         # this functionality, this is something that would be retrieved from
         # disk somewhere (think sqlalchemy)
-        class TestObject:
+        class TestUser:
             def __init__(self, username, roles):
                 self.username = username
                 self.roles = roles
@@ -348,16 +348,19 @@ class JWTEncodeDecodeTests(unittest.TestCase):
         jwt = JWTManager(app)
 
         @jwt.user_claims_loader
-        def custom_claims(object):
+        def custom_claims(user):
             return {
-                'roles': object.roles
+                'roles': user.roles
             }
+
+        @jwt.user_identity_loader
+        def user_identity_lookup(user):
+            return user.username
 
         # Create the token using the complex object
         with app.test_request_context():
-            user = TestObject(username='foo', roles=['bar', 'baz'])
-            token = create_access_token(identity=user,
-                                        identity_lookup=lambda obj: obj.username)
+            user = TestUser(username='foo', roles=['bar', 'baz'])
+            token = create_access_token(identity=user)
 
             # Decode the token and make sure the values are set properly
             token_data = _decode_jwt(token, app.secret_key, app.config['JWT_ALGORITHM'])

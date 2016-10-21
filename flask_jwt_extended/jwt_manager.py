@@ -8,7 +8,10 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 class JWTManager:
     def __init__(self, app=None):
         # Function that will be called to add custom user claims to a JWT.
-        self.user_claims_callback = lambda _: {}
+        self._user_claims_callback = lambda _: {}
+
+        # Function that will be called to return an identity from an object
+        self._user_identity_callback = lambda i: i
 
         # Function that will be called when an expired token is received
         self._expired_token_callback = lambda: (
@@ -90,7 +93,19 @@ class JWTManager:
         Callback must be a function that takes only one argument, which is the
         identity of the JWT being created.
         """
-        self.user_claims_callback = callback
+        self._user_claims_callback = callback
+        return callback
+
+    def user_identity_loader(self, callback):
+        """
+        This sets the callback method for adding custom user claims to a JWT.
+
+        By default, no extra user claims will be added to the JWT.
+
+        Callback must be a function that takes only one argument, which is the
+        identity of the JWT being created.
+        """
+        self._user_identity_callback = callback
         return callback
 
     def expired_token_loader(self, callback):

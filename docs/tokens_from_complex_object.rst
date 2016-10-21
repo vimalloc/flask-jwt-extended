@@ -17,10 +17,10 @@ this user has. This isn't a huge deal, but obviously it could be more efficient.
 This extension provides the ability to pass any object to the **create_access_token**
 method, which will then be passed to the **user_claims_loader** method. This lets
 us access the database only once. However, as we still need the identity to be
-a JSON serializable object unique to this user, we need
-to take an addition step and use the optional **identity_lookup** kwarg in the
-**create_access_token** method. This lets us tell the system how to get the identity from
-an object.
+a JSON serializable object unique to this user. We have a second jwt decorator
+we can use for this, **user_identity_loader**. This lets you create a function
+which takes any object passed in to the **create_access_token** and return
+a json serializable identity from that object.
 
 Here is an example of this in action
 

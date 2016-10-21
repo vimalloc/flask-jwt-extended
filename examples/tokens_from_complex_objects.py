@@ -25,6 +25,14 @@ def add_claims_to_access_token(user):
     return {'roles': user.roles}
 
 
+# This method will also get whatever object is passed into the
+# create_access_token method, and let us define what the identity
+# should be for this object
+@jwt.user_identity_loader
+def user_identity_lookup(user):
+    return user.username
+
+
 @app.route('/login', methods=['POST'])
 def login():
     username = request.json.get('username', None)
@@ -38,17 +46,10 @@ def login():
     # We can now pass this complex object directly to the
     # create_access_token method. This will allow us to access
     # the properties of this object in the user_claims_loader
-    # function. Because this object is not json serializable itself,
-    # we also need to provide a way to get some which is json
-    # serializable and represents the identity of this token from
-    # the complex object. We pass a function to  the optional
-    # identity_lookup kwarg, which tells the create_access_token
+    # function, and get the identity of this object from the
+    # user_identity_loader function.
     # function how to get the identity from this object
-    access_token = create_access_token(
-        identity=user,
-        identity_lookup=lambda u: u.username
-    )
-
+    access_token = create_access_token(identity=user)
     ret = {'access_token': access_token}
     return jsonify(ret), 200
 

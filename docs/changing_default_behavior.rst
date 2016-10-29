@@ -27,7 +27,7 @@ Possible loader functions are:
       - Takes one argument - an error string indicating why the token is invalid
     * - **unauthorized_loader**
       - Function to call when a request with no JWT accesses a protected endpoint
-      - None
+      - Takes one argument - an error string indicating why the request in unauthorized
     * - **needs_fresh_token_loader**
       - Function to call when a non-fresh token accesses a **fresh_jwt_required** endpoint
       - None

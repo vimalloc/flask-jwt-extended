@@ -56,7 +56,7 @@ class TestJWTManager(unittest.TestCase):
     def test_default_unauthorized_callback(self):
         with self.app.test_request_context():
             m = JWTManager(self.app)
-            result = m._unauthorized_callback()
+            result = m._unauthorized_callback("Missing Authorization Header")
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 401)
@@ -124,10 +124,10 @@ class TestJWTManager(unittest.TestCase):
             m = JWTManager(self.app)
 
             @m.unauthorized_loader
-            def custom_unauthorized():
-                return jsonify({"err": "GOTTA LOGIN FOOL"}), 200
+            def custom_unauthorized(err_str):
+                return jsonify({"err": err_str}), 200
 
-            result = m._unauthorized_callback()
+            result = m._unauthorized_callback("GOTTA LOGIN FOOL")
             status_code, data = self._parse_callback_result(result)
 
             self.assertEqual(status_code, 200)

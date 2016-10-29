@@ -25,8 +25,8 @@ class JWTManager:
 
         # Function that will be called when attempting to access a protected
         # endpoint without a valid token
-        self._unauthorized_callback = lambda: (
-            jsonify({'msg': 'Missing Authorization Header'}), 401
+        self._unauthorized_callback = lambda err: (
+            jsonify({'msg': err}), 401
         )
 
         # Function that will be called when attempting to access a fresh_jwt_required
@@ -54,7 +54,7 @@ class JWTManager:
 
         @app.errorhandler(NoAuthorizationError)
         def handle_auth_error(e):
-            return self._unauthorized_callback()
+            return self._unauthorized_callback(str(e))
 
         @app.errorhandler(ExpiredSignatureError)
         def handle_expired_error(e):

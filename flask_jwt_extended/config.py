@@ -7,7 +7,7 @@ from flask import current_app
 #      app (don't have to worry about csrf/xss there, and headers are easier to
 #      manage in that environment)
 
-# Where to look for the JWT. Available options are cookie, header, and either
+# Where to look for the JWT. Available options are cookies or headers
 TOKEN_LOCATION = 'headers'
 
 # Options for JWTs when the TOKEN_LOCATION is headers

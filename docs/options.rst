@@ -29,7 +29,7 @@ The available options are:
                                   will cause this access tookie to be sent in with every request. Should be modified
                                   for only the paths that need the access cookie
 ``JWT_REFRESH_COOKIE_PATH``       What ``path`` should be set for the refresh cookie. Defaults to ``None``, which
-                                  will cause this access tookie to be sent in with every request. Should be modified
+                                  will cause this access cookie to be sent in with every request. Should be modified
                                   for only the paths that need the refresh cookie
 ``JWT_COOKIE_CSRF_PROTECT``       Enable/disable CSRF protection. Only used when sending the JWT in via cookies
 ``JWT_ACCESS_CSRF_COOKIE_NAME``   Name of the CSRF access cookie. Defaults to ``'csrf_access_token'``. Only used
@@ -45,7 +45,7 @@ The available options are:
 ``JWT_ALGORITHM``                 Which algorithm to sign the JWT with. `See here
                                   <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_ for the options. Defaults
                                   to ``'HS256'``. Note that Asymmetric (Public-key) Algorithms are not currently supported.
-``JWT_BLACKLIST_ENABLED``         Enable/disable token blackliting and revoking. Defaults to ``False``
+``JWT_BLACKLIST_ENABLED``         Enable/disable token blacklisting and revoking. Defaults to ``False``
 ``JWT_BLACKLIST_STORE``           Where to save created and revoked tokens. `See here
                                   <http://pythonhosted.org/simplekv/>`_ for options.
 ``JWT_BLACKLIST_CHECKS``          What token types to check against the blacklist. Options are

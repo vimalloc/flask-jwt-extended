@@ -3,7 +3,7 @@ Refresh Tokens
 
 Flask-JWT-Extended supports refresh tokens out of the box. These are long
 lived tokens which can be used to create new access tokens once an old access
-token has expired. Refresh tokens cannot access a **jwt_requred** protected
+token has expired. Refresh tokens cannot access a **jwt_required** protected
 endpoint.
 
 .. literalinclude:: ../examples/refresh_tokens.py

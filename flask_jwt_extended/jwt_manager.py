@@ -41,7 +41,7 @@ class JWTManager:
             jsonify({'msg': 'Token has been revoked'}), 401
         )
 
-        # Setup the app if it is given (can be passed to this consturctor, or
+        # Setup the app if it is given (can be passed to this constructor, or
         # called later by calling init_app directly)
         if app is not None:
             self.init_app(app)
@@ -77,7 +77,7 @@ class JWTManager:
             return self._invalid_token_callback(str(e))
 
         @app.errorhandler(RevokedTokenError)
-        def hanlde_revoked_token_error(e):
+        def handle_revoked_token_error(e):
             return self._revoked_token_callback()
 
         @app.errorhandler(FreshTokenRequired)

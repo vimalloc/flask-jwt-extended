@@ -23,8 +23,8 @@ app.config['JWT_COOKIE_SECURE'] = False
 app.config['JWT_ACCESS_COOKIE_PATH'] = '/api/'
 app.config['JWT_REFRESH_COOKIE_PATH'] = '/token/refresh'
 
-# Enable csrf double submit protection. Check out this for a simple
-# overview of what this is: http://stackoverflow.com/a/37396572/272689.
+# Enable csrf double submit protection. See this for a thorough
+# explination: http://www.redotheweb.com/2015/11/09/api-security.html
 app.config['JWT_COOKIE_CSRF_PROTECT'] = True
 
 jwt = JWTManager(app)

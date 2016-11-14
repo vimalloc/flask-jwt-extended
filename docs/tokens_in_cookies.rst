@@ -7,7 +7,7 @@ site, an attacker will be able to trivially steal your refresh and access tokens
 If you want some additional security on your site, you can save your JWTs in a
 httponly cookie instead, which keeps javascript from being able to access the
 cookie. See this great blog for a more in depth analysis between these options:
-https://stormpath.com/blog/where-to-store-your-jwts-cookies-vs-html5-web-storage.
+http://www.redotheweb.com/2015/11/09/api-security.html
 
 Here is a basic example of how to store JWTs in cookies:
 

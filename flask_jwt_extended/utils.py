@@ -277,7 +277,7 @@ def jwt_refresh_token_required(fn):
     """
     If you decorate a view with this, it will insure that the requester has a
     valid JWT refresh token before calling the actual view. If the token is
-    invalid, expired, not present, etc, the appropiate callback will be called
+    invalid, expired, not present, etc, the appropriate callback will be called
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -324,7 +324,7 @@ def create_access_token(identity, fresh=False):
                      query disk twice, once for initially finding the identity
                      in your login endpoint, and once for setting addition data
                      in the JWT via the user_claims_loader
-    :param fresh: If this token should me markded as fresh, and can thus access
+    :param fresh: If this token should be marked as fresh, and can thus access
                   fresh_jwt_required protected endpoints. Defaults to False
     :return: A newly encoded JWT access token
     """

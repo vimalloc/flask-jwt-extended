@@ -12,7 +12,7 @@ The available options are:
 .. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
 
 ================================= =========================================
-``JWT_TOKEN_LOCATION``            Where to find the JWT in the request. The options are ``'headers'`` or
+``JWT_TOKEN_LOCATION``            Where to look for a JWT when processing a request. The options are ``'headers'`` or
                                   ``'cookies'``. Defaults to ``'headers'``
 ``JWT_HEADER_NAME``               What header to look for the JWT in a request. Only used if we are sending
                                   the JWT in via headers. Defaults to ``'Authorization'``
@@ -20,13 +20,13 @@ The available options are:
                                   an empty string, in which case the header only contains the JWT
 ``JWT_COOKIE_SECURE``             If the secure flag should be set on your JWT cookies. This will only allow
                                   the cookies to be sent over https. Defaults to ``False``, but in production
-                                  this should likely be set to ``True``.
+                                  this should likely be set to ``True``. Only used when sending the JWT in via cookies.
 ``JWT_ACCESS_COOKIE_NAME``        What the cookie that hold the access JWT will be called. Only used
                                   when sending the JWT in via cookies. Defaults to ``access_token_cookie``
-``JWT_REFRESH_COOKIE_NAME``       What the cookie that hold the access JWT will be called. Only used
+``JWT_REFRESH_COOKIE_NAME``       What the cookie that hold the refresh JWT will be called. Only used
                                   when sending the JWT in via cookies. Defaults to ``refresh_token_cookie``
 ``JWT_ACCESS_COOKIE_PATH``        What ``path`` should be set for the access cookie. Defaults to ``None``, which
-                                  will cause this access tookie to be sent in with every request. Should be modified
+                                  will cause this access cookie to be sent in with every request. Should be modified
                                   for only the paths that need the access cookie
 ``JWT_REFRESH_COOKIE_PATH``       What ``path`` should be set for the refresh cookie. Defaults to ``None``, which
                                   will cause this access cookie to be sent in with every request. Should be modified
@@ -49,5 +49,5 @@ The available options are:
 ``JWT_BLACKLIST_STORE``           Where to save created and revoked tokens. `See here
                                   <http://pythonhosted.org/simplekv/>`_ for options.
 ``JWT_BLACKLIST_CHECKS``          What token types to check against the blacklist. Options are
-                                  ``'refresh'`` or  ``'all'``. Defaults to ``'refresh'``
+                                  ``'refresh'`` or  ``'all'``. Defaults to ``'refresh'``. Only used if blacklisting is enabled.
 ================================= =========================================

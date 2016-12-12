@@ -35,9 +35,9 @@ will not be able to steal the actual access and refresh JWTs, as javascript is
 still not able to access those httponly cookies.
 
 This obviously isn't a golden bullet. If an attacker can perform an XSS attack they can
-still access protected endpoint from people who visit your site. However, it is better
+still access protected endpoints from people who visit your site. However, it is better
 then if they were able to steal the access and refresh tokens tokens from
-local/session storage, and do whatever they wanted with them. If this additional
+local/session storage, and use them whenever they wanted. If this additional
 security is worth the added complexity of using cookies and double submit CSRF
 protection is a choice you will have to make.
 

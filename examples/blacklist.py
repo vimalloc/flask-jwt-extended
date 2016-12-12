@@ -20,9 +20,9 @@ app.secret_key = 'super-secret'
 app.config['JWT_BLACKLIST_ENABLED'] = True
 app.config['JWT_BLACKLIST_STORE'] = simplekv.memory.DictStore()
 
-# Only check the refresh token for being revoked, and set a small time to live
-# on the access tokens to prevent a compromised one from being used for a long
-# period of time
+# Only check the refresh token for being revoked, and set a small time to
+# live on the access tokens to prevent a compromised one from being used
+# for a long period of time
 app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(minutes=3)
 

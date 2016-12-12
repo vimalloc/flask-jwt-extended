@@ -48,7 +48,6 @@ def login():
     # the properties of this object in the user_claims_loader
     # function, and get the identity of this object from the
     # user_identity_loader function.
-    # function how to get the identity from this object
     access_token = create_access_token(identity=user)
     ret = {'access_token': access_token}
     return jsonify(ret), 200

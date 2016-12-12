@@ -15,7 +15,7 @@ multiple thread and processes running your application. At present we believe
 redis is a good fit for this. It has the added benefit of removing expired tokens
 from the store automatically, so it wont blow up into something huge.
 
-We also have choose what tokens we want to check against the blacklist. We could
+We also have to choose what tokens we want to check against the blacklist. We could
 check all tokens (refresh and access), or only the refresh tokens. There are pros
 and cons to either way (extra overhead on jwt_required endpoints vs someone being
 able to use an access token freely until it expires). In this example, we are going

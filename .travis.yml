@@ -1,0 +1,14 @@
+language: python
+python:
+    - "3.5"
+sudo: false
+env:
+    - TOXENV=py27
+    - TOXENV=py33
+    - TOXENV=py34
+    - TOXENV=py35
+install:
+    - pip install -U pip
+    - pip install -U Flask, PyJWT, six, tox, coverage
+script:
+    - tox

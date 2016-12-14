@@ -1,4 +1,6 @@
 # Flask-JWT-Extended
+[![Build Status](https://travis-ci.org/vimalloc/flask-jwt-extended.svg?branch=master)](https://travis-ci.org/vimalloc/flask-jwt-extended)
+
 Flask-JWT-Extended adds support for using JSON Web Tokens (JWT) to Flask for protecting views.
 
 This has several optional features built it to make working with JSON Web Tokens

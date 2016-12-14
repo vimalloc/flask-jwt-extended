@@ -29,9 +29,9 @@ $ python setup.py install
 
 
 ### Testing and Code Coverage
-We require 100% code coverage in our unit tests. We run all the unit tests with tox.
-This will test against python2.7, and 3.5 (although not tested, python3.3 and 3.4
-should also be fully supported). Running tox will print out a code coverage report
+We require 100% code coverage in our unit tests. We run all the unit tests with tox,
+which will test against python2.7, 3.3, 3.4, and 3.5. Running tox will print out a
+code coverage report
 ```
 $ tox
 ```

@@ -50,7 +50,12 @@ class JWTManager:
         """
         Register this extension with the flask app
         """
+        # Save this so we can use it later in the extension
         app.jwt_manager = self
+
+        # Set propagate exceptions, so all of these error handlers properly
+        # work in production
+        app.config['PROPAGATE_EXCEPTIONS'] = True
 
         @app.errorhandler(NoAuthorizationError)
         def handle_auth_error(e):

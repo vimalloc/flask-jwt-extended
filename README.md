@@ -1,6 +1,7 @@
 # Flask-JWT-Extended
 [![Build Status](https://travis-ci.org/vimalloc/flask-jwt-extended.svg?branch=master)](https://travis-ci.org/vimalloc/flask-jwt-extended)
 [![Coverage Status](https://coveralls.io/repos/github/vimalloc/flask-jwt-extended/badge.svg)](https://coveralls.io/github/vimalloc/flask-jwt-extended)
+[![PyPI version](https://badge.fury.io/py/Flask-JWT-Extended.svg)](https://badge.fury.io/py/Flask-JWT-Extended)
 
 Flask-JWT-Extended adds support for using JSON Web Tokens (JWT) to Flask for protecting views.
 

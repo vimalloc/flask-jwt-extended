@@ -312,13 +312,15 @@ class TestEndpoints(unittest.TestCase):
 
         self.app.config['JWT_HEADER_TYPE'] = 'Bearer'
         self.app.config['JWT_HEADER_NAME'] = 'Auth'
-        status, data = self._jwt_get('/protected', access_token, header_name='Auth')
+        status, data = self._jwt_get('/protected', access_token, header_name='Auth',
+                                     header_type='Bearer')
+        self.assertIn('msg', data)
+        self.assertEqual(status, 200)
+
+        status, data = self._jwt_get('/protected', access_token, header_name='Authorization',
+                                     header_type='Bearer')
         self.assertIn('msg', data)
         self.assertEqual(status, 401)
-
-        status, data = self._jwt_get('/protected', access_token, header_name='Authorization')
-        self.assertEqual(data, {'msg': 'hello world'})
-        self.assertEqual(status, 200)
 
 
 class TestEndpointsWithCookies(unittest.TestCase):

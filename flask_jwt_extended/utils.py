@@ -18,7 +18,7 @@ from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
     get_cookie_csrf_protect, get_access_csrf_cookie_name, \
     get_refresh_cookie_name, get_refresh_cookie_path, \
     get_refresh_csrf_cookie_name, get_token_location, \
-    get_csrf_header_name
+    get_csrf_header_name, get_jwt_header_name
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthorizationError, WrongTokenError, \
     FreshTokenRequired
@@ -153,13 +153,14 @@ def _decode_jwt(token, secret, algorithm):
 
 def _decode_jwt_from_headers():
     # Verify we have the auth header
-    auth_header = request.headers.get('Authorization', None)
-    if not auth_header:
+    header_name = get_jwt_header_name()
+    jwt_header = request.headers.get(header_name, None)
+    if not jwt_header:
         raise NoAuthorizationError("Missing Authorization Header")
 
     # Make sure the header is valid
     expected_header = get_jwt_header_type()
-    parts = auth_header.split()
+    parts = jwt_header.split()
     if not expected_header:
         if len(parts) != 1:
             msg = "Badly formatted authorization header. Should be '<JWT>'"

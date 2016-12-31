@@ -156,19 +156,19 @@ def _decode_jwt_from_headers():
     header_name = get_jwt_header_name()
     jwt_header = request.headers.get(header_name, None)
     if not jwt_header:
-        raise NoAuthorizationError("Missing Authorization Header")
+        raise NoAuthorizationError("Missing {} Header".format(header_name))
 
     # Make sure the header is valid
     expected_header = get_jwt_header_type()
     parts = jwt_header.split()
     if not expected_header:
         if len(parts) != 1:
-            msg = "Badly formatted authorization header. Should be '<JWT>'"
+            msg = "Bad {} header. Expected '<JWT>'"
             raise InvalidHeaderError(msg)
         token = parts[0]
     else:
         if parts[0] != expected_header or len(parts) != 2:
-            msg = "Bad authorization header. Expected '{} <JWT>'".format(expected_header)
+            msg = "Bad {} header. Expected '{} <JWT>'".format(header_name, expected_header)
             raise InvalidHeaderError(msg)
         token = parts[1]
 

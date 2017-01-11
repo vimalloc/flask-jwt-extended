@@ -6,7 +6,8 @@ from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, jwt_required, \
     get_jwt_identity, revoke_token, unrevoke_token, \
     get_stored_tokens, get_all_stored_tokens, create_access_token, \
-    create_refresh_token, jwt_refresh_token_required, get_stored_token
+    create_refresh_token, jwt_refresh_token_required, \
+    get_raw_jwt, get_stored_token
 
 
 # Setup flask
@@ -53,6 +54,16 @@ def refresh():
         'access_token': create_access_token(identity=current_user)
     }
     return jsonify(ret), 200
+
+
+# Endpoint for revoking a token when logging out
+@app.route('/logout', method=['POST'])
+@jwt_required
+def login():
+    jwt = get_raw_jwt()
+    jti = jwt['jti']
+    revoke_token(jti)
+    return jsonify({"msg": "Successfully logged out"}), 200
 
 
 # Endpoint for listing tokens that have the same identity as you

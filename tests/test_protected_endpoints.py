@@ -10,7 +10,7 @@ from flask_jwt_extended.utils import _encode_access_token, get_jwt_claims, \
     get_jwt_identity, set_refresh_cookies, set_access_cookies, unset_jwt_cookies
 from flask_jwt_extended import JWTManager, create_refresh_token, \
     jwt_refresh_token_required, create_access_token, fresh_jwt_required, \
-    jwt_required
+    jwt_required, get_raw_jwt
 
 
 class TestEndpoints(unittest.TestCase):
@@ -280,6 +280,7 @@ class TestEndpoints(unittest.TestCase):
                 'claims': get_jwt_claims()
             })
 
+
         # Login
         response = self.client.post('/auth/login')
         data = json.loads(response.get_data(as_text=True))
@@ -289,6 +290,32 @@ class TestEndpoints(unittest.TestCase):
         status, data = self._jwt_get('/claims', access_token)
         self.assertEqual(status, 200)
         self.assertEqual(data, {'username': 'test', 'claims': {'foo': 'bar'}})
+
+    def test_jwt_raw_token(self):
+        # Endpoints that uses get raw tokens and returns the keys
+        @self.app.route('/claims')
+        @jwt_required
+        def claims():
+            jwt = get_raw_jwt()
+            claims_keys = [claim for claim in jwt]
+            return jsonify(claims_keys), 200
+
+        # Login
+        response = self.client.post('/auth/login')
+        data = json.loads(response.get_data(as_text=True))
+        access_token = data['access_token']
+
+        # Test our custom endpoint
+        status, data = self._jwt_get('/claims', access_token)
+        self.assertEqual(status, 200)
+        self.assertIn('exp', data)
+        self.assertIn('iat', data)
+        self.assertIn('nbf', data)
+        self.assertIn('jti', data)
+        self.assertIn('identity', data)
+        self.assertIn('fresh', data)
+        self.assertIn('type', data)
+        self.assertIn('user_claims', data)
 
     def test_different_headers(self):
         response = self.client.post('/auth/login')

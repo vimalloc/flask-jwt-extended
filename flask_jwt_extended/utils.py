@@ -41,6 +41,14 @@ def get_jwt_claims():
     return getattr(ctx_stack.top, 'jwt_user_claims', {})
 
 
+def get_raw_jwt():
+    """
+    Returns the python dictionary which has all of the data in this JWT. If no
+    JWT is currently present, and empty dict is returned
+    """
+    return getattr(ctx_stack.top, 'jwt', {})
+
+
 def _create_csrf_token():
     return str(uuid.uuid4())
 
@@ -235,6 +243,7 @@ def jwt_required(fn):
         # the various endpoints that is using this decorator
         ctx_stack.top.jwt_identity = jwt_data['identity']
         ctx_stack.top.jwt_user_claims = jwt_data['user_claims']
+        ctx_stack.top.jwt = jwt_data
         return fn(*args, **kwargs)
     return wrapper
 
@@ -270,6 +279,7 @@ def fresh_jwt_required(fn):
         # the various endpoints that is using this decorator
         ctx_stack.top.jwt_identity = jwt_data['identity']
         ctx_stack.top.jwt_user_claims = jwt_data['user_claims']
+        ctx_stack.top.jwt = jwt_data
         return fn(*args, **kwargs)
     return wrapper
 
@@ -297,6 +307,7 @@ def jwt_refresh_token_required(fn):
         # Save the jwt in the context so that it can be accessed later by
         # the various endpoints that is using this decorator
         ctx_stack.top.jwt_identity = jwt_data['identity']
+        ctx_stack.top.jwt = jwt_data
         return fn(*args, **kwargs)
     return wrapper
 

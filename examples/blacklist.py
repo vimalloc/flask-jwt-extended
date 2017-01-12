@@ -59,7 +59,7 @@ def refresh():
 # Endpoint for revoking a token when logging out
 @app.route('/logout', method=['POST'])
 @jwt_required
-def login():
+def logout():
     jwt = get_raw_jwt()
     jti = jwt['jti']
     revoke_token(jti)

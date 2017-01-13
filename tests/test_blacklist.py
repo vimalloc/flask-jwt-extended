@@ -7,7 +7,7 @@ import simplekv.memory
 from flask import Flask, jsonify, request
 from flask_jwt_extended.blacklist import _get_token_ttl, get_stored_token
 from flask_jwt_extended.utils import _encode_refresh_token, _decode_jwt, \
-    fresh_jwt_required, get_jwt_identity
+    fresh_jwt_required, get_jwt_identity, get_raw_jwt
 
 from flask_jwt_extended import JWTManager, create_access_token, \
     get_all_stored_tokens, get_stored_tokens, revoke_token, unrevoke_token, \
@@ -69,6 +69,14 @@ class TestEndpoints(unittest.TestCase):
         def refresh():
             username = get_jwt_identity()
             ret = {'access_token': create_access_token(username, fresh=False)}
+            return jsonify(ret), 200
+
+        @self.app.route('/auth/logout', methods=['POST'])
+        @jwt_required
+        def logout():
+            jti = get_raw_jwt()['jti']
+            revoke_token(jti)
+            ret = {"msg": "Successfully logged out"}
             return jsonify(ret), 200
 
         @self.app.route('/protected', methods=['POST'])
@@ -283,6 +291,28 @@ class TestEndpoints(unittest.TestCase):
         status, data = self._jwt_post('/auth/refresh', refresh_token)
         self.assertEqual(status, 200)
         self.assertIn('access_token', data)
+
+    def test_login_logout(self):
+        # Check access and refresh tokens
+        self.app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'all'
+
+        # Login
+        access_token, refresh_token = self._login('test12345')
+
+        # Verify we can access the protected endpoint
+        status, data = self._jwt_post('/protected', access_token)
+        self.assertEqual(status, 200)
+        self.assertEqual(data, {'hello': 'world'})
+
+        # Logout
+        status, data = self._jwt_post('/auth/logout', access_token)
+        self.assertEqual(status, 200)
+        self.assertEqual(data, {'msg': 'Successfully logged out'})
+
+        # Verify that we cannot access the protected endpoint anymore
+        status, data = self._jwt_post('/protected', access_token)
+        self.assertEqual(status, 401)
+        self.assertEqual(data, {'msg': 'Token has been revoked'})
 
     def test_bad_blacklist_settings(self):
         app = Flask(__name__)

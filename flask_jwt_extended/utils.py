@@ -30,7 +30,7 @@ def get_jwt_identity():
     Returns the identity of the JWT in this context. If no JWT is present,
     None is returned.
     """
-    return get_raw_jwt().get('identity', None)
+    return get_raw_jwt().get('identity', {})
 
 
 def get_jwt_claims():

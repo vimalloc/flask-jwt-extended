@@ -56,13 +56,19 @@ def refresh():
     return jsonify(ret), 200
 
 
-# Endpoint for revoking a token when logging out
-@app.route('/logout', method=['POST'])
+# Endpoint for revoking an access token when logging out.
+# Please make sure JWT_BLACKLIST_TOKEN_CHECKS is set to 'all'
+@app.route('/logout', methods=['POST'])
 @jwt_required
 def logout():
     jwt = get_raw_jwt()
     jti = jwt['jti']
-    revoke_token(jti)
+    try:
+        revoke_token(jti)
+    except KeyError:
+        return jsonify({
+            'msg': 'Requires access tokens to be blacklisted'
+        }), 500
     return jsonify({"msg": "Successfully logged out"}), 200
 
 

@@ -48,6 +48,6 @@ The available options are:
 ``JWT_BLACKLIST_ENABLED``         Enable/disable token blacklisting and revoking. Defaults to ``False``
 ``JWT_BLACKLIST_STORE``           Where to save created and revoked tokens. `See here
                                   <http://pythonhosted.org/simplekv/>`_ for options.
-``JWT_BLACKLIST_CHECKS``          What token types to check against the blacklist. Options are
+``JWT_BLACKLIST_TOKEN_CHECKS``    What token types to check against the blacklist. Options are
                                   ``'refresh'`` or  ``'all'``. Defaults to ``'refresh'``. Only used if blacklisting is enabled.
 ================================= =========================================

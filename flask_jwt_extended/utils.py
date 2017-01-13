@@ -30,7 +30,7 @@ def get_jwt_identity():
     Returns the identity of the JWT in this context. If no JWT is present,
     None is returned.
     """
-    return getattr(ctx_stack.top, 'jwt_identity', None)
+    return get_raw_jwt().get('identity', None)
 
 
 def get_jwt_claims():
@@ -38,7 +38,7 @@ def get_jwt_claims():
     Returns the dictionary of custom use claims in this JWT. If no custom user
     claims are present, an empty dict is returned
     """
-    return getattr(ctx_stack.top, 'jwt_user_claims', {})
+    return get_raw_jwt().get('user_claims', {})
 
 
 def get_raw_jwt():
@@ -241,8 +241,6 @@ def jwt_required(fn):
 
         # Save the jwt in the context so that it can be accessed later by
         # the various endpoints that is using this decorator
-        ctx_stack.top.jwt_identity = jwt_data['identity']
-        ctx_stack.top.jwt_user_claims = jwt_data['user_claims']
         ctx_stack.top.jwt = jwt_data
         return fn(*args, **kwargs)
     return wrapper
@@ -277,8 +275,6 @@ def fresh_jwt_required(fn):
 
         # Save the jwt in the context so that it can be accessed later by
         # the various endpoints that is using this decorator
-        ctx_stack.top.jwt_identity = jwt_data['identity']
-        ctx_stack.top.jwt_user_claims = jwt_data['user_claims']
         ctx_stack.top.jwt = jwt_data
         return fn(*args, **kwargs)
     return wrapper
@@ -306,7 +302,6 @@ def jwt_refresh_token_required(fn):
 
         # Save the jwt in the context so that it can be accessed later by
         # the various endpoints that is using this decorator
-        ctx_stack.top.jwt_identity = jwt_data['identity']
         ctx_stack.top.jwt = jwt_data
         return fn(*args, **kwargs)
     return wrapper

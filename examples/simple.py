@@ -15,7 +15,7 @@ jwt = JWTManager(app)
 def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
-    if username != 'test' and password != 'test':
+    if username != 'test' or password != 'test':
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable

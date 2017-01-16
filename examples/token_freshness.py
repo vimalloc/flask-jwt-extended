@@ -14,7 +14,7 @@ jwt = JWTManager(app)
 def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
-    if username != 'test' and password != 'test':
+    if username != 'test' or password != 'test':
         return jsonify({"msg": "Bad username or password"}), 401
 
     # create_access_token supports an optional 'fresh' argument,
@@ -37,7 +37,7 @@ def login():
 def fresh_login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
-    if username != 'test' and password != 'test':
+    if username != 'test' or password != 'test':
         return jsonify({"msg": "Bad username or password"}), 401
 
     new_token = create_access_token(identity=username, fresh=True)

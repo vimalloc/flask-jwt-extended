@@ -37,7 +37,7 @@ def user_identity_lookup(user):
 def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
-    if username != 'test' and password != 'test':
+    if username != 'test' or password != 'test':
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Create an example UserObject

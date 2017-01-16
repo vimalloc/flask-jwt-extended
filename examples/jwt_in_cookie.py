@@ -36,7 +36,7 @@ jwt = JWTManager(app)
 def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
-    if username != 'test' and password != 'test':
+    if username != 'test' or password != 'test':
         return jsonify({'login': False}), 401
 
     # Create the tokens we will be sending back to the user

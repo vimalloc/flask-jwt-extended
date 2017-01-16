@@ -23,7 +23,7 @@ def add_claims_to_access_token(identity):
 def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
-    if username != 'test' and password != 'test':
+    if username != 'test' or password != 'test':
         return jsonify({"msg": "Bad username or password"}), 401
 
     ret = {'access_token': create_access_token(username)}

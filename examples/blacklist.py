@@ -21,11 +21,11 @@ app.secret_key = 'super-secret'
 app.config['JWT_BLACKLIST_ENABLED'] = True
 app.config['JWT_BLACKLIST_STORE'] = simplekv.memory.DictStore()
 
-# Only check the refresh token for being revoked, and set a small time to
-# live on the access tokens to prevent a compromised one from being used
-# for a long period of time
-app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(minutes=3)
+# Check all tokens (access and refresh) to see if they have been revoked.
+# You can alternately check only the refresh tokens here, by setting this
+# to 'refresh' instead of 'all'
+app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'all'
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(minutes=5)
 
 jwt = JWTManager(app)
 
@@ -56,23 +56,42 @@ def refresh():
     return jsonify(ret), 200
 
 
-# Endpoint for revoking an access token when logging out.
-# Please make sure JWT_BLACKLIST_TOKEN_CHECKS is set to 'all'
+# Helper method to revoke the current token used to access
+# a protected endpoint
+def _revoke_current_token():
+    current_token = get_raw_jwt()
+    jti = current_token['jti']
+    revoke_token(jti)
+
+
+# Endpoint for revoking the current users access token
 @app.route('/logout', methods=['POST'])
 @jwt_required
 def logout():
-    jwt = get_raw_jwt()
-    jti = jwt['jti']
     try:
-        revoke_token(jti)
+        _revoke_current_token()
     except KeyError:
         return jsonify({
-            'msg': 'Requires access tokens to be blacklisted'
+            'msg': 'Access token not found in the blacklist store'
+        }), 500
+    return jsonify({"msg": "Successfully logged out"}), 200
+
+
+# Endpoint for revoking the current users refresh token
+@app.route('/logout2', methods=['POST'])
+@jwt_refresh_token_required
+def logout2():
+    try:
+        _revoke_current_token()
+    except KeyError:
+        return jsonify({
+            'msg': 'Refresh token not found in the blacklist store'
         }), 500
     return jsonify({"msg": "Successfully logged out"}), 200
 
 
 # Endpoint for listing tokens that have the same identity as you
+# NOTE: This is currently very inefficient.
 @app.route('/auth/tokens', methods=['GET'])
 @jwt_required
 def list_identity_tokens():

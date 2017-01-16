@@ -199,7 +199,8 @@ def _decode_jwt_from_cookies(type):
     token = _decode_jwt(token, secret, algorithm)
 
     if get_cookie_csrf_protect():
-        csrf = request.cookies.get(get_access_csrf_cookie_name(), None)
+        csrf_header_key = get_csrf_header_name()
+        csrf = request.headers.get(csrf_header_key, None)
         if not csrf or not safe_str_cmp(csrf,  token['csrf']):
             raise NoAuthorizationError("Missing or invalid csrf double submit header")
 

@@ -7,7 +7,6 @@ env:
     - TOXENV=py33
     - TOXENV=py34
     - TOXENV=py35
-    - TOXENV=py36
 install:
     - pip install -U pip
     - pip install -U Flask PyJWT six tox coverage coveralls

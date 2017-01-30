@@ -13,7 +13,8 @@ The available options are:
 
 ================================= =========================================
 ``JWT_TOKEN_LOCATION``            Where to look for a JWT when processing a request. The options are ``'headers'`` or
-                                  ``'cookies'``. Defaults to ``'headers'``
+                                  ``'cookies'``. You can pass in a list to check more then one location: ```['headers', 'cookies']```.
+                                  Defaults to ``'headers'``
 ``JWT_HEADER_NAME``               What header to look for the JWT in a request. Only used if we are sending
                                   the JWT in via headers. Defaults to ``'Authorization'``
 ``JWT_HEADER_TYPE``               What type of header the JWT is in. Defaults to ``'Bearer'``. This can be

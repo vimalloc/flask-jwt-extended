@@ -2,13 +2,8 @@ import datetime
 from flask import current_app
 
 
-# TODO support for cookies and headers at the same time. This could be useful
-#      for using cookies in a web browser (more secure), and headers in a mobile
-#      app (don't have to worry about csrf/xss there, and headers are easier to
-#      manage in that environment)
-
 # Where to look for the JWT. Available options are cookies or headers
-TOKEN_LOCATION = 'headers'
+TOKEN_LOCATION = ['headers']
 
 # Options for JWTs when the TOKEN_LOCATION is headers
 HEADER_NAME = 'Authorization'
@@ -43,10 +38,14 @@ BLACKLIST_TOKEN_CHECKS = 'refresh'  # valid options are 'all', and 'refresh'
 
 
 def get_token_location():
-    location = current_app.config.get('JWT_TOKEN_LOCATION', TOKEN_LOCATION)
-    if location not in ['headers', 'cookies']:
-        raise RuntimeError('JWT_LOCATION_LOCATION must be "headers" or "cookies"')
-    return location
+    locations = current_app.config.get('JWT_TOKEN_LOCATION', TOKEN_LOCATION)
+    if not isinstance(locations, list):
+        locations = [locations]
+    for location in locations:
+        if location not in ('headers', 'cookies'):
+            raise RuntimeError('JWT_LOCATION_LOCATION can only contain '
+                               '"headers" and/or "cookies"')
+    return locations
 
 
 def get_jwt_header_name():

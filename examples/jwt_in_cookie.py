@@ -16,7 +16,7 @@ app.secret_key = 'super-secret'  # Change this!
 # Configure application to store JWTs in cookies. Whenever you make
 # a request to a protected endpoint, you will need to send in the
 # access or refresh JWT via a cookie.
-app.config['JWT_TOKEN_LOCATION'] = 'cookies'
+app.config['JWT_TOKEN_LOCATION'] = ['cookies']
 
 # Set the cookie paths, so that you are only sending your access token
 # cookie to the access endpoints, and only sending your refresh token

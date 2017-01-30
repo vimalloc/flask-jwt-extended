@@ -25,7 +25,7 @@ class TestEndpoints(unittest.TestCase):
 
     def test_default_configs(self):
         with self.app.test_request_context():
-            self.assertEqual(get_token_location(), 'headers')
+            self.assertEqual(get_token_location(), ['headers'])
             self.assertEqual(get_jwt_header_name(), 'Authorization')
             self.assertEqual(get_jwt_header_type(), 'Bearer')
 
@@ -69,7 +69,7 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'all'
 
         with self.app.test_request_context():
-            self.assertEqual(get_token_location(), 'cookies')
+            self.assertEqual(get_token_location(), ['cookies'])
             self.assertEqual(get_jwt_header_name(), 'Auth')
             self.assertEqual(get_jwt_header_type(), 'JWT')
 

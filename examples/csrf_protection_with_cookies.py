@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.secret_key = 'super-secret'  # Change this!
 
 # Configure application to store JWTs in cookies
-app.config['JWT_TOKEN_LOCATION'] = 'cookies'
+app.config['JWT_TOKEN_LOCATION'] = ['cookies']
 
 # Only allow JWT cookies to be sent over https. In production, this
 # should likely be True

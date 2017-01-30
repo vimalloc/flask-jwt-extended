@@ -87,7 +87,7 @@ def _encode_access_token(identity, secret, algorithm, token_expire_delta,
         'type': 'access',
         'user_claims': user_claims,
     }
-    if get_token_location() == 'cookies' and get_cookie_csrf_protect():
+    if 'cookies' in get_token_location() and get_cookie_csrf_protect() is True:
         token_data['csrf'] = _create_csrf_token()
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
 
@@ -119,7 +119,7 @@ def _encode_refresh_token(identity, secret, algorithm, token_expire_delta):
         'identity': identity,
         'type': 'refresh',
     }
-    if get_token_location() == 'cookies' and get_cookie_csrf_protect():
+    if 'cookies' in get_token_location() and get_cookie_csrf_protect() is True:
         token_data['csrf'] = _create_csrf_token()
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
 
@@ -153,9 +153,6 @@ def _decode_jwt(token, secret, algorithm):
             raise JWTDecodeError("Missing or invalid claim: fresh")
         if 'user_claims' not in data or not isinstance(data['user_claims'], dict):
             raise JWTDecodeError("Missing or invalid claim: user_claims")
-    if get_token_location() == 'cookies' and get_cookie_csrf_protect():
-        if 'csrf' not in data or not isinstance(data['csrf'], six.string_types):
-            raise JWTDecodeError("Missing or invalid claim: csrf")
     return data
 
 
@@ -200,17 +197,41 @@ def _decode_jwt_from_cookies(type):
 
     if get_cookie_csrf_protect():
         csrf_header_key = get_csrf_header_name()
-        csrf = request.headers.get(csrf_header_key, None)
-        if not csrf or not safe_str_cmp(csrf,  token['csrf']):
-            raise NoAuthorizationError("Missing or invalid csrf double submit header")
+        csrf_token_from_header = request.headers.get(csrf_header_key, None)
+        csrf_token_from_cookie = token.get('csrf', None)
 
+        # Verify the csrf tokens are present and matching
+        if csrf_token_from_cookie is None:
+            raise JWTDecodeError("Missing claim: 'csrf'")
+        if not isinstance(csrf_token_from_cookie, six.string_types):
+            raise JWTDecodeError("Invalid claim: 'csrf' (must be a string)")
+        if csrf_token_from_header is None:
+            raise NoAuthorizationError("Missing CSRF token in headers")
+        if not safe_str_cmp(csrf_token_from_header,  csrf_token_from_cookie):
+            raise NoAuthorizationError("CSRF double submit tokens do not match")
     return token
 
 
 def _decode_jwt_from_request(type):
-    token_location = get_token_location()
-    if token_location == 'headers':
+    token_locations = get_token_location()
+
+    # JWT can be in either headers or cookies
+    if 'headers' in token_locations and 'cookies' in token_locations:
+        try:
+            return _decode_jwt_from_headers()
+        except NoAuthorizationError:
+            pass
+        try:
+            return _decode_jwt_from_cookies(type)
+        except NoAuthorizationError:
+            pass
+        raise NoAuthorizationError("Missing JWT in header and cookies")
+
+    # JWT can only be in headers
+    elif 'headers' in token_locations:
         return _decode_jwt_from_headers()
+
+    # JWT can only be in cookie
     else:
         return _decode_jwt_from_cookies(type)
 

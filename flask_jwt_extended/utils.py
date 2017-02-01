@@ -333,6 +333,7 @@ def create_refresh_token(identity):
     refresh_expire_delta = get_refresh_expires()
     algorithm = get_algorithm()
     secret = _get_secret_key()
+    identity = current_app.jwt_manager._user_identity_callback(identity)
 
     # Actually make the tokens
     refresh_token = _encode_refresh_token(identity, secret, algorithm,

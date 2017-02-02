@@ -33,6 +33,8 @@ The available options are:
                                   will cause this access cookie to be sent in with every request. Should be modified
                                   for only the paths that need the refresh cookie
 ``JWT_COOKIE_CSRF_PROTECT``       Enable/disable CSRF protection. Only used when sending the JWT in via cookies
+``JWT_CSRF_METHODS``              The request types that will use CSRF protection. Defaults to
+                                  ```['POST', 'PUT', 'PATCH', 'DELETE']```
 ``JWT_ACCESS_CSRF_COOKIE_NAME``   Name of the CSRF access cookie. Defaults to ``'csrf_access_token'``. Only used
                                   if using cookies with CSRF protection enabled
 ``JWT_REFRESH_CSRF_COOKIE_NAME``  Name of the CSRF refresh cookie. Defaults to ``'csrf_refresh_token'``. Only used

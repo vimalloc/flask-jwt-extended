@@ -18,6 +18,7 @@ REFRESH_COOKIE_PATH = None
 
 # Options for using double submit for verifying CSRF tokens
 COOKIE_CSRF_PROTECT = True
+CSRF_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE']
 ACCESS_CSRF_COOKIE_NAME = 'csrf_access_token'
 REFRESH_CSRF_COOKIE_NAME = 'csrf_refresh_token'
 CSRF_HEADER_NAME = 'X-CSRF-TOKEN'
@@ -77,6 +78,10 @@ def get_refresh_cookie_path():
 
 def get_cookie_csrf_protect():
     return current_app.config.get('JWT_COOKIE_CSRF_PROTECT', COOKIE_CSRF_PROTECT)
+
+
+def get_csrf_request_methods():
+    return current_app.config.get('JWT_CSRF_METHODS', CSRF_METHODS)
 
 
 def get_access_csrf_cookie_name():

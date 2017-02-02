@@ -18,7 +18,7 @@ from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
     get_cookie_csrf_protect, get_access_csrf_cookie_name, \
     get_refresh_cookie_name, get_refresh_cookie_path, \
     get_refresh_csrf_cookie_name, get_token_location, \
-    get_csrf_header_name, get_jwt_header_name
+    get_csrf_header_name, get_jwt_header_name, get_csrf_request_methods
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthorizationError, WrongTokenError, \
     FreshTokenRequired, CSRFError
@@ -195,7 +195,7 @@ def _decode_jwt_from_cookies(type):
     algorithm = get_algorithm()
     token = _decode_jwt(token, secret, algorithm)
 
-    if get_cookie_csrf_protect():
+    if get_cookie_csrf_protect() and request.method in get_csrf_request_methods():
         csrf_header_key = get_csrf_header_name()
         csrf_token_from_header = request.headers.get(csrf_header_key, None)
         csrf_token_from_cookie = token.get('csrf', None)

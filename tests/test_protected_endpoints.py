@@ -390,24 +390,10 @@ class TestEndpointsWithCookies(unittest.TestCase):
             set_access_cookies(resp, access_token)
             return resp, 200
 
-        @self.app.route('/api/protected')
+        @self.app.route('/api/protected', methods=['POST'])
         @jwt_required
         def protected():
             return jsonify({'msg': "hello world"})
-
-    def _jwt_post(self, url, jwt):
-        response = self.client.post(url, content_type='application/json',
-                                    headers={'Authorization': 'Bearer {}'.format(jwt)})
-        status_code = response.status_code
-        data = json.loads(response.get_data(as_text=True))
-        return status_code, data
-
-    def _jwt_get(self, url, jwt, header_name='Authorization', header_type='Bearer'):
-        header_type = '{} {}'.format(header_type, jwt).strip()
-        response = self.client.get(url, headers={header_name: header_type})
-        status_code = response.status_code
-        data = json.loads(response.get_data(as_text=True))
-        return status_code, data
 
     def _login(self):
         resp = self.client.post('/auth/login')
@@ -491,7 +477,7 @@ class TestEndpointsWithCookies(unittest.TestCase):
         self.app.config['JWT_COOKIE_CSRF_PROTECT'] = False
 
         # Try access without logging in
-        response = self.client.get('/api/protected')
+        response = self.client.post('/api/protected')
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 401)
@@ -506,7 +492,7 @@ class TestEndpointsWithCookies(unittest.TestCase):
 
         # Try with logging in
         self._login()
-        response = self.client.get('/api/protected')
+        response = self.client.post('/api/protected')
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 200)
@@ -525,7 +511,7 @@ class TestEndpointsWithCookies(unittest.TestCase):
         access_cookie_key = access_cookie_str.split('=')[0]
         access_cookie_value = "".join(access_cookie_str.split('=')[1:])
         self.client.set_cookie('localhost', access_cookie_key, access_cookie_value)
-        response = self.client.get('/api/protected')
+        response = self.client.post('/api/protected')
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 200)
@@ -535,7 +521,7 @@ class TestEndpointsWithCookies(unittest.TestCase):
         self.app.config['JWT_COOKIE_CSRF_PROTECT'] = True
 
         # Try without logging in
-        response = self.client.get('/api/protected')
+        response = self.client.post('/api/protected')
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 401)
@@ -545,14 +531,14 @@ class TestEndpointsWithCookies(unittest.TestCase):
         access_csrf, refresh_csrf = self._login()
 
         # Try with logging in but without double submit csrf protection
-        response = self.client.get('/api/protected')
+        response = self.client.post('/api/protected')
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 401)
         self.assertIn('msg', data)
 
         # Try with logged in and bad header name for double submit token
-        response = self.client.get('/api/protected',
+        response = self.client.post('/api/protected',
                                    headers={'bad-header-name': 'banana'})
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
@@ -560,7 +546,7 @@ class TestEndpointsWithCookies(unittest.TestCase):
         self.assertIn('msg', data)
 
         # Try with logged in and bad header data for double submit token
-        response = self.client.get('/api/protected',
+        response = self.client.post('/api/protected',
                                    headers={'X-CSRF-TOKEN': 'banana'})
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
@@ -568,7 +554,7 @@ class TestEndpointsWithCookies(unittest.TestCase):
         self.assertIn('msg', data)
 
         # Try with logged in and good double submit token
-        response = self.client.get('/api/protected',
+        response = self.client.post('/api/protected',
                                    headers={'X-CSRF-TOKEN': access_csrf})
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
@@ -582,7 +568,7 @@ class TestEndpointsWithCookies(unittest.TestCase):
         self._login()
         self.app.config['JWT_COOKIE_CSRF_PROTECT'] = True
 
-        response = self.client.get('/api/protected')
+        response = self.client.post('/api/protected')
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 422)
@@ -606,11 +592,57 @@ class TestEndpointsWithCookies(unittest.TestCase):
         self.client.set_cookie('localhost', access_cookie_key, encoded_token)
 
         self.app.config['JWT_COOKIE_CSRF_PROTECT'] = True
-        response = self.client.get('/api/protected')
+        response = self.client.post('/api/protected')
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 422)
         self.assertIn('msg', data)
+
+    def test_custom_csrf_methods(self):
+        @self.app.route('/protected-post', methods=['POST'])
+        @jwt_required
+        def protected_post():
+            return jsonify({'msg': "hello world"})
+
+        @self.app.route('/protected-get', methods=['GET'])
+        @jwt_required
+        def protected_get():
+            return jsonify({'msg': "hello world"})
+
+        # Login (saves jwts in the cookies for the test client
+        self.app.config['JWT_COOKIE_CSRF_PROTECT'] = True
+        self._login()
+
+        # Test being able to access GET without CSRF protection, and POST with
+        # CSRF protection
+        self.app.config['JWT_CSRF_METHODS'] = ['POST']
+
+        response = self.client.post('/protected-post')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 401)
+        self.assertIn('msg', data)
+
+        response = self.client.get('/protected-get')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 200)
+        self.assertEqual(data, {'msg': 'hello world'})
+
+        # Now swap it around, and verify the JWT_CRSF_METHODS are being honored
+        self.app.config['JWT_CSRF_METHODS'] = ['GET']
+
+        response = self.client.get('/protected-get')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 401)
+        self.assertIn('msg', data)
+
+        response = self.client.post('/protected-post')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 200)
+        self.assertEqual(data, {'msg': 'hello world'})
 
 
 class TestEndpointsWithHeadersAndCookies(unittest.TestCase):

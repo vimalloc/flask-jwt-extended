@@ -21,7 +21,7 @@ from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
     get_csrf_header_name, get_jwt_header_name
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthorizationError, WrongTokenError, \
-    FreshTokenRequired
+    FreshTokenRequired, CSRFError
 from flask_jwt_extended.blacklist import check_if_token_revoked, store_token
 
 
@@ -206,9 +206,9 @@ def _decode_jwt_from_cookies(type):
         if not isinstance(csrf_token_from_cookie, six.string_types):
             raise JWTDecodeError("Invalid claim: 'csrf' (must be a string)")
         if csrf_token_from_header is None:
-            raise NoAuthorizationError("Missing CSRF token in headers")
+            raise CSRFError("Missing CSRF token in headers")
         if not safe_str_cmp(csrf_token_from_header,  csrf_token_from_cookie):
-            raise NoAuthorizationError("CSRF double submit tokens do not match")
+            raise CSRFError("CSRF double submit tokens do not match")
     return token
 
 

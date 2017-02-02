@@ -1,7 +1,8 @@
 from flask import jsonify
 
 from flask_jwt_extended.exceptions import JWTDecodeError, NoAuthorizationError, \
-    InvalidHeaderError, WrongTokenError, RevokedTokenError, FreshTokenRequired
+    InvalidHeaderError, WrongTokenError, RevokedTokenError, FreshTokenRequired, \
+    CSRFError
 from jwt import ExpiredSignatureError, InvalidTokenError
 
 
@@ -58,6 +59,10 @@ class JWTManager:
         app.config['PROPAGATE_EXCEPTIONS'] = True
 
         @app.errorhandler(NoAuthorizationError)
+        def handle_auth_error(e):
+            return self._unauthorized_callback(str(e))
+
+        @app.errorhandler(CSRFError)
         def handle_auth_error(e):
             return self._unauthorized_callback(str(e))
 

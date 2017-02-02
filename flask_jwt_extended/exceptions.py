@@ -28,7 +28,14 @@ class InvalidHeaderError(JWTExtendedException):
 
 class NoAuthorizationError(JWTExtendedException):
     """
-    An error getting header information from a request
+    An error raised when no authorization token was found in a protected endpoint
+    """
+    pass
+
+
+class CSRFError(JWTExtendedException):
+    """
+    An error with CSRF protection
     """
     pass
 

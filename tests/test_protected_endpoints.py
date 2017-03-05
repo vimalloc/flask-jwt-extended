@@ -349,6 +349,41 @@ class TestEndpoints(unittest.TestCase):
         self.assertIn('msg', data)
         self.assertEqual(status, 401)
 
+    def test_cookie_methods_fail_with_headers_configured(self):
+        app = Flask(__name__)
+        app.config['JWT_TOKEN_LOCATION'] = ['headers']
+        app.secret_key = 'super=secret'
+        app.testing = True
+        JWTManager(app)
+        client = app.test_client()
+
+        @app.route('/login-bad', methods=['POST'])
+        def bad_login():
+            access_token = create_access_token('test')
+            resp = jsonify({'login': True})
+            set_access_cookies(resp, access_token)
+            return resp, 200
+
+        @app.route('/refresh-bad', methods=['POST'])
+        def bad_refresh():
+            refresh_token = create_refresh_token('test')
+            resp = jsonify({'login': True})
+            set_refresh_cookies(resp, refresh_token)
+            return resp, 200
+
+        @app.route('/logout-bad', methods=['POST'])
+        def bad_logout():
+            resp = jsonify({'logout': True})
+            unset_jwt_cookies(resp)
+            return resp, 200
+
+        with self.assertRaises(RuntimeWarning):
+            client.post('/login-bad')
+        with self.assertRaises(RuntimeWarning):
+            client.post('/refresh-bad')
+        with self.assertRaises(RuntimeWarning):
+            client.post('/logout-bad')
+
 
 class TestEndpointsWithCookies(unittest.TestCase):
 

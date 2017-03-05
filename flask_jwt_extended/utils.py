@@ -388,6 +388,10 @@ def set_access_cookies(response, encoded_access_token):
     Takes a flask response object, and configures it to set the encoded access
     token in a cookie (as well as a csrf access cookie if enabled)
     """
+    if 'cookies' not in get_token_location():
+        raise RuntimeWarning("set_access_cookies() called without "
+                             "'JWT_TOKEN_LOCATION' configured to use cookies")
+
     # Set the access JWT in the cookie
     response.set_cookie(get_access_cookie_name(),
                         value=encoded_access_token,
@@ -409,6 +413,10 @@ def set_refresh_cookies(response, encoded_refresh_token):
     Takes a flask response object, and configures it to set the encoded refresh
     token in a cookie (as well as a csrf refresh cookie if enabled)
     """
+    if 'cookies' not in get_token_location():
+        raise RuntimeWarning("set_refresh_cookies() called without "
+                             "'JWT_TOKEN_LOCATION' configured to use cookies")
+
     # Set the refresh JWT in the cookie
     response.set_cookie(get_refresh_cookie_name(),
                         value=encoded_refresh_token,
@@ -431,6 +439,10 @@ def unset_jwt_cookies(response):
     cookies. Basically, this is a logout helper method if using cookies to store
     the JWT
     """
+    if 'cookies' not in get_token_location():
+        raise RuntimeWarning("unset_refresh_cookies() called without "
+                             "'JWT_TOKEN_LOCATION' configured to use cookies")
+
     response.set_cookie(get_refresh_cookie_name(),
                         value='',
                         expires=0,

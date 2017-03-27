@@ -31,7 +31,7 @@ $ python setup.py install
 
 
 ### Chatting
-We on irc! You can come chat with us in the ```#flask-jwt-extended``` channel on freenode.
+We are on irc! You can come chat with us in the ```#flask-jwt-extended``` channel on ```freenode```.
 
 
 ### Testing and Code Coverage

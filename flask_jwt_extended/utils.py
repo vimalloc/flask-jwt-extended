@@ -455,4 +455,19 @@ def unset_jwt_cookies(response):
                         secure=get_cookie_secure(),
                         httponly=True,
                         path=get_access_cookie_path())
+
+    if get_cookie_csrf_protect():
+        response.set_cookie(get_refresh_csrf_cookie_name(),
+                            value='',
+                            expires=0,
+                            secure=get_cookie_secure(),
+                            httponly=False,
+                            path='/')
+        response.set_cookie(get_access_csrf_cookie_name(),
+                            value='',
+                            expires=0,
+                            secure=get_cookie_secure(),
+                            httponly=False,
+                            path='/')
+
     return response

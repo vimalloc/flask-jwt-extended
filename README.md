@@ -10,7 +10,7 @@ This has several **optional** features built it to make working with JSON Web To
 easier. These include:
 
 * Support for adding custom claims to JSON Web Tokens
-* [Refresh tokens] (https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/)
+* [Refresh tokens](https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/)
 * Token freshness and separate view decorators to only allow fresh tokens
 * Token revoking
 * Storing tokens in cookies and CSRF protection
@@ -27,7 +27,11 @@ $ python setup.py install
 ```
 
 ### Usage
-[View the documentation online] (http://flask-jwt-extended.readthedocs.io/en/latest/)
+[View the documentation online](http://flask-jwt-extended.readthedocs.io/en/latest/)
+
+
+### Chatting
+We on irc! You can come chat with us in the ```#flask-jwt-extended``` channel on freenode.
 
 
 ### Testing and Code Coverage

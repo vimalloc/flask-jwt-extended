@@ -16,7 +16,7 @@ from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
     get_algorithm, get_blacklist_enabled, get_blacklist_checks, get_jwt_header_type, \
     get_access_cookie_name, get_cookie_secure, get_access_cookie_path, \
     get_cookie_csrf_protect, get_access_csrf_cookie_name, \
-    get_refresh_cookie_name, get_refresh_cookie_path, \
+    get_refresh_cookie_name, get_refresh_cookie_path, get_session_cookie, \
     get_refresh_csrf_cookie_name, get_token_location, \
     get_csrf_header_name, get_jwt_header_name, get_csrf_request_methods
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
@@ -47,6 +47,14 @@ def get_raw_jwt():
     JWT is currently present, and empty dict is returned
     """
     return getattr(ctx_stack.top, 'jwt', {})
+
+
+def _get_cookie_max_age():
+    """
+    Checks config value for using session or persistent cookies and returns the
+    appropriate value for flask set_cookies.
+    """
+    return None if get_session_cookie() else 2147483647  # 2^31
 
 
 def _create_csrf_token():
@@ -395,6 +403,7 @@ def set_access_cookies(response, encoded_access_token):
     # Set the access JWT in the cookie
     response.set_cookie(get_access_cookie_name(),
                         value=encoded_access_token,
+                        max_age=_get_cookie_max_age(),
                         secure=get_cookie_secure(),
                         httponly=True,
                         path=get_access_cookie_path())
@@ -403,6 +412,7 @@ def set_access_cookies(response, encoded_access_token):
     if get_cookie_csrf_protect():
         response.set_cookie(get_access_csrf_cookie_name(),
                             value=_get_csrf_token(encoded_access_token),
+                            max_age=_get_cookie_max_age(),
                             secure=get_cookie_secure(),
                             httponly=False,
                             path='/')
@@ -420,6 +430,7 @@ def set_refresh_cookies(response, encoded_refresh_token):
     # Set the refresh JWT in the cookie
     response.set_cookie(get_refresh_cookie_name(),
                         value=encoded_refresh_token,
+                        max_age=_get_cookie_max_age(),
                         secure=get_cookie_secure(),
                         httponly=True,
                         path=get_refresh_cookie_path())
@@ -428,6 +439,7 @@ def set_refresh_cookies(response, encoded_refresh_token):
     if get_cookie_csrf_protect():
         response.set_cookie(get_refresh_csrf_cookie_name(),
                             value=_get_csrf_token(encoded_refresh_token),
+                            max_age=_get_cookie_max_age(),
                             secure=get_cookie_secure(),
                             httponly=False,
                             path='/')

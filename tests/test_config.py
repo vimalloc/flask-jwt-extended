@@ -10,7 +10,7 @@ from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
     get_token_location, get_cookie_secure, get_access_cookie_name, \
     get_refresh_cookie_name, get_access_cookie_path, get_refresh_cookie_path, \
     get_cookie_csrf_protect, get_access_csrf_cookie_name, \
-    get_refresh_csrf_cookie_name, get_csrf_header_name
+    get_refresh_csrf_cookie_name, get_csrf_header_name, get_session_cookie
 from flask_jwt_extended import JWTManager
 
 
@@ -34,6 +34,7 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(get_refresh_cookie_name(), 'refresh_token_cookie')
             self.assertEqual(get_access_cookie_path(), None)
             self.assertEqual(get_refresh_cookie_path(), None)
+            self.assertEqual(get_session_cookie(), True)
             self.assertEqual(get_cookie_csrf_protect(), True)
             self.assertEqual(get_access_csrf_cookie_name(), 'csrf_access_token')
             self.assertEqual(get_refresh_csrf_cookie_name(), 'csrf_refresh_token')
@@ -56,6 +57,7 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_REFRESH_COOKIE_NAME'] = 'banana2'
         self.app.config['JWT_ACCESS_COOKIE_PATH'] = '/banana/'
         self.app.config['JWT_REFRESH_COOKIE_PATH'] = '/banana2/'
+        self.app.config['JWT_SESSION_COOKIE'] = False
         self.app.config['JWT_COOKIE_CSRF_PROTECT'] = False
         self.app.config['JWT_ACCESS_CSRF_COOKIE_NAME'] = 'banana1a'
         self.app.config['JWT_REFRESH_CSRF_COOKIE_NAME'] = 'banana2a'
@@ -78,6 +80,7 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(get_refresh_cookie_name(), 'banana2')
             self.assertEqual(get_access_cookie_path(), '/banana/')
             self.assertEqual(get_refresh_cookie_path(), '/banana2/')
+            self.assertEqual(get_session_cookie(), False)
             self.assertEqual(get_cookie_csrf_protect(), False)
             self.assertEqual(get_access_csrf_cookie_name(), 'banana1a')
             self.assertEqual(get_refresh_csrf_cookie_name(), 'banana2a')

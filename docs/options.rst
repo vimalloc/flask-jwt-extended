@@ -32,6 +32,8 @@ The available options are:
 ``JWT_REFRESH_COOKIE_PATH``       What ``path`` should be set for the refresh cookie. Defaults to ``None``, which
                                   will cause this access cookie to be sent in with every request. Should be modified
                                   for only the paths that need the refresh cookie
+``JWT_SESSION_COOKIE``            Whether to set session (deleted when the browser is closed) or persistent cookies.
+                                  Defaults to ``True`` (sets session cookies).
 ``JWT_COOKIE_CSRF_PROTECT``       Enable/disable CSRF protection. Only used when sending the JWT in via cookies
 ``JWT_CSRF_METHODS``              The request types that will use CSRF protection. Defaults to
                                   ```['POST', 'PUT', 'PATCH', 'DELETE']```

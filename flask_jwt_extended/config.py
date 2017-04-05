@@ -15,6 +15,7 @@ ACCESS_COOKIE_NAME = 'access_token_cookie'
 REFRESH_COOKIE_NAME = 'refresh_token_cookie'
 ACCESS_COOKIE_PATH = None
 REFRESH_COOKIE_PATH = None
+SESSION_COOKIE = True  # True to use session cookies, False to use persistent
 
 # Options for using double submit for verifying CSRF tokens
 COOKIE_CSRF_PROTECT = True
@@ -74,6 +75,10 @@ def get_access_cookie_path():
 
 def get_refresh_cookie_path():
     return current_app.config.get('JWT_REFRESH_COOKIE_PATH', REFRESH_COOKIE_PATH)
+
+
+def get_session_cookie():
+    return current_app.config.get('JWT_SESSION_COOKIE', SESSION_COOKIE)
 
 
 def get_cookie_csrf_protect():

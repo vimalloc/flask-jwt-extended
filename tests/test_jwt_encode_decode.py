@@ -14,6 +14,7 @@ class JWTEncodeDecodeTests(unittest.TestCase):
 
     def setUp(self):
         self.app = Flask(__name__)
+        self.jwt = JWTManager(self.app)
 
     def test_jwt_identity(self):
         pass

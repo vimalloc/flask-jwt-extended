@@ -1,135 +1,171 @@
 import datetime
+from warnings import warn
+
+import simplekv
 from flask import current_app
 
 
-# Where to look for the JWT. Available options are cookies or headers
-TOKEN_LOCATION = ['headers']
+class Config(object):
+    """
+    Helper object for accessing and verifying options in this extension. This
+    is meant for internal use of the application; modifying config options
+    should be done with flasks ```app.config```.
+    
+    Default values for the configuration options are set in the jwt_manager
+    object
+    """
 
-# Options for JWTs when the TOKEN_LOCATION is headers
-HEADER_NAME = 'Authorization'
-HEADER_TYPE = 'Bearer'
+    @property
+    def token_location(self):
+        locations = current_app.config['JWT_TOKEN_LOCATION']
+        if not isinstance(locations, list):
+            locations = [locations]
+        for location in locations:
+            if location not in ('headers', 'cookies'):
+                raise RuntimeError('JWT_LOCATION_LOCATION can only contain '
+                                   '"headers" and/or "cookies"')
+        return locations
 
-# Option for JWTs when the TOKEN_LOCATION is cookies
-COOKIE_SECURE = False
-ACCESS_COOKIE_NAME = 'access_token_cookie'
-REFRESH_COOKIE_NAME = 'refresh_token_cookie'
-ACCESS_COOKIE_PATH = None
-REFRESH_COOKIE_PATH = None
-SESSION_COOKIE = True  # True to use session cookies, False to use persistent
+    @staticmethod
+    def _get_depreciated_header_name():
+        # This used to be the same option for access and refresh header names.
+        # This gives users a warning if they are still using the old behavior
+        old_name = current_app.config.get('JWT_HEADER_NAME', None)
+        if old_name:
+            msg = (
+                "JWT_HEADER_NAME is depreciated. Use JWT_ACCESS_HEADER_NAME "
+                "or JWT_REFRESH_HEADER_NAME instead"
+            )
+            warn(msg, DeprecationWarning)
+        return old_name
 
-# Options for using double submit for verifying CSRF tokens
-COOKIE_CSRF_PROTECT = True
-CSRF_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE']
-ACCESS_CSRF_COOKIE_NAME = 'csrf_access_token'
-REFRESH_CSRF_COOKIE_NAME = 'csrf_refresh_token'
-CSRF_HEADER_NAME = 'X-CSRF-TOKEN'
+    @property
+    def access_header_name(self):
+        name = self._get_depreciated_header_name() or \
+               current_app.config['JWT_ACCESS_HEADER_NAME']
+        if not name:
+            raise RuntimeError("JWT_ACCESS_HEADER_NAME cannot be empty")
+        return name
 
-# How long an a token will live before they expire.
-ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=15)
-REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)
+    @property
+    def refresh_header_name(self):
+        name = self._get_depreciated_header_name() or \
+               current_app.config['JWT_REFRESH_HEADER_NAME']
+        if not name:
+            raise RuntimeError("JWT_REFRESH_HEADER_NAME cannot be empty")
+        return name
 
-# What algorithm to use to sign the token. See here for a list of options:
-# https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py (note that
-# public private key is not yet supported)
-ALGORITHM = 'HS256'
+    @property
+    def header_type(self):
+        return current_app.config['JWT_HEADER_TYPE']
 
-# Options for blacklisting/revoking tokens
-BLACKLIST_ENABLED = False
-BLACKLIST_STORE = None  # simplekv object: https://pypi.python.org/pypi/simplekv/
-BLACKLIST_TOKEN_CHECKS = 'refresh'  # valid options are 'all', and 'refresh'
+    @property
+    def access_cookie_name(self):
+        return current_app.config['JWT_ACCESS_COOKIE_NAME']
 
+    @property
+    def refresh_cookie_name(self):
+        return current_app.config['JWT_REFRESH_COOKIE_NAME']
 
-def get_token_location():
-    locations = current_app.config.get('JWT_TOKEN_LOCATION', TOKEN_LOCATION)
-    if not isinstance(locations, list):
-        locations = [locations]
-    for location in locations:
-        if location not in ('headers', 'cookies'):
-            raise RuntimeError('JWT_LOCATION_LOCATION can only contain '
-                               '"headers" and/or "cookies"')
-    return locations
+    @property
+    def access_cookie_path(self):
+        return current_app.config['JWT_ACCESS_COOKIE_PATH']
 
+    @property
+    def refresh_cookie_path(self):
+        return current_app.config['JWT_REFRESH_COOKIE_PATH']
 
-def get_jwt_header_name():
-    name = current_app.config.get('JWT_HEADER_NAME', HEADER_NAME)
-    if not name:
-        raise RuntimeError("JWT_HEADER_NAME must be set")
-    return name
+    @property
+    def cookie_secure(self):
+        return current_app.config['JWT_COOKIE_SECURE']
 
+    @property
+    def session_cookie(self):
+        return current_app.config['JWT_SESSION_COOKIE']
 
-def get_cookie_secure():
-    return current_app.config.get('JWT_COOKIE_SECURE', COOKIE_SECURE)
+    @property
+    def cookie_csrf_protect(self):
+        return current_app.config['JWT_COOKIE_CSRF_PROTECT']
 
+    @property
+    def csrf_request_methods(self):
+        return current_app.config['JWT_CSRF_METHODS']
 
-def get_access_cookie_name():
-    return current_app.config.get('JWT_ACCESS_COOKIE_NAME', ACCESS_COOKIE_NAME)
+    # TODO csrf cookie enabled option here or in set_access_cookies method?
 
+    @property
+    def access_csrf_cookie_name(self):
+        return current_app.config['JWT_ACCESS_CSRF_COOKIE_NAME']
 
-def get_refresh_cookie_name():
-    return current_app.config.get('JWT_REFRESH_COOKIE_NAME', REFRESH_COOKIE_NAME)
+    @property
+    def refresh_csrf_cookie_name(self):
+        return current_app.config['JWT_REFRESH_CSRF_COOKIE_NAME']
 
+    @staticmethod
+    def _get_depreciated_csrf_header_name():
+        # This used to be the same option for access and refresh header names.
+        # This gives users a warning if they are still using the old behavior
+        old_name = current_app.config.get('JWT_CSRF_HEADER_NAME', None)
+        if old_name:
+            msg = (
+                "JWT_CSRF_HEADER_NAME is depreciated. Use JWT_ACCESS_CSRF_HEADER_NAME "
+                "or JWT_REFRESH_CSRF_HEADER_NAME instead"
+            )
+            warn(msg, DeprecationWarning)
+        return old_name
 
-def get_access_cookie_path():
-    return current_app.config.get('JWT_ACCESS_COOKIE_PATH', ACCESS_COOKIE_PATH)
+    @property
+    def access_csrf_header_name(self):
+        return self._get_depreciated_csrf_header_name() or \
+               current_app.config['JWT_ACCESS_CSRF_HEADER_NAME']
 
+    @property
+    def refresh_csrf_header_name(self):
+        return self._get_depreciated_csrf_header_name() or \
+               current_app.config['JWT_REFRESH_CSRF_HEADER_NAME']
 
-def get_refresh_cookie_path():
-    return current_app.config.get('JWT_REFRESH_COOKIE_PATH', REFRESH_COOKIE_PATH)
+    @property
+    def access_expires(self):
+        delta = current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
+        if not isinstance(delta, datetime.timedelta):
+            raise RuntimeError('JWT_ACCESS_TOKEN_EXPIRES must be a datetime.timedelta')
+        return delta
 
+    @property
+    def refresh_expires(self):
+        delta = current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
+        if not isinstance(delta, datetime.timedelta):
+            raise RuntimeError('JWT_REFRESH_TOKEN_EXPIRES must be a datetime.timedelta')
+        return delta
 
-def get_session_cookie():
-    return current_app.config.get('JWT_SESSION_COOKIE', SESSION_COOKIE)
+    @property
+    def algorithm(self):
+        return current_app.config['JWT_ALGORITHM']
 
+    @property
+    def blacklist_enabled(self):
+        return current_app.config['JWT_BLACKLIST_ENABLED']
 
-def get_cookie_csrf_protect():
-    return current_app.config.get('JWT_COOKIE_CSRF_PROTECT', COOKIE_CSRF_PROTECT)
+    @property
+    def blacklist_store(self):
+        # simplekv object: https://pypi.python.org/pypi/simplekv/
+        store = current_app.config['JWT_BLACKLIST_STORE']
+        if not isinstance(store, simplekv.KeyValueStore):
+            raise RuntimeError("JWT_BLACKLIST_STORE must be a simplekv KeyValueStore")
+        return store
 
+    @property
+    def blacklist_checks(self):
+        check_type = current_app.config['JWT_BLACKLIST_TOKEN_CHECKS']
+        if check_type not in ('all', 'refresh'):
+            raise RuntimeError('JWT_BLACKLIST_TOKEN_CHECKS must be "all" or "refresh"')
+        return check_type
 
-def get_csrf_request_methods():
-    return current_app.config.get('JWT_CSRF_METHODS', CSRF_METHODS)
+    @property
+    def secret_key(self):
+        key = current_app.config.get('SECRET_KEY', None)
+        if not key:
+            raise RuntimeError('flask SECRET_KEY must be set')
+        return key
 
-
-def get_access_csrf_cookie_name():
-    return current_app.config.get('JWT_ACCESS_CSRF_COOKIE_NAME', ACCESS_CSRF_COOKIE_NAME)
-
-
-def get_refresh_csrf_cookie_name():
-    return current_app.config.get('JWT_REFRESH_CSRF_COOKIE_NAME', REFRESH_CSRF_COOKIE_NAME)
-
-
-def get_csrf_header_name():
-    return current_app.config.get('JWT_CSRF_HEADER_NAME', CSRF_HEADER_NAME)
-
-
-def get_jwt_header_type():
-    return current_app.config.get('JWT_HEADER_TYPE', HEADER_TYPE)
-
-
-def get_access_expires():
-    delta = current_app.config.get('JWT_ACCESS_TOKEN_EXPIRES', ACCESS_TOKEN_EXPIRES)
-    if not isinstance(delta, datetime.timedelta):
-        raise RuntimeError('JWT_ACCESS_TOKEN_EXPIRES must be a datetime.timedelta')
-    return delta
-
-
-def get_refresh_expires():
-    delta = current_app.config.get('JWT_REFRESH_TOKEN_EXPIRES', REFRESH_TOKEN_EXPIRES)
-    if not isinstance(delta, datetime.timedelta):
-        raise RuntimeError('JWT_REFRESH_TOKEN_EXPIRES must be a datetime.timedelta')
-    return delta
-
-
-def get_algorithm():
-    return current_app.config.get('JWT_ALGORITHM', ALGORITHM)
-
-
-def get_blacklist_enabled():
-    return current_app.config.get('JWT_BLACKLIST_ENABLED', BLACKLIST_ENABLED)
-
-
-def get_blacklist_store():
-    return current_app.config.get('JWT_BLACKLIST_STORE', BLACKLIST_STORE)
-
-
-def get_blacklist_checks():
-    return current_app.config.get('JWT_BLACKLIST_TOKEN_CHECKS', BLACKLIST_TOKEN_CHECKS)
+config = Config()

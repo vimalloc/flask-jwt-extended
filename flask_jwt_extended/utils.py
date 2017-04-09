@@ -12,17 +12,15 @@ try:
 except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as ctx_stack
 
-from flask_jwt_extended.config import get_access_expires, get_refresh_expires, \
-    get_algorithm, get_blacklist_enabled, get_blacklist_checks, get_jwt_header_type, \
-    get_access_cookie_name, get_cookie_secure, get_access_cookie_path, \
-    get_cookie_csrf_protect, get_access_csrf_cookie_name, \
-    get_refresh_cookie_name, get_refresh_cookie_path, get_session_cookie, \
-    get_refresh_csrf_cookie_name, get_token_location, \
-    get_csrf_header_name, get_jwt_header_name, get_csrf_request_methods
+from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import JWTEncodeError, JWTDecodeError, \
     InvalidHeaderError, NoAuthorizationError, WrongTokenError, \
     FreshTokenRequired, CSRFError
 from flask_jwt_extended.blacklist import check_if_token_revoked, store_token
+
+
+# TODO move everything into a single jwt object, then create first class methods
+#      for stuff like jwt_required to not break functionality
 
 
 def get_jwt_identity():
@@ -54,7 +52,7 @@ def _get_cookie_max_age():
     Checks config value for using session or persistent cookies and returns the
     appropriate value for flask set_cookies.
     """
-    return None if get_session_cookie() else 2147483647  # 2^31
+    return None if config.session_cookie else 2147483647  # 2^31
 
 
 def _create_csrf_token():
@@ -95,14 +93,13 @@ def _encode_access_token(identity, secret, algorithm, token_expire_delta,
         'type': 'access',
         'user_claims': user_claims,
     }
-    if 'cookies' in get_token_location() and get_cookie_csrf_protect() is True:
+    if 'cookies' in config.token_location and config.cookie_csrf_protect is True:
         token_data['csrf'] = _create_csrf_token()
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
 
     # If blacklisting is enabled and configured to store access and refresh tokens,
     # add this token to the store
-    blacklist_enabled = get_blacklist_enabled()
-    if blacklist_enabled and get_blacklist_checks() == 'all':
+    if config.blacklist_enabled and config.blacklist_checks == 'all':
         store_token(token_data, revoked=False)
     return encoded_token
 
@@ -127,13 +124,12 @@ def _encode_refresh_token(identity, secret, algorithm, token_expire_delta):
         'identity': identity,
         'type': 'refresh',
     }
-    if 'cookies' in get_token_location() and get_cookie_csrf_protect() is True:
+    if 'cookies' in config.token_location and config.cookie_csrf_protect is True:
         token_data['csrf'] = _create_csrf_token()
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
 
     # If blacklisting is enabled, store this token in our key-value store
-    blacklist_enabled = get_blacklist_enabled()
-    if blacklist_enabled:
+    if config.blacklist_enabled:
         store_token(token_data, revoked=False)
     return encoded_token
 
@@ -164,51 +160,57 @@ def _decode_jwt(token, secret, algorithm):
     return data
 
 
-def _decode_jwt_from_headers():
+def _decode_jwt_from_headers(type):
+    # TODO make type an enum or something instead of a magic string
+    if type == 'access':
+        header_name = config.access_header_name
+        header_type = config.header_type
+    else:
+        header_name = config.refresh_header_name
+        header_type = config.header_type
+
     # Verify we have the auth header
-    header_name = get_jwt_header_name()
     jwt_header = request.headers.get(header_name, None)
     if not jwt_header:
         raise NoAuthorizationError("Missing {} Header".format(header_name))
 
-    # Make sure the header is valid
-    expected_header = get_jwt_header_type()
+    # Make sure the header is in a valid format that we are expecting, ie
+    # <HeaderName>: <HeaderType(optional)> <JWT>
     parts = jwt_header.split()
-    if not expected_header:
+    if not header_type:
         if len(parts) != 1:
-            msg = "Bad {} header. Expected '<JWT>'"
+            msg = "Bad {} header. Expected value '<JWT>'".format(header_name)
             raise InvalidHeaderError(msg)
         token = parts[0]
     else:
-        if parts[0] != expected_header or len(parts) != 2:
-            msg = "Bad {} header. Expected '{} <JWT>'".format(header_name, expected_header)
+        if parts[0] != header_type or len(parts) != 2:
+            msg = "Bad {} header. Expected value '{} <JWT>'".format(header_name, header_type)
             raise InvalidHeaderError(msg)
         token = parts[1]
 
-    secret = _get_secret_key()
-    algorithm = get_algorithm()
-    return _decode_jwt(token, secret, algorithm)
+    return _decode_jwt(token, config.secret_key, config.algorithm)
 
 
 def _decode_jwt_from_cookies(type):
+    # TODO make type an enum or something instead of a magic string
     if type == 'access':
-        cookie_key = get_access_cookie_name()
+        cookie_key = config.access_cookie_name
+        csrf_header_key = config.access_csrf_header_name
     else:
-        cookie_key = get_refresh_cookie_name()
+        cookie_key = config.refresh_cookie_name
+        csrf_header_key = config.refresh_csrf_header_name
 
+    # Decode the token
     token = request.cookies.get(cookie_key)
     if not token:
         raise NoAuthorizationError('Missing cookie "{}"'.format(cookie_key))
-    secret = _get_secret_key()
-    algorithm = get_algorithm()
-    token = _decode_jwt(token, secret, algorithm)
+    token = _decode_jwt(token, config.secret_key, config.algorithm)
 
-    if get_cookie_csrf_protect() and request.method in get_csrf_request_methods():
-        csrf_header_key = get_csrf_header_name()
+    # Verify csrf double submit tokens match if required
+    if config.cookie_csrf_protect and request.method in config.csrf_request_methods:
         csrf_token_from_header = request.headers.get(csrf_header_key, None)
         csrf_token_from_cookie = token.get('csrf', None)
 
-        # Verify the csrf tokens are present and matching
         if csrf_token_from_cookie is None:
             raise JWTDecodeError("Missing claim: 'csrf'")
         if not isinstance(csrf_token_from_cookie, six.string_types):
@@ -217,16 +219,17 @@ def _decode_jwt_from_cookies(type):
             raise CSRFError("Missing CSRF token in headers")
         if not safe_str_cmp(csrf_token_from_header,  csrf_token_from_cookie):
             raise CSRFError("CSRF double submit tokens do not match")
+
     return token
 
 
 def _decode_jwt_from_request(type):
-    token_locations = get_token_location()
+    token_locations = config.token_location
 
     # JWT can be in either headers or cookies
     if 'headers' in token_locations and 'cookies' in token_locations:
         try:
-            return _decode_jwt_from_headers()
+            return _decode_jwt_from_headers(type)
         except NoAuthorizationError:
             pass
         try:
@@ -237,7 +240,7 @@ def _decode_jwt_from_request(type):
 
     # JWT can only be in headers
     elif 'headers' in token_locations:
-        return _decode_jwt_from_headers()
+        return _decode_jwt_from_headers(type)
 
     # JWT can only be in cookie
     else:
@@ -264,8 +267,7 @@ def jwt_required(fn):
             raise WrongTokenError('Only access tokens can access this endpoint')
 
         # If blacklisting is enabled, see if this token has been revoked
-        blacklist_enabled = get_blacklist_enabled()
-        if blacklist_enabled:
+        if config.blacklist_enabled:
             check_if_token_revoked(jwt_data)
 
         # Save the jwt in the context so that it can be accessed later by
@@ -294,8 +296,7 @@ def fresh_jwt_required(fn):
             raise WrongTokenError('Only access tokens can access this endpoint')
 
         # If blacklisting is enabled, see if this token has been revoked
-        blacklist_enabled = get_blacklist_enabled()
-        if blacklist_enabled:
+        if config.blacklist_enabled:
             check_if_token_revoked(jwt_data)
 
         # Check if the token is fresh
@@ -325,8 +326,7 @@ def jwt_refresh_token_required(fn):
             raise WrongTokenError('Only refresh tokens can access this endpoint')
 
         # If blacklisting is enabled, see if this token has been revoked
-        blacklist_enabled = get_blacklist_enabled()
-        if blacklist_enabled:
+        if config.blacklist_enabled:
             check_if_token_revoked(jwt_data)
 
         # Save the jwt in the context so that it can be accessed later by
@@ -338,9 +338,9 @@ def jwt_refresh_token_required(fn):
 
 def create_refresh_token(identity):
     # Token settings
-    refresh_expire_delta = get_refresh_expires()
-    algorithm = get_algorithm()
-    secret = _get_secret_key()
+    refresh_expire_delta = config.refresh_expires
+    algorithm = config.algorithm
+    secret = config.secret_key
     identity = current_app.jwt_manager._user_identity_callback(identity)
 
     # Actually make the tokens
@@ -366,9 +366,9 @@ def create_access_token(identity, fresh=False):
     :return: A newly encoded JWT access token
     """
     # Token options
-    secret = _get_secret_key()
-    access_expire_delta = get_access_expires()
-    algorithm = get_algorithm()
+    secret = config.secret_key
+    access_expire_delta = config.access_expires
+    algorithm = config.algorithm
     user_claims = current_app.jwt_manager._user_claims_callback(identity)
     identity = current_app.jwt_manager._user_identity_callback(identity)
 
@@ -377,16 +377,9 @@ def create_access_token(identity, fresh=False):
     return access_token
 
 
-def _get_secret_key():
-    key = current_app.config.get('SECRET_KEY', None)
-    if not key:
-        raise RuntimeError('flask SECRET_KEY must be set')
-    return key
-
-
 def _get_csrf_token(encoded_token):
-    secret = _get_secret_key()
-    algorithm = get_algorithm()
+    secret = config.secret_key
+    algorithm = config.algorithm
     token = _decode_jwt(encoded_token, secret, algorithm)
     return token['csrf']
 
@@ -396,24 +389,24 @@ def set_access_cookies(response, encoded_access_token):
     Takes a flask response object, and configures it to set the encoded access
     token in a cookie (as well as a csrf access cookie if enabled)
     """
-    if 'cookies' not in get_token_location():
+    if 'cookies' not in config.token_location:
         raise RuntimeWarning("set_access_cookies() called without "
                              "'JWT_TOKEN_LOCATION' configured to use cookies")
 
     # Set the access JWT in the cookie
-    response.set_cookie(get_access_cookie_name(),
+    response.set_cookie(config.access_cookie_name,
                         value=encoded_access_token,
-                        max_age=_get_cookie_max_age(),
-                        secure=get_cookie_secure(),
+                        max_age=_get_cookie_max_age(),  # TODO move to config
+                        secure=config.cookie_secure,
                         httponly=True,
-                        path=get_access_cookie_path())
+                        path=config.access_cookie_path)
 
     # If enabled, set the csrf double submit access cookie
-    if get_cookie_csrf_protect():
-        response.set_cookie(get_access_csrf_cookie_name(),
+    if config.cookie_csrf_protect:
+        response.set_cookie(config.access_csrf_cookie_name,
                             value=_get_csrf_token(encoded_access_token),
-                            max_age=_get_cookie_max_age(),
-                            secure=get_cookie_secure(),
+                            max_age=_get_cookie_max_age(),  # TODO move to config
+                            secure=config.cookie_secure,
                             httponly=False,
                             path='/')
 
@@ -423,24 +416,24 @@ def set_refresh_cookies(response, encoded_refresh_token):
     Takes a flask response object, and configures it to set the encoded refresh
     token in a cookie (as well as a csrf refresh cookie if enabled)
     """
-    if 'cookies' not in get_token_location():
+    if 'cookies' not in config.token_location:
         raise RuntimeWarning("set_refresh_cookies() called without "
                              "'JWT_TOKEN_LOCATION' configured to use cookies")
 
     # Set the refresh JWT in the cookie
-    response.set_cookie(get_refresh_cookie_name(),
+    response.set_cookie(config.refresh_cookie_name,
                         value=encoded_refresh_token,
-                        max_age=_get_cookie_max_age(),
-                        secure=get_cookie_secure(),
+                        max_age=_get_cookie_max_age(),  # TODO move to config
+                        secure=config.cookie_secure,
                         httponly=True,
-                        path=get_refresh_cookie_path())
+                        path=config.refresh_cookie_path)
 
     # If enabled, set the csrf double submit refresh cookie
-    if get_cookie_csrf_protect():
-        response.set_cookie(get_refresh_csrf_cookie_name(),
+    if config.cookie_csrf_protect:
+        response.set_cookie(config.refresh_csrf_cookie_name,
                             value=_get_csrf_token(encoded_refresh_token),
-                            max_age=_get_cookie_max_age(),
-                            secure=get_cookie_secure(),
+                            max_age=_get_cookie_max_age(),  # TODO move to config
+                            secure=config.cookie_secure,
                             httponly=False,
                             path='/')
 
@@ -451,34 +444,34 @@ def unset_jwt_cookies(response):
     cookies. Basically, this is a logout helper method if using cookies to store
     the JWT
     """
-    if 'cookies' not in get_token_location():
+    if 'cookies' not in config.token_location:
         raise RuntimeWarning("unset_refresh_cookies() called without "
                              "'JWT_TOKEN_LOCATION' configured to use cookies")
 
-    response.set_cookie(get_refresh_cookie_name(),
+    response.set_cookie(config.refresh_cookie_name,
                         value='',
                         expires=0,
-                        secure=get_cookie_secure(),
+                        secure=config.cookie_secure,
                         httponly=True,
-                        path=get_refresh_cookie_path())
-    response.set_cookie(get_access_cookie_name(),
+                        path=config.refresh_cookie_path)
+    response.set_cookie(config.access_cookie_name,
                         value='',
                         expires=0,
-                        secure=get_cookie_secure(),
+                        secure=config.cookie_secure,
                         httponly=True,
-                        path=get_access_cookie_path())
+                        path=config.access_cookie_path)
 
-    if get_cookie_csrf_protect():
-        response.set_cookie(get_refresh_csrf_cookie_name(),
+    if config.cookie_csrf_protect:
+        response.set_cookie(config.refresh_csrf_cookie_name,
                             value='',
                             expires=0,
-                            secure=get_cookie_secure(),
+                            secure=config.cookie_secure,
                             httponly=False,
                             path='/')
-        response.set_cookie(get_access_csrf_cookie_name(),
+        response.set_cookie(config.access_csrf_cookie_name,
                             value='',
                             expires=0,
-                            secure=get_cookie_secure(),
+                            secure=config.cookie_secure,
                             httponly=False,
                             path='/')
 

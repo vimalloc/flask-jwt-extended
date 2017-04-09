@@ -337,8 +337,7 @@ class TestEndpoints(unittest.TestCase):
 
         # Check calling blacklist function if invalid blacklist check type
         app.config['JWT_BLACKLIST_ENABLED'] = True
-        app.config['JWT_BLACKLIST_STORE'] = simplekv.memory.DictStore()
-        app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'banana'
+        app.config['JWT_BLACKLIST_STORE'] = {}
         with self.assertRaises(RuntimeError):
             client.get('/list-tokens')
 

@@ -26,6 +26,14 @@ class Config(object):
                                    '"headers" and/or "cookies"')
         return locations
 
+    @property
+    def jwt_in_cookies(self):
+        return 'cookies' in self.token_location
+
+    @property
+    def jwt_in_headers(self):
+        return 'headers' in self.token_location
+
     @staticmethod
     def _get_depreciated_header_name():
         # This used to be the same option for access and refresh header names.
@@ -84,8 +92,8 @@ class Config(object):
         return current_app.config['JWT_SESSION_COOKIE']
 
     @property
-    def cookie_csrf_protect(self):
-        return current_app.config['JWT_COOKIE_CSRF_PROTECT']
+    def csrf_protect(self):
+        return self.jwt_in_cookies and current_app.config['JWT_COOKIE_CSRF_PROTECT']
 
     @property
     def csrf_request_methods(self):

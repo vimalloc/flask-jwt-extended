@@ -51,16 +51,6 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
     }
     if csrf:
         token_data['csrf'] = _create_csrf_token()
-
-    # TODO delete JwtEncodeError exception
-    # TODO encode this in calling code
-    #if 'cookies' in config.token_location and config.cookie_csrf_protect is True:
-
-    # TODO this should be moved to the actual create_access_token method
-    # If blacklisting is enabled and configured to store access and refresh tokens,
-    # add this token to the store
-    #if config.blacklist_enabled and config.blacklist_checks == 'all':
-    #    store_token(token_data, revoked=False)
     return _encode_jwt(token_data, expires_delta, secret, algorithm)
 
 

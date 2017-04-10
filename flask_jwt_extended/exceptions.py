@@ -12,13 +12,6 @@ class JWTDecodeError(JWTExtendedException):
     pass
 
 
-class JWTEncodeError(JWTExtendedException):
-    """
-    An error encoding a JWT
-    """
-    pass
-
-
 class InvalidHeaderError(JWTExtendedException):
     """
     An error getting header information from a request

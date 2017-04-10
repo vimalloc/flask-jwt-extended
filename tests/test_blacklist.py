@@ -353,8 +353,8 @@ class TestEndpoints(unittest.TestCase):
         # Test token ttl
         with self.app.test_request_context():
             token_str = encode_refresh_token('foo', 'secret', 'HS256',
-                                              timedelta(minutes=5))
-            token = decode_jwt(token_str, 'secret', 'HS256')
+                                              timedelta(minutes=5), csrf=False)
+            token = decode_jwt(token_str, 'secret', 'HS256', csrf=False)
             time.sleep(2)
             token_ttl = _get_token_ttl(token).total_seconds()
             self.assertGreater(token_ttl, 296)
@@ -363,8 +363,8 @@ class TestEndpoints(unittest.TestCase):
         # Test ttl is 0 if token is already expired
         with self.app.test_request_context():
             token_str = encode_refresh_token('foo', 'secret', 'HS256',
-                                              timedelta(seconds=0))
-            token = decode_jwt(token_str, 'secret', 'HS256')
+                                              timedelta(seconds=0), csrf=False)
+            token = decode_jwt(token_str, 'secret', 'HS256', csrf=False)
             time.sleep(2)
             token_ttl = _get_token_ttl(token).total_seconds()
             self.assertEqual(token_ttl, 0)

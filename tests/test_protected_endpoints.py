@@ -247,7 +247,7 @@ class TestEndpoints(unittest.TestCase):
         # Test token that was signed with a different key
         with self.app.test_request_context():
             token = encode_access_token('foo', 'newsecret', 'HS256',
-                                        timedelta(minutes=5), True, {})
+                                        timedelta(minutes=5), True, {}, csrf=False)
         auth_header = "Bearer {}".format(token)
         response = self.client.get('/protected', headers={'Authorization': auth_header})
         data = json.loads(response.get_data(as_text=True))
@@ -631,7 +631,7 @@ class TestEndpointsWithCookies(unittest.TestCase):
         response = self.client.post('/api/protected')
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
-        self.assertEqual(status_code, 422)
+        self.assertEqual(status_code, 401)
         self.assertIn('msg', data)
 
     def test_custom_csrf_methods(self):

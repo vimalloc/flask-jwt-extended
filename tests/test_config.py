@@ -29,7 +29,7 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.access_cookie_path, '/')
             self.assertEqual(config.refresh_cookie_path, '/')
             self.assertEqual(config.session_cookie, True)
-            self.assertEqual(config.csrf_protect, True)
+            self.assertEqual(config.csrf_protect, False)
             self.assertEqual(config.access_csrf_cookie_name, 'csrf_access_token')
             self.assertEqual(config.refresh_csrf_cookie_name, 'csrf_refresh_token')
             self.assertEqual(config.access_csrf_header_name, 'X-CSRF-TOKEN')
@@ -56,7 +56,7 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_ACCESS_COOKIE_PATH'] = '/banana/'
         self.app.config['JWT_REFRESH_COOKIE_PATH'] = '/banana2/'
         self.app.config['JWT_SESSION_COOKIE'] = False
-        self.app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+        self.app.config['JWT_COOKIE_CSRF_PROTECT'] = True
         self.app.config['JWT_ACCESS_CSRF_COOKIE_NAME'] = 'banana1a'
         self.app.config['JWT_REFRESH_CSRF_COOKIE_NAME'] = 'banana2a'
         self.app.config['JWT_ACCESS_CSRF_HEADER_NAME'] = 'bananaaaa'
@@ -81,7 +81,7 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.access_cookie_path, '/banana/')
             self.assertEqual(config.refresh_cookie_path, '/banana2/')
             self.assertEqual(config.session_cookie, False)
-            self.assertEqual(config.csrf_protect, False)
+            self.assertEqual(config.csrf_protect, True)
             self.assertEqual(config.access_csrf_cookie_name, 'banana1a')
             self.assertEqual(config.refresh_csrf_cookie_name, 'banana2a')
             self.assertEqual(config.access_csrf_header_name, 'bananaaaa')

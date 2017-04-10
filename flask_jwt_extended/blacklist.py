@@ -14,8 +14,7 @@ def _verify_blacklist_enabled(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        blacklist_enabled = config.blacklist_enabled
-        if not blacklist_enabled:
+        if not config.blacklist_enabled:
             err = 'JWT_BLACKLIST_ENABLED must be True to access this functionality'
             raise RuntimeError(err)
         return fn(*args, **kwargs)

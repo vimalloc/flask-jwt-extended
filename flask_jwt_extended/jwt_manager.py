@@ -2,7 +2,8 @@ import datetime
 
 from jwt import ExpiredSignatureError, InvalidTokenError
 
-from flask_jwt_extended.config import Config
+from flask_jwt_extended.blacklist import store_token
+from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
     JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
     RevokedTokenError, FreshTokenRequired, CSRFError
@@ -13,6 +14,10 @@ from flask_jwt_extended.default_callbacks import (
     default_unauthorized_callback,
     default_needs_fresh_token_callback,
     default_revoked_token_callback
+)
+from flask_jwt_extended.tokens import (
+    encode_refresh_token, decode_jwt,
+    encode_access_token
 )
 
 
@@ -25,10 +30,6 @@ class JWTManager(object):
 
         :param app: A flask application
         """
-        # This is a helper object for managing configuration options in this
-        # extension
-        self.config = Config()
-
         # Register the default error handler callback methods. These can be
         # overridden with the appropriate loader decorators
         self._user_claims_callback = default_user_claims_callback
@@ -230,3 +231,63 @@ class JWTManager(object):
         """
         self._revoked_token_callback = callback
         return callback
+
+    def create_refresh_token(self, identity):
+        """
+        Creates a new refresh token
+
+        :param identity: The identity of this token. This can be any data that is
+                         json serializable. It can also be an object, in which case
+                         you can use the user_identity_loader to define a function
+                         that will be called to pull a json serializable identity
+                         out of this object. This is useful so you don't need to
+                         query disk twice, once for initially finding the identity
+                         in your login endpoint, and once for setting addition data
+                         in the JWT via the user_claims_loader
+        :return: A new refresh token
+        """
+        refresh_token = encode_refresh_token(
+            identity=self._user_identity_callback(identity),
+            secret=config.secret_key,
+            algorithm=config.algorithm,
+            expires_delta=config.refresh_expires,
+            csrf=config.csrf_protect
+        )
+
+        # If blacklisting is enabled, store this token in our key-value store
+        if config.blacklist_enabled:
+            decoded_token = decode_jwt(refresh_token, config.secret_key,
+                                       config.algorithm, csrf=config.csrf_protect)
+            store_token(decoded_token, revoked=False)
+        return refresh_token
+
+    def create_access_token(self, identity, fresh=False):
+        """
+        Creates a new access token
+
+        :param identity: The identity of this token. This can be any data that is
+                         json serializable. It can also be an object, in which case
+                         you can use the user_identity_loader to define a function
+                         that will be called to pull a json serializable identity
+                         out of this object. This is useful so you don't need to
+                         query disk twice, once for initially finding the identity
+                         in your login endpoint, and once for setting addition data
+                         in the JWT via the user_claims_loader
+        :param fresh: If this token should be marked as fresh, and can thus access
+                      fresh_jwt_required protected endpoints. Defaults to False
+        :return: A new access token
+        """
+        access_token = encode_access_token(
+            identity=self._user_identity_callback(identity),
+            secret=config.secret_key,
+            algorithm=config.algorithm,
+            expires_delta=config.access_expires,
+            fresh=fresh,
+            user_claims=self._user_claims_callback(identity),
+            csrf=config.csrf_protect
+        )
+        if config.blacklist_enabled:
+            decoded_token = decode_jwt(access_token, config.secret_key,
+                                       config.algorithm, csrf=config.csrf_protect)
+            store_token(decoded_token, revoked=False)
+        return access_token

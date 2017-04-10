@@ -4,11 +4,16 @@ try:
 except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as ctx_stack
 
-from flask_jwt_extended.blacklist import store_token
 from flask_jwt_extended.config import config
-from flask_jwt_extended.tokens import (
-    decode_jwt, encode_refresh_token, encode_access_token
-)
+from flask_jwt_extended.tokens import decode_jwt
+
+
+def get_raw_jwt():
+    """
+    Returns the python dictionary which has all of the data in this JWT. If no
+    JWT is currently present, and empty dict is returned
+    """
+    return getattr(ctx_stack.top, 'jwt', {})
 
 
 def get_jwt_identity():
@@ -27,74 +32,22 @@ def get_jwt_claims():
     return get_raw_jwt().get('user_claims', {})
 
 
-def get_raw_jwt():
-    """
-    Returns the python dictionary which has all of the data in this JWT. If no
-    JWT is currently present, and empty dict is returned
-    """
-    return getattr(ctx_stack.top, 'jwt', {})
+def _get_jwt_manager():
+    try:
+        return current_app.jwt_manager
+    except AttributeError:
+        raise RuntimeError("You must initialize a JWTManager with this flask"
+                           "application before using this method")
 
 
-def create_refresh_token(identity):
-    """
-    Creates a new refresh token
-
-    :param identity: The identity of this token. This can be any data that is
-                     json serializable. It can also be an object, in which case
-                     you can use the user_identity_loader to define a function
-                     that will be called to pull a json serializable identity
-                     out of this object. This is useful so you don't need to
-                     query disk twice, once for initially finding the identity
-                     in your login endpoint, and once for setting addition data
-                     in the JWT via the user_claims_loader
-    :return: A new refresh token
-    """
-    refresh_token = encode_refresh_token(
-        identity=current_app.jwt_manager._user_identity_callback(identity),
-        secret=config.secret_key,
-        algorithm=config.algorithm,
-        expires_delta=config.refresh_expires,
-        csrf=config.csrf_protect
-    )
-
-    # If blacklisting is enabled, store this token in our key-value store
-    if config.blacklist_enabled:
-        decoded_token = decode_jwt(refresh_token, config.secret_key,
-                                   config.algorithm, csrf=config.csrf_protect)
-        store_token(decoded_token, revoked=False)
-    return refresh_token
+def create_access_token(*args, **kwargs):
+    jwt_manager = _get_jwt_manager()
+    jwt_manager.create_access_token(*args, **kwargs)
 
 
-def create_access_token(identity, fresh=False):
-    """
-    Creates a new access token
-
-    :param identity: The identity of this token. This can be any data that is
-                     json serializable. It can also be an object, in which case
-                     you can use the user_identity_loader to define a function
-                     that will be called to pull a json serializable identity
-                     out of this object. This is useful so you don't need to
-                     query disk twice, once for initially finding the identity
-                     in your login endpoint, and once for setting addition data
-                     in the JWT via the user_claims_loader
-    :param fresh: If this token should be marked as fresh, and can thus access
-                  fresh_jwt_required protected endpoints. Defaults to False
-    :return: A new access token
-    """
-    access_token = encode_access_token(
-        identity=current_app.jwt_manager._user_identity_callback(identity),
-        secret=config.secret_key,
-        algorithm=config.algorithm,
-        expires_delta=config.access_expires,
-        fresh=fresh,
-        user_claims=current_app.jwt_manager._user_claims_callback(identity),
-        csrf=config.csrf_protect
-    )
-    if config.blacklist_enabled:
-        decoded_token = decode_jwt(access_token, config.secret_key,
-                                   config.algorithm, csrf=config.csrf_protect)
-        store_token(decoded_token, revoked=False)
-    return access_token
+def create_refresh_token(*args, **kwargs):
+    jwt_manager = _get_jwt_manager()
+    jwt_manager.create_refresh_token(*args, **kwargs)
 
 
 def get_csrf_token(encoded_token):

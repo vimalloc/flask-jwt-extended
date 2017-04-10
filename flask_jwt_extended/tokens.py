@@ -2,7 +2,6 @@ import datetime
 import uuid
 
 import jwt
-import six
 
 from flask_jwt_extended.exceptions import JWTDecodeError
 

@@ -5,14 +5,14 @@ import simplekv
 from flask import current_app
 
 
-class Config(object):
+class _Config(object):
     """
     Helper object for accessing and verifying options in this extension. This
     is meant for internal use of the application; modifying config options
     should be done with flasks ```app.config```.
     
     Default values for the configuration options are set in the jwt_manager
-    object
+    object. All of these values are read only.
     """
 
     @property
@@ -183,4 +183,4 @@ class Config(object):
         # seconds a long ways in the future
         return None if self.session_cookie else 2147483647  # 2^31
 
-config = Config()
+config = _Config()

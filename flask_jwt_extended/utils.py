@@ -42,12 +42,12 @@ def _get_jwt_manager():
 
 def create_access_token(*args, **kwargs):
     jwt_manager = _get_jwt_manager()
-    jwt_manager.create_access_token(*args, **kwargs)
+    return jwt_manager.create_access_token(*args, **kwargs)
 
 
 def create_refresh_token(*args, **kwargs):
     jwt_manager = _get_jwt_manager()
-    jwt_manager.create_refresh_token(*args, **kwargs)
+    return jwt_manager.create_refresh_token(*args, **kwargs)
 
 
 def get_csrf_token(encoded_token):

@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from flask import Flask, jsonify
 import jwt
 
-from flask_jwt_extended.utils import _encode_access_token, get_jwt_claims, \
+from flask_jwt_extended.tokens import encode_access_token
+from flask_jwt_extended.utils import get_jwt_claims, \
     get_jwt_identity, set_refresh_cookies, set_access_cookies, unset_jwt_cookies
 from flask_jwt_extended import JWTManager, create_refresh_token, \
     jwt_refresh_token_required, create_access_token, fresh_jwt_required, \
@@ -245,8 +246,8 @@ class TestEndpoints(unittest.TestCase):
 
         # Test token that was signed with a different key
         with self.app.test_request_context():
-            token = _encode_access_token('foo', 'newsecret', 'HS256',
-                                         timedelta(minutes=5), True, {})
+            token = encode_access_token('foo', 'newsecret', 'HS256',
+                                        timedelta(minutes=5), True, {})
         auth_header = "Bearer {}".format(token)
         response = self.client.get('/protected', headers={'Authorization': auth_header})
         data = json.loads(response.get_data(as_text=True))

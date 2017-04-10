@@ -6,12 +6,15 @@ from datetime import timedelta
 import simplekv.memory
 from flask import Flask, jsonify, request
 from flask_jwt_extended.blacklist import _get_token_ttl, get_stored_token
-from flask_jwt_extended.utils import _encode_refresh_token, _decode_jwt, \
-    fresh_jwt_required, get_jwt_identity, get_raw_jwt
+from flask_jwt_extended.tokens import encode_refresh_token, decode_jwt
+from flask_jwt_extended.utils import get_jwt_identity, get_raw_jwt
 
-from flask_jwt_extended import JWTManager, create_access_token, \
-    get_all_stored_tokens, get_stored_tokens, revoke_token, unrevoke_token, \
-    jwt_required,create_refresh_token, jwt_refresh_token_required
+from flask_jwt_extended import (
+    JWTManager, create_access_token,
+    get_all_stored_tokens, get_stored_tokens, revoke_token, unrevoke_token,
+    jwt_required, create_refresh_token, jwt_refresh_token_required,
+    fresh_jwt_required
+)
 
 
 class TestEndpoints(unittest.TestCase):
@@ -349,9 +352,9 @@ class TestEndpoints(unittest.TestCase):
 
         # Test token ttl
         with self.app.test_request_context():
-            token_str = _encode_refresh_token('foo', 'secret', 'HS256',
+            token_str = encode_refresh_token('foo', 'secret', 'HS256',
                                               timedelta(minutes=5))
-            token = _decode_jwt(token_str, 'secret', 'HS256')
+            token = decode_jwt(token_str, 'secret', 'HS256')
             time.sleep(2)
             token_ttl = _get_token_ttl(token).total_seconds()
             self.assertGreater(token_ttl, 296)
@@ -359,9 +362,9 @@ class TestEndpoints(unittest.TestCase):
 
         # Test ttl is 0 if token is already expired
         with self.app.test_request_context():
-            token_str = _encode_refresh_token('foo', 'secret', 'HS256',
+            token_str = encode_refresh_token('foo', 'secret', 'HS256',
                                               timedelta(seconds=0))
-            token = _decode_jwt(token_str, 'secret', 'HS256')
+            token = decode_jwt(token_str, 'secret', 'HS256')
             time.sleep(2)
             token_ttl = _get_token_ttl(token).total_seconds()
             self.assertEqual(token_ttl, 0)

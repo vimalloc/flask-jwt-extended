@@ -109,6 +109,14 @@ class _Config(object):
     def refresh_csrf_cookie_name(self):
         return current_app.config['JWT_REFRESH_CSRF_COOKIE_NAME']
 
+    @property
+    def access_csrf_cookie_path(self):
+        return current_app.config['JWT_ACCESS_CSRF_COOKIE_PATH']
+
+    @property
+    def refresh_csrf_cookie_path(self):
+        return current_app.config['JWT_REFRESH_CSRF_COOKIE_PATH']
+
     @staticmethod
     def _get_depreciated_csrf_header_name():
         # This used to be the same option for access and refresh header names.

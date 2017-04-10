@@ -127,6 +127,8 @@ class JWTManager(object):
         app.config.setdefault('JWT_CSRF_METHODS', ['POST', 'PUT', 'PATCH', 'DELETE'])
         app.config.setdefault('JWT_ACCESS_CSRF_COOKIE_NAME', 'csrf_access_token')
         app.config.setdefault('JWT_REFRESH_CSRF_COOKIE_NAME', 'csrf_refresh_token')
+        app.config.setdefault('JWT_ACCESS_CSRF_COOKIE_PATH', '/')
+        app.config.setdefault('JWT_REFRESH_CSRF_COOKIE_PATH', '/')
         app.config.setdefault('JWT_ACCESS_CSRF_HEADER_NAME', 'X-CSRF-TOKEN')
         app.config.setdefault('JWT_REFRESH_CSRF_HEADER_NAME', 'X-CSRF-TOKEN')
 

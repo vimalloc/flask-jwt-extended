@@ -79,7 +79,7 @@ def set_access_cookies(response, encoded_access_token):
                             max_age=config.cookie_max_age,
                             secure=config.cookie_secure,
                             httponly=False,
-                            path='/')
+                            path=config.access_csrf_cookie_path)
 
 
 def set_refresh_cookies(response, encoded_refresh_token):
@@ -106,7 +106,7 @@ def set_refresh_cookies(response, encoded_refresh_token):
                             max_age=config.cookie_max_age,
                             secure=config.cookie_secure,
                             httponly=False,
-                            path='/')
+                            path=config.refresh_csrf_cookie_path)
 
 
 def unset_jwt_cookies(response):
@@ -138,10 +138,10 @@ def unset_jwt_cookies(response):
                             expires=0,
                             secure=config.cookie_secure,
                             httponly=False,
-                            path='/')
+                            path=config.refresh_csrf_cookie_path)
         response.set_cookie(config.access_csrf_cookie_name,
                             value='',
                             expires=0,
                             secure=config.cookie_secure,
                             httponly=False,
-                            path='/')
+                            path=config.access_csrf_cookie_path)

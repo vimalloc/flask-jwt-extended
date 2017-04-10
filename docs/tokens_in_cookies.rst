@@ -44,3 +44,37 @@ protection is a choice you will have to make.
 Here is an example of what this would look like:
 
 .. literalinclude::  ../examples/csrf_protection_with_cookies.py
+
+By default, the CSRF double submit values are sent back as additional cookies
+to the caller. If you prefer, you can disable that, and send them back directly
+to the caller, like such:
+
+.. code-block:: python
+
+  app.config('JWT_CSRF_IN_COOKIES') = False
+  #...
+  #...
+  #...
+  @app.route('/token/auth', methods=['POST'])
+  def login():
+      username = request.json.get('username', None)
+      password = request.json.get('password', None)
+      if username != 'test' or password != 'test':
+          return jsonify({'login': False}), 401
+
+      # Create the tokens we will be sending back to the user
+      access_token = create_access_token(identity=username)
+      refresh_token = create_refresh_token(identity=username)
+
+      # Return the double submit values in the resulting JSON
+      # instead of in additional cookies
+      resp = jsonify({
+          'access_csrf': get_csrf_token(access_token),
+          'refresh_csrf': get_csrf_token(refresh_token)
+      })
+
+      # We still need to call these functions to set the
+      # JWTs in the cookies
+      set_access_cookies(resp, access_token)
+      set_refresh_cookies(resp, refresh_token)
+      return resp, 200

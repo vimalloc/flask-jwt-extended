@@ -34,33 +34,11 @@ class _Config(object):
     def jwt_in_headers(self):
         return 'headers' in self.token_location
 
-    @staticmethod
-    def _get_depreciated_header_name():
-        # This used to be the same option for access and refresh header names.
-        # This gives users a warning if they are still using the old behavior
-        old_name = current_app.config.get('JWT_HEADER_NAME', None)
-        if old_name:
-            msg = (
-                "JWT_HEADER_NAME is depreciated. Use JWT_ACCESS_HEADER_NAME "
-                "or JWT_REFRESH_HEADER_NAME instead"
-            )
-            warn(msg, DeprecationWarning)
-        return old_name
-
     @property
-    def access_header_name(self):
-        name = self._get_depreciated_header_name() or \
-               current_app.config['JWT_ACCESS_HEADER_NAME']
+    def header_name(self):
+        name = current_app.config['JWT_HEADER_NAME']
         if not name:
             raise RuntimeError("JWT_ACCESS_HEADER_NAME cannot be empty")
-        return name
-
-    @property
-    def refresh_header_name(self):
-        name = self._get_depreciated_header_name() or \
-               current_app.config['JWT_REFRESH_HEADER_NAME']
-        if not name:
-            raise RuntimeError("JWT_REFRESH_HEADER_NAME cannot be empty")
         return name
 
     @property

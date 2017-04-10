@@ -110,8 +110,7 @@ class JWTManager(object):
         app.config.setdefault('JWT_TOKEN_LOCATION', ['headers'])
 
         # Options for JWTs when the TOKEN_LOCATION is headers
-        app.config.setdefault('JWT_ACCESS_HEADER_NAME', 'Authorization')
-        app.config.setdefault('JWT_REFRESH_HEADER_NAME', 'Authorization')
+        app.config.setdefault('JWT_HEADER_NAME', 'Authorization')
         app.config.setdefault('JWT_HEADER_TYPE', 'Bearer')
 
         # Option for JWTs when the TOKEN_LOCATION is cookies

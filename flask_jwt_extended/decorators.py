@@ -75,13 +75,9 @@ def jwt_refresh_token_required(fn):
     return wrapper
 
 
-def _decode_jwt_from_headers(request_type):
-    if request_type == 'access':
-        header_name = config.access_header_name
-        header_type = config.header_type
-    else:
-        header_name = config.refresh_header_name
-        header_type = config.header_type
+def _decode_jwt_from_headers():
+    header_name = config.header_name
+    header_type = config.header_type
 
     # Verify we have the auth header
     jwt_header = request.headers.get(header_name, None)
@@ -146,11 +142,11 @@ def _decode_jwt_from_request(request_type):
             decoded_token = _decode_jwt_from_cookies(request_type)
         except NoAuthorizationError:
             try:
-                decoded_token = _decode_jwt_from_headers(request_type)
+                decoded_token = _decode_jwt_from_headers()
             except NoAuthorizationError:
                 raise NoAuthorizationError("Missing JWT in headers and cookies")
     elif config.jwt_in_headers:
-        decoded_token = _decode_jwt_from_headers(request_type)
+        decoded_token = _decode_jwt_from_headers()
     else:
         decoded_token = _decode_jwt_from_cookies(request_type)
 

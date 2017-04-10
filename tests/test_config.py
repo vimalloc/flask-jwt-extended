@@ -19,8 +19,7 @@ class TestEndpoints(unittest.TestCase):
     def test_default_configs(self):
         with self.app.test_request_context():
             self.assertEqual(config.token_location, ['headers'])
-            self.assertEqual(config.access_header_name, 'Authorization')
-            self.assertEqual(config.refresh_header_name, 'Authorization')
+            self.assertEqual(config.header_name, 'Authorization')
             self.assertEqual(config.header_type, 'Bearer')
 
             self.assertEqual(config.cookie_secure, False)
@@ -46,8 +45,7 @@ class TestEndpoints(unittest.TestCase):
 
     def test_override_configs(self):
         self.app.config['JWT_TOKEN_LOCATION'] = 'cookies'
-        self.app.config['JWT_ACCESS_HEADER_NAME'] = 'Auth'
-        self.app.config['JWT_REFRESH_HEADER_NAME'] = 'Auth'
+        self.app.config['JWT_HEADER_NAME'] = 'Auth'
         self.app.config['JWT_HEADER_TYPE'] = 'JWT'
 
         self.app.config['JWT_COOKIE_SECURE'] = True
@@ -71,8 +69,7 @@ class TestEndpoints(unittest.TestCase):
 
         with self.app.test_request_context():
             self.assertEqual(config.token_location, ['cookies'])
-            self.assertEqual(config.access_header_name, 'Auth')
-            self.assertEqual(config.refresh_header_name, 'Auth')
+            self.assertEqual(config.header_name, 'Auth')
             self.assertEqual(config.header_type, 'JWT')
 
             self.assertEqual(config.cookie_secure, True)
@@ -94,16 +91,13 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.blacklist_checks, 'all')
 
         self.app.config['JWT_TOKEN_LOCATION'] = 'banana'
-        self.app.config['JWT_ACCESS_HEADER_NAME'] = ''
-        self.app.config['JWT_REFRESH_HEADER_NAME'] = ''
+        self.app.config['JWT_HEADER_NAME'] = ''
         self.app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 'banana'
         self.app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 'banana'
 
         with self.app.test_request_context():
             with self.assertRaises(RuntimeError):
-                config.access_header_name
-            with self.assertRaises(RuntimeError):
-                config.refresh_header_name
+                config.header_name
             with self.assertRaises(RuntimeError):
                 config.access_expires
             with self.assertRaises(RuntimeError):

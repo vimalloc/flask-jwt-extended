@@ -44,13 +44,6 @@ def get_raw_jwt():
     return getattr(ctx_stack.top, 'jwt', {})
 
 
-def _get_cookie_max_age():
-    """
-    Checks config value for using session or persistent cookies and returns the
-    appropriate value for flask set_cookies.
-    """
-    return None if config.session_cookie else 2147483647  # 2^31
-
 
 def _decode_jwt_from_headers(type):
     # TODO make type an enum or something instead of a magic string
@@ -310,7 +303,7 @@ def set_access_cookies(response, encoded_access_token):
     # Set the access JWT in the cookie
     response.set_cookie(config.access_cookie_name,
                         value=encoded_access_token,
-                        max_age=_get_cookie_max_age(),  # TODO move to config
+                        max_age=config.cookie_max_age,
                         secure=config.cookie_secure,
                         httponly=True,
                         path=config.access_cookie_path)
@@ -319,7 +312,7 @@ def set_access_cookies(response, encoded_access_token):
     if config.csrf_protect:
         response.set_cookie(config.access_csrf_cookie_name,
                             value=_get_csrf_token(encoded_access_token),
-                            max_age=_get_cookie_max_age(),  # TODO move to config
+                            max_age=config.cookie_max_age,
                             secure=config.cookie_secure,
                             httponly=False,
                             path='/')
@@ -337,7 +330,7 @@ def set_refresh_cookies(response, encoded_refresh_token):
     # Set the refresh JWT in the cookie
     response.set_cookie(config.refresh_cookie_name,
                         value=encoded_refresh_token,
-                        max_age=_get_cookie_max_age(),  # TODO move to config
+                        max_age=config.cookie_max_age,
                         secure=config.cookie_secure,
                         httponly=True,
                         path=config.refresh_cookie_path)
@@ -346,7 +339,7 @@ def set_refresh_cookies(response, encoded_refresh_token):
     if config.csrf_protect:
         response.set_cookie(config.refresh_csrf_cookie_name,
                             value=_get_csrf_token(encoded_refresh_token),
-                            max_age=_get_cookie_max_age(),  # TODO move to config
+                            max_age=config.cookie_max_age,
                             secure=config.cookie_secure,
                             httponly=False,
                             path='/')

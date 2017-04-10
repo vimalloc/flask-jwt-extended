@@ -176,4 +176,11 @@ class Config(object):
             raise RuntimeError('flask SECRET_KEY must be set')
         return key
 
+    @property
+    def cookie_max_age(self):
+        # Returns the appropiate value for max_age for flask set_cookies. If
+        # session cookie is true, return None, otherwise return a number of
+        # seconds a long ways in the future
+        return None if self.session_cookie else 2147483647  # 2^31
+
 config = Config()

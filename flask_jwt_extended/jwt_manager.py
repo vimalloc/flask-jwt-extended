@@ -1,69 +1,69 @@
 import datetime
 
-from flask import jsonify
 from jwt import ExpiredSignatureError, InvalidTokenError
 
-from flask_jwt_extended.exceptions import JWTDecodeError, NoAuthorizationError, \
-    InvalidHeaderError, WrongTokenError, RevokedTokenError, FreshTokenRequired, \
-    CSRFError
+from flask_jwt_extended.config import Config
+from flask_jwt_extended.exceptions import (
+    JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
+    RevokedTokenError, FreshTokenRequired, CSRFError
+)
+from flask_jwt_extended.default_callbacks import (
+    default_expired_token_callback, default_user_claims_callback,
+    default_user_identity_callback, default_invalid_token_callback,
+    default_unauthorized_callback,
+    default_needs_fresh_token_callback,
+    default_revoked_token_callback
+)
 
 
-class JWTManager:
+class JWTManager(object):
     def __init__(self, app=None):
-        # Function that will be called to add custom user claims to a JWT.
-        self._user_claims_callback = lambda _: {}
+        """
+        Create the JWTManager instance. You can either pass a flask application
+        in directly here to register this extension with the flask app, or
+        call init_app after creating this object
 
-        # Function that will be called to return an identity from an object
-        self._user_identity_callback = lambda i: i
+        :param app: A flask application
+        """
+        # This is a helper object for managing configuration options in this
+        # extension
+        self.config = Config()
 
-        # Function that will be called when an expired token is received
-        self._expired_token_callback = lambda: (
-            jsonify({'msg': 'Token has expired'}), 401
-        )
+        # Register the default error handler callback methods. These can be
+        # overridden with the appropriate loader decorators
+        self._user_claims_callback = default_user_claims_callback
+        self._user_identity_callback = default_user_identity_callback
+        self._expired_token_callback = default_expired_token_callback
+        self._invalid_token_callback = default_invalid_token_callback
+        self._unauthorized_callback = default_unauthorized_callback
+        self._needs_fresh_token_callback = default_needs_fresh_token_callback
+        self._revoked_token_callback = default_revoked_token_callback
 
-        # Function that will be called when an invalid token is received
-        self._invalid_token_callback = lambda err: (
-            jsonify({'msg': err}), 422
-        )
-
-        # Function that will be called when attempting to access a protected
-        # endpoint without a valid token
-        self._unauthorized_callback = lambda err: (
-            jsonify({'msg': err}), 401
-        )
-
-        # Function that will be called when attempting to access a fresh_jwt_required
-        # endpoint with a valid token that is not fresh
-        self._needs_fresh_token_callback = lambda: (
-            jsonify({'msg': 'Fresh token required'}), 401
-        )
-
-        # Function that will be called when a revoked token attempts to access
-        # a protected endpoint
-        self._revoked_token_callback = lambda: (
-            jsonify({'msg': 'Token has been revoked'}), 401
-        )
-
-        # Setup the app if it is given (can be passed to this constructor, or
-        # called later by calling init_app directly)
+        # Register this extension with the flask app now (if it is provided)
         if app is not None:
             self.init_app(app)
 
     def init_app(self, app):
         """
         Register this extension with the flask app
+
+        :param app: A flask application
         """
         # Save this so we can use it later in the extension
         app.jwt_manager = self
 
-        # Set propagate exceptions, so all of these error handlers properly
-        # work in production
-        app.config['PROPAGATE_EXCEPTIONS'] = True
-
+        # Set all the default configurations for this extension
         self._set_default_configuration_options(app)
         self._set_error_handler_callbacks(app)
 
+        # Set propagate exceptions, so all of our error handlers properly
+        # work in production
+        app.config['PROPAGATE_EXCEPTIONS'] = True
+
     def _set_error_handler_callbacks(self, app):
+        """
+        Sets the error handler callbacks used by this extension
+        """
         @app.errorhandler(NoAuthorizationError)
         def handle_auth_error(e):
             return self._unauthorized_callback(str(e))
@@ -100,7 +100,11 @@ class JWTManager:
         def handle_fresh_token_required(e):
             return self._needs_fresh_token_callback()
 
-    def _set_default_configuration_options(self, app):
+    @staticmethod
+    def _set_default_configuration_options(app):
+        """
+        Sets the default configuration options used by this extension
+        """
         # Where to look for the JWT. Available options are cookies or headers
         app.config.setdefault('JWT_TOKEN_LOCATION', ['headers'])
 
@@ -130,8 +134,8 @@ class JWTManager:
         app.config.setdefault('JWT_REFRESH_TOKEN_EXPIRES', datetime.timedelta(days=30))
 
         # What algorithm to use to sign the token. See here for a list of options:
-        # https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py (note that
-        # public private key is not yet supported)
+        # https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py (note
+        # that public private key is not yet supported in this extension)
         app.config.setdefault('JWT_ALGORITHM', 'HS256')
 
         # Options for blacklisting/revoking tokens

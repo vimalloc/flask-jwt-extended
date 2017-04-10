@@ -1,5 +1,5 @@
 from .jwt_manager import JWTManager
-from .decorators import (
+from .view_decorators import (
     jwt_required, fresh_jwt_required, jwt_refresh_token_required
 )
 from .utils import (

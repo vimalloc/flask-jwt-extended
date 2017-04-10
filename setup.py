@@ -17,7 +17,7 @@ setup(name='Flask-JWT-Extended',
       packages=['flask_jwt_extended'],
       zip_safe=False,
       platforms='any',
-      install_requires=['Flask', 'PyJWT', 'simplekv', 'six'],
+      install_requires=['Flask', 'PyJWT', 'simplekv'],
       classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

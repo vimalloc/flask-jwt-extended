@@ -6,6 +6,8 @@ from functools import wraps
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import RevokedTokenError
 
+# TODO make simplekv an optional dependency if blacklist is disabled
+
 
 def _verify_blacklist_enabled(fn):
     """

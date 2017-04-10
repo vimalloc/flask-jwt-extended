@@ -99,7 +99,9 @@ class _Config(object):
     def csrf_request_methods(self):
         return current_app.config['JWT_CSRF_METHODS']
 
-    # TODO csrf cookie enabled option here or in set_access_cookies method?
+    @property
+    def csrf_in_cookies(self):
+        return current_app.config['JWT_CSRF_IN_COOKIES']
 
     @property
     def access_csrf_cookie_name(self):

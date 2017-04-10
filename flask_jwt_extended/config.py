@@ -170,6 +170,10 @@ class _Config(object):
         return check_type
 
     @property
+    def blacklist_access_tokens(self):
+        return 'all' in self.blacklist_checks
+
+    @property
     def secret_key(self):
         key = current_app.config.get('SECRET_KEY', None)
         if not key:

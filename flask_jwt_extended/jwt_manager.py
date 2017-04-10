@@ -286,7 +286,7 @@ class JWTManager(object):
             user_claims=self._user_claims_callback(identity),
             csrf=config.csrf_protect
         )
-        if config.blacklist_enabled:
+        if config.blacklist_enabled and config.blacklist_access_tokens:
             decoded_token = decode_jwt(access_token, config.secret_key,
                                        config.algorithm, csrf=config.csrf_protect)
             store_token(decoded_token, revoked=False)

@@ -60,7 +60,7 @@ These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use cookies.
 ``JWT_COOKIE_SECURE``             If the secure flag should be set on your JWT cookies. This will only allow
                                   the cookies to be sent over https. Defaults to ``False``, but in production
                                   this should likely be set to ``True``.
-``JWT_COOKIE_DOMAIN``             Value to use for a cross domain cookies. Defaults to ``None`` which sets
+``JWT_COOKIE_DOMAIN``             Value to use for cross domain cookies. Defaults to ``None`` which sets
                                   this cookie to only be readable by the domain that set it.
 ``JWT_SESSION_COOKIE``            If the cookies should be session cookies (deleted when the
                                   browser is closed) or persistent cookies (never expire).

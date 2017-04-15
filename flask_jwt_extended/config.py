@@ -67,7 +67,7 @@ class _Config(object):
 
     @property
     def cookie_domain(self):
-        return current_app.config.get('JWT_COOKIE_DOMAIN', None)
+        return current_app.config['JWT_COOKIE_DOMAIN']
 
     @property
     def session_cookie(self):

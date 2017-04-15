@@ -10,7 +10,7 @@ class _Config(object):
     Helper object for accessing and verifying options in this extension. This
     is meant for internal use of the application; modifying config options
     should be done with flasks ```app.config```.
-    
+
     Default values for the configuration options are set in the jwt_manager
     object. All of these values are read only.
     """
@@ -64,6 +64,10 @@ class _Config(object):
     @property
     def cookie_secure(self):
         return current_app.config['JWT_COOKIE_SECURE']
+
+    @property
+    def cookie_domain(self):
+        return current_app.config['JWT_COOKIE_DOMAIN']
 
     @property
     def session_cookie(self):

@@ -29,6 +29,7 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.access_cookie_path, '/')
             self.assertEqual(config.refresh_cookie_path, '/')
             self.assertEqual(config.cookie_secure, False)
+            self.assertEqual(config.cookie_domain, None)
             self.assertEqual(config.session_cookie, True)
 
             self.assertEqual(config.csrf_protect, False)
@@ -66,6 +67,7 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_ACCESS_COOKIE_PATH'] = '/access/path'
         self.app.config['JWT_REFRESH_COOKIE_PATH'] = '/refresh/path'
         self.app.config['JWT_COOKIE_SECURE'] = True
+        self.app.config['JWT_COOKIE_DOMAIN'] = ".example.com"
         self.app.config['JWT_SESSION_COOKIE'] = False
 
         self.app.config['JWT_COOKIE_CSRF_PROTECT'] = True
@@ -100,6 +102,7 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.access_cookie_path, '/access/path')
             self.assertEqual(config.refresh_cookie_path, '/refresh/path')
             self.assertEqual(config.cookie_secure, True)
+            self.assertEqual(config.cookie_domain, ".example.com")
             self.assertEqual(config.session_cookie, False)
 
             self.assertEqual(config.csrf_protect, True)

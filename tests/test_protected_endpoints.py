@@ -385,6 +385,22 @@ class TestEndpoints(unittest.TestCase):
         with self.assertRaises(RuntimeWarning):
             client.post('/logout-bad')
 
+    def test_jwt_with_different_algorithm(self):
+        self.app.config['JWT_ALGORITHM'] = 'HS256'
+        self.app.secret_key = 'test_secret'
+        access_token = encode_access_token(
+            identity='bobdobbs',
+            secret='test_secret',
+            algorithm='HS512',
+            expires_delta=timedelta(minutes=5),
+            fresh=True,
+            user_claims={},
+            csrf=False
+        )
+        status, data = self._jwt_get('/protected', access_token)
+        self.assertEqual(status, 422)
+        self.assertIn('msg', data)
+
 
 class TestEndpointsWithCookies(unittest.TestCase):
 

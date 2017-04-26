@@ -88,7 +88,7 @@ def decode_jwt(encoded_token, secret, algorithm, csrf):
     :return: Dictionary containing contents of the JWT
     """
     # This call verifies the ext, iat, and nbf claims
-    data = jwt.decode(encoded_token, secret, algorithm=algorithm)
+    data = jwt.decode(encoded_token, secret, algorithms=[algorithm])
 
     # Make sure that any custom claims we expect in the token are present
     if 'jti' not in data:

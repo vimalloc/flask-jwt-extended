@@ -45,11 +45,15 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.access_expires, timedelta(minutes=15))
             self.assertEqual(config.refresh_expires, timedelta(days=30))
             self.assertEqual(config.algorithm, 'HS256')
+            self.assertEqual(config.is_asymmetric, False)
             self.assertEqual(config.blacklist_enabled, False)
             self.assertEqual(config.blacklist_checks, 'refresh')
             self.assertEqual(config.blacklist_access_tokens, False)
 
             self.assertEqual(config.secret_key, self.app.secret_key)
+            self.assertEqual(config.public_key, None)
+            self.assertEqual(config.encode_key, self.app.secret_key)
+            self.assertEqual(config.decode_key, self.app.secret_key)
             self.assertEqual(config.cookie_max_age, None)
 
             with self.assertRaises(RuntimeError):
@@ -166,6 +170,15 @@ class TestEndpoints(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 config.secret_key
 
+            self.app.secret_key = None
+            with self.assertRaises(RuntimeError):
+                config.encode_key
+
+            self.app.config['JWT_ALGORITHM'] = 'RS256'
+            self.app.config['JWT_PUBLIC_KEY'] = None
+            with self.assertRaises(RuntimeError):
+                config.decode_key
+
     def test_depreciated_options(self):
         self.app.config['JWT_CSRF_HEADER_NAME'] = 'Auth'
 
@@ -205,3 +218,14 @@ class TestEndpoints(unittest.TestCase):
             self.app.config['JWT_TOKEN_LOCATION'] = ['cookies']
             self.app.config['JWT_COOKIE_CSRF_PROTECT'] = False
             self.assertEqual(config.csrf_protect, False)
+
+    def test_asymmetric_encryption_key_handling(self):
+        self.app.secret_key = 'MOCK_RSA_PRIVATE_KEY'
+        self.app.config['JWT_PUBLIC_KEY'] = 'MOCK_RSA_PUBLIC_KEY'
+        self.app.config['JWT_ALGORITHM'] = 'RS256'
+
+        with self.app.test_request_context():
+            self.assertEqual(config.is_asymmetric, True)
+            self.assertEqual(config.secret_key, 'MOCK_RSA_PRIVATE_KEY')
+            self.assertEqual(config.encode_key, 'MOCK_RSA_PRIVATE_KEY')
+            self.assertEqual(config.decode_key, 'MOCK_RSA_PUBLIC_KEY')

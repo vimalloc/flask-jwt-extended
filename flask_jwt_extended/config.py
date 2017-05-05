@@ -3,6 +3,7 @@ from warnings import warn
 
 import simplekv
 from flask import current_app
+from jwt.algorithms import requires_cryptography
 
 
 class _Config(object):
@@ -14,6 +15,18 @@ class _Config(object):
     Default values for the configuration options are set in the jwt_manager
     object. All of these values are read only.
     """
+
+    @property
+    def is_asymmetric(self):
+        return self.algorithm in requires_cryptography
+
+    @property
+    def encode_key(self):
+        return self.secret_key
+
+    @property
+    def decode_key(self):
+        return self.public_key if self.is_asymmetric else self.secret_key
 
     @property
     def token_location(self):
@@ -173,6 +186,17 @@ class _Config(object):
         return key
 
     @property
+    def public_key(self):
+        key = None
+        if self.algorithm in requires_cryptography:
+            key = current_app.config.get('JWT_PUBLIC_KEY', None)
+            if not key:
+                raise RuntimeError('JWT_PUBLIC_KEY must be set to use '
+                                   'asymmetric cryptography algorith '
+                                   '"{crypto_algorithm}"'.format(crypto_algorithm=self.algorithm))
+        return key
+
+    @property
     def cookie_max_age(self):
         # Returns the appropiate value for max_age for flask set_cookies. If
         # session cookie is true, return None, otherwise return a number of
@@ -180,3 +204,5 @@ class _Config(object):
         return None if self.session_cookie else 2147483647  # 2^31
 
 config = _Config()
+
+

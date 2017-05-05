@@ -138,9 +138,11 @@ class JWTManager(object):
         app.config.setdefault('JWT_REFRESH_TOKEN_EXPIRES', datetime.timedelta(days=30))
 
         # What algorithm to use to sign the token. See here for a list of options:
-        # https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py (note
-        # that public private key is not yet supported in this extension)
+        # https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py
         app.config.setdefault('JWT_ALGORITHM', 'HS256')
+
+        # must be set if using asymmetric cryptography algorithm (RS* or EC*)
+        app.config.setdefault('JWT_PUBLIC_KEY', None)
 
         # Options for blacklisting/revoking tokens
         app.config.setdefault('JWT_BLACKLIST_ENABLED', False)
@@ -251,7 +253,7 @@ class JWTManager(object):
         """
         refresh_token = encode_refresh_token(
             identity=self._user_identity_callback(identity),
-            secret=config.secret_key,
+            secret=config.encode_key,
             algorithm=config.algorithm,
             expires_delta=config.refresh_expires,
             csrf=config.csrf_protect
@@ -259,7 +261,7 @@ class JWTManager(object):
 
         # If blacklisting is enabled, store this token in our key-value store
         if config.blacklist_enabled:
-            decoded_token = decode_jwt(refresh_token, config.secret_key,
+            decoded_token = decode_jwt(refresh_token, config.decode_key,
                                        config.algorithm, csrf=config.csrf_protect)
             store_token(decoded_token, revoked=False)
         return refresh_token
@@ -282,7 +284,7 @@ class JWTManager(object):
         """
         access_token = encode_access_token(
             identity=self._user_identity_callback(identity),
-            secret=config.secret_key,
+            secret=config.encode_key,
             algorithm=config.algorithm,
             expires_delta=config.access_expires,
             fresh=fresh,
@@ -290,7 +292,7 @@ class JWTManager(object):
             csrf=config.csrf_protect
         )
         if config.blacklist_enabled and config.blacklist_access_tokens:
-            decoded_token = decode_jwt(access_token, config.secret_key,
+            decoded_token = decode_jwt(access_token, config.decode_key,
                                        config.algorithm, csrf=config.csrf_protect)
             store_token(decoded_token, revoked=False)
         return access_token

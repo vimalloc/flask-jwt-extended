@@ -814,3 +814,113 @@ class TestEndpointsWithHeadersAndCookies(unittest.TestCase):
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 401)
         self.assertIn('msg', data)
+
+
+# random 1024bit RSA keypair
+RSA_PRIVATE = """
+-----BEGIN RSA PRIVATE KEY-----
+MIICXgIBAAKBgQDN+p9a9oMyqRzkae8yLdJcEK0O0WesH6JiMz+KDrpUwAoAM/KP
+DnxFnROJDSBHyHEmPVn5x8GqV5lQ9+6l97jdEEcPo6wkshycM82fgcxOmvtAy4Uo
+xq/AeplYqplhcUTGVuo4ZldOLmN8ksGmzhWpsOdT0bkYipHCn5sWZxd21QIDAQAB
+AoGBAMJ0++KVXXEDZMpjFDWsOq898xNNMHG3/8ZzmWXN161RC1/7qt/RjhLuYtX9
+NV9vZRrzyrDcHAKj5pMhLgUzpColKzvdG2vKCldUs2b0c8HEGmjsmpmgoI1Tdf9D
+G1QK+q9pKHlbj/MLr4vZPX6xEwAFeqRKlzL30JPD+O6mOXs1AkEA8UDzfadH1Y+H
+bcNN2COvCqzqJMwLNRMXHDmUsjHfR2gtzk6D5dDyEaL+O4FLiQCaNXGWWoDTy/HJ
+Clh1Z0+KYwJBANqRtJ+RvdgHMq0Yd45MMyy0ODGr1B3PoRbUK8EdXpyUNMi1g3iJ
+tXMbLywNkTfcEXZTlbbkVYwrEl6P2N1r42cCQQDb9UQLBEFSTRJE2RRYQ/CL4yt3
+cTGmqkkfyr/v19ii2jEpMBzBo8eQnPL+fdvIhWwT3gQfb+WqxD9v10bzcmnRAkEA
+mzTgeHd7wg3KdJRtQYTmyhXn2Y3VAJ5SG+3qbCW466NqoCQVCeFwEh75rmSr/Giv
+lcDhDZCzFuf3EWNAcmuMfQJARsWfM6q7v2p6vkYLLJ7+VvIwookkr6wymF5Zgb9d
+E6oTM2EeUPSyyrj5IdsU2JCNBH1m3JnUflz8p8/NYCoOZg==
+-----END RSA PRIVATE KEY-----
+"""
+RSA_PUBLIC = """
+-----BEGIN RSA PUBLIC KEY-----
+MIGJAoGBAM36n1r2gzKpHORp7zIt0lwQrQ7RZ6wfomIzP4oOulTACgAz8o8OfEWd
+E4kNIEfIcSY9WfnHwapXmVD37qX3uN0QRw+jrCSyHJwzzZ+BzE6a+0DLhSjGr8B6
+mViqmWFxRMZW6jhmV04uY3ySwabOFamw51PRuRiKkcKfmxZnF3bVAgMBAAE=
+-----END RSA PUBLIC KEY-----
+"""
+
+class TestEndpointsWithAssymmetricCrypto(unittest.TestCase):
+
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.app.secret_key = RSA_PRIVATE
+        self.app.config['JWT_PUBLIC_KEY'] = RSA_PUBLIC
+        self.app.config['JWT_ALGORITHM'] = 'RS256'
+        self.app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=1)
+        self.app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(seconds=1)
+        self.jwt_manager = JWTManager(self.app)
+        self.client = self.app.test_client()
+
+        @self.app.route('/auth/login', methods=['POST'])
+        def login():
+            ret = {
+                'access_token': create_access_token('test', fresh=True),
+                'refresh_token': create_refresh_token('test')
+            }
+            return jsonify(ret), 200
+
+        @self.app.route('/auth/refresh', methods=['POST'])
+        @jwt_refresh_token_required
+        def refresh():
+            username = get_jwt_identity()
+            ret = {'access_token': create_access_token(username, fresh=False)}
+            return jsonify(ret), 200
+
+        @self.app.route('/auth/fresh-login', methods=['POST'])
+        def fresh_login():
+            ret = {'access_token': create_access_token('test', fresh=True)}
+            return jsonify(ret), 200
+
+        @self.app.route('/protected')
+        @jwt_required
+        def protected():
+            return jsonify({'msg': "hello world"})
+
+        @self.app.route('/fresh-protected')
+        @fresh_jwt_required
+        def fresh_protected():
+            return jsonify({'msg': "fresh hello world"})
+
+    def _jwt_post(self, url, jwt):
+        response = self.client.post(url, content_type='application/json',
+                                    headers={'Authorization': 'Bearer {}'.format(jwt)})
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        return status_code, data
+
+    def _jwt_get(self, url, jwt, header_name='Authorization', header_type='Bearer'):
+        header_type = '{} {}'.format(header_type, jwt).strip()
+        response = self.client.get(url, headers={header_name: header_type})
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        return status_code, data
+
+    def test_login(self):
+        response = self.client.post('/auth/login')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 200)
+        self.assertIn('access_token', data)
+        self.assertIn('refresh_token', data)
+
+    def test_fresh_login(self):
+        response = self.client.post('/auth/fresh-login')
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 200)
+        self.assertIn('access_token', data)
+        self.assertNotIn('refresh_token', data)
+
+    def test_refresh(self):
+        response = self.client.post('/auth/login')
+        data = json.loads(response.get_data(as_text=True))
+        access_token = data['access_token']
+        refresh_token = data['refresh_token']
+
+        status_code, data = self._jwt_post('/auth/refresh', refresh_token)
+        self.assertEqual(status_code, 200)
+        self.assertIn('access_token', data)
+        self.assertNotIn('refresh_token', data)

@@ -22,8 +22,10 @@ General Options:
 ``JWT_REFRESH_TOKEN_EXPIRES``     How long a refresh token should live before it expires. This
                                   takes a ``datetime.timedelta``, and defaults to 30 days
 ``JWT_ALGORITHM``                 Which algorithm to sign the JWT with. `See here <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
-                                  for the options. Defaults to ``'HS256'``. Note that Asymmetric
-                                  (Public-key) algorithms are not currently supported.
+                                  for the options. Defaults to ``'HS256'``.
+``JWT_PUBLIC_KEY``                The public key needed for RSA and ECDSA based signing algorithms.
+                                  Has to be provided if any of ``RS*`` or ``ES*`` algorithms is used.
+                                  PEM format expected.
 ================================= =========================================
 
 

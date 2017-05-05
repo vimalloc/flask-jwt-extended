@@ -51,7 +51,7 @@ def create_refresh_token(*args, **kwargs):
 
 
 def get_csrf_token(encoded_token):
-    token = decode_jwt(encoded_token, config.secret_key, config.algorithm, csrf=True)
+    token = decode_jwt(encoded_token, config.decode_key, config.algorithm, csrf=True)
     return token['csrf']
 
 

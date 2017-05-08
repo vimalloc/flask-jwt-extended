@@ -12,7 +12,7 @@ from flask import current_app
 # versions of pyjwt, it will kick it out as an unrecognized algorithm.
 try:
     from jwt.algorithms import requires_cryptography
-except ImportError:
+except ImportError:  # pragma: no cover
     requires_cryptography = {'RS256', 'RS384', 'RS512', 'ES256', 'ES384',
                              'ES521', 'ES512', 'PS256', 'PS384', 'PS512'}
 

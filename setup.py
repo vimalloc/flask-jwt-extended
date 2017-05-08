@@ -17,7 +17,10 @@ setup(name='Flask-JWT-Extended',
       packages=['flask_jwt_extended'],
       zip_safe=False,
       platforms='any',
-      install_requires=['Flask', 'PyJWT', 'simplekv', 'cryptography'],
+      install_requires=['Flask', 'PyJWT', 'simplekv'],
+      extras_require={
+        'asymmetric_crypto':  ["cryptography"]
+      }
       classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

@@ -9,7 +9,7 @@ env:
     - TOXENV=py35
 install:
     - pip install -U pip
-    - pip install -U Flask PyJWT six tox coverage coveralls
+    - pip install -U Flask PyJWT six tox coverage coveralls cryptography
 script:
     - tox
 after_success:

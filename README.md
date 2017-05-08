@@ -15,16 +15,10 @@ easier. These include:
 * Token revoking
 * Storing tokens in cookies and CSRF protection
 
-### Installation
-The easiest way to start working with this extension with pip:
-```
-$ pip install flask-jwt-extended
-```
 
-If you prefer to install from source, you can clone this repo and run
-```
-$ python setup.py install
-```
+### Installation
+[View Installation Instructions](http://flask-jwt-extended.readthedocs.io/en/latest/installation.html)
+
 
 ### Usage
 [View the documentation online](http://flask-jwt-extended.readthedocs.io/en/latest/)

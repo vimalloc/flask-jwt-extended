@@ -3,7 +3,18 @@ from warnings import warn
 
 import simplekv
 from flask import current_app
-from jwt.algorithms import requires_cryptography
+
+# Older versions of pyjwt do not have the requires_cryptography set. Also,
+# older versions will not be adding new algorithms to them, so I can hard code
+# the default version here and be safe. If there is a newer algorithm someone
+# wants to use, they will need newer versions of pyjwt and it will be included
+# in their requires_cryptography set, and if they attempt to use it in older
+# versions of pyjwt, it will kick it out as an unrecognized algorithm.
+try:
+    from jwt.algorithms import requires_cryptography
+except ImportError:
+    requires_cryptography = {'RS256', 'RS384', 'RS512', 'ES256', 'ES384',
+                             'ES521', 'ES512', 'PS256', 'PS384', 'PS512'}
 
 
 class _Config(object):

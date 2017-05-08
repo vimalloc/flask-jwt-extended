@@ -20,7 +20,7 @@ setup(name='Flask-JWT-Extended',
       install_requires=['Flask', 'PyJWT', 'simplekv'],
       extras_require={
         'asymmetric_crypto':  ["cryptography"]
-      }
+      },
       classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

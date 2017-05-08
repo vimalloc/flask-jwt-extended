@@ -141,7 +141,14 @@ class JWTManager(object):
         # https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py
         app.config.setdefault('JWT_ALGORITHM', 'HS256')
 
-        # must be set if using asymmetric cryptography algorithm (RS* or EC*)
+        # Secret key to sign JWTs with. Only used if a symmetric algorithm is
+        # used (such as the HS* algorithms). We will use the app secret key
+        # if this is not set.
+        app.config.setdefault('JWT_SECRET_KEY', None)
+
+        # Keys to sign JWTs with when use when using an asymmetric
+        # (public/private key) algorithm, such as RS* or EC*
+        app.config.setdefault('JWT_PRIVATE_KEY', None)
         app.config.setdefault('JWT_PUBLIC_KEY', None)
 
         # Options for blacklisting/revoking tokens

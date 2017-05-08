@@ -23,9 +23,13 @@ General Options:
                                   takes a ``datetime.timedelta``, and defaults to 30 days
 ``JWT_ALGORITHM``                 Which algorithm to sign the JWT with. `See here <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
                                   for the options. Defaults to ``'HS256'``.
-``JWT_PUBLIC_KEY``                The public key needed for RSA and ECDSA based signing algorithms.
-                                  Has to be provided if any of ``RS*`` or ``ES*`` algorithms is used.
-                                  PEM format expected.
+``JWT_SECRET_KEY``                The secret key needed for symmetric based signing algorithms,
+                                  such as ``HS*``. If this is not set, we use the
+                                  flask ``SECRET_KEY`` value instead.
+``JWT_PUBLIC_KEY``                The public key needed for asymmetric based signing algorithms,
+                                  such as ``RS*`` or ``ES*``. PEM format expected.
+``JWT_PRIVATE_KEY``               The private key needed for asymmetric based signing algorithms,
+                                  such as ``RS*`` or ``ES*``. PEM format expected.
 ================================= =========================================
 
 

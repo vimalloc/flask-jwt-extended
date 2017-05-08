@@ -846,8 +846,8 @@ class TestEndpointsWithAssymmetricCrypto(unittest.TestCase):
 
     def setUp(self):
         self.app = Flask(__name__)
-        self.app.secret_key = RSA_PRIVATE
         self.app.config['JWT_PUBLIC_KEY'] = RSA_PUBLIC
+        self.app.config['JWT_PRIVATE_KEY'] = RSA_PRIVATE
         self.app.config['JWT_ALGORITHM'] = 'RS256'
         self.app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=1)
         self.app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(seconds=1)

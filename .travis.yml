@@ -1,12 +1,19 @@
 language: python
 python:
-    - "3.5"
+    - "3.6"
+addons:
+  apt:
+    sources:
+      - deadsnakes
+    packages:
+      - python3.5 python3.5-dev
 sudo: false
 env:
     - TOXENV=py27
     - TOXENV=py33
     - TOXENV=py34
     - TOXENV=py35
+    - TOXENV=py36
 install:
     - pip install -U pip
     - pip install -U tox coverage coveralls

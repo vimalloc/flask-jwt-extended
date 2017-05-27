@@ -40,3 +40,27 @@ NOTE: Remember to change the secret key of your application, and insure that no
 one is able to view it. The json web tokens are signed with the secret key, so
 if someone gets that, they can create arbitrary tokens, and in essence log in
 as any user.
+
+Partially protecting routes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There may be cases where you want to use one endpoint for both protected
+and unprotected data. In these situations, you can use the **jwt_optional**
+decorator. This will allow the view to be called whether or not a token
+is sent in the request, although if the token is expired or badly constructed,
+or if the header is improperly formatted or otherwise incorrect, an error
+will be returned.
+
+.. code-block:: python
+
+  @app.route('/partially-protected', methods=['GET'])
+  @jwt_optional
+  def partially_protected():
+      # If no JWT is sent in the request headers, get_jwt_identity()
+      # will return None
+      current_user = get_jwt_identity()
+      if current_user:
+          return jsonify({'hello_from': current_user}), 200
+
+      return jsonify({'hello_from': 'an anonymous user'}), 200
+

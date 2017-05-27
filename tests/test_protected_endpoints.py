@@ -11,7 +11,7 @@ from flask_jwt_extended.utils import get_jwt_claims, \
     get_jwt_identity, set_refresh_cookies, set_access_cookies, unset_jwt_cookies
 from flask_jwt_extended import JWTManager, create_refresh_token, \
     jwt_refresh_token_required, create_access_token, fresh_jwt_required, \
-    jwt_required, get_raw_jwt
+    jwt_optional, jwt_required, get_raw_jwt
 
 
 class TestEndpoints(unittest.TestCase):
@@ -54,6 +54,14 @@ class TestEndpoints(unittest.TestCase):
         @fresh_jwt_required
         def fresh_protected():
             return jsonify({'msg': "fresh hello world"})
+
+        @self.app.route('/partially-protected')
+        @jwt_optional
+        def partially_protected():
+            if get_jwt_identity():
+                return jsonify({'msg': "protected hello world"})
+            return jsonify({'msg': "unprotected hello world"})
+
 
     def _jwt_post(self, url, jwt):
         response = self.client.post(url, content_type='application/json',
@@ -124,6 +132,32 @@ class TestEndpoints(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(data, {'msg': 'hello world'})
 
+    def test_jwt_optional_no_jwt(self):
+        response = self.client.get('/partially-protected')
+        data = json.loads(response.get_data(as_text=True))
+        status = response.status_code
+        self.assertEqual(status, 200)
+        self.assertEqual(data, {'msg': 'unprotected hello world'})
+
+    def test_jwt_optional_with_jwt(self):
+        response = self.client.post('/auth/login')
+        data = json.loads(response.get_data(as_text=True))
+        fresh_access_token = data['access_token']
+        refresh_token = data['refresh_token']
+
+        # Test it works with a fresh token
+        status, data = self._jwt_get('/partially-protected',
+                                     fresh_access_token)
+        self.assertEqual(data, {'msg': 'protected hello world'})
+        self.assertEqual(status, 200)
+
+        # Test it works with a non-fresh access token
+        _, data = self._jwt_post('/auth/refresh', refresh_token)
+        non_fresh_token = data['access_token']
+        status, data = self._jwt_get('/partially-protected', non_fresh_token)
+        self.assertEqual(status, 200)
+        self.assertEqual(data, {'msg': 'protected hello world'})
+
     def test_jwt_required_wrong_token(self):
         response = self.client.post('/auth/login')
         data = json.loads(response.get_data(as_text=True))
@@ -131,6 +165,15 @@ class TestEndpoints(unittest.TestCase):
 
         # Shouldn't work with a refresh token
         status, text = self._jwt_get('/protected', refresh_token)
+        self.assertEqual(status, 422)
+
+    def test_jwt_optional_wrong_token(self):
+        response = self.client.post('/auth/login')
+        data = json.loads(response.get_data(as_text=True))
+        refresh_token = data['refresh_token']
+
+        # Shouldn't work with a refresh token
+        status, text = self._jwt_get('/partially-protected', refresh_token)
         self.assertEqual(status, 422)
 
     def test_fresh_jwt_required(self):
@@ -209,6 +252,38 @@ class TestEndpoints(unittest.TestCase):
         self.assertEqual(status_code, 422)
         self.assertIn('msg', data)
 
+    def test_optional_bad_jwt_requests(self):
+        response = self.client.post('/auth/login')
+        data = json.loads(response.get_data(as_text=True))
+        access_token = data['access_token']
+
+        # Test with missing type in authorization header
+        auth_header = access_token
+        response = self.client.get('/partially-protected',
+                                   headers={'Authorization': auth_header})
+        data = json.loads(response.get_data(as_text=True))
+        status_code = response.status_code
+        self.assertEqual(status_code, 422)
+        self.assertIn('msg', data)
+
+        # Test with type not being Bearer in authorization header
+        auth_header = "BANANA {}".format(access_token)
+        response = self.client.get('/partially-protected',
+                                   headers={'Authorization': auth_header})
+        data = json.loads(response.get_data(as_text=True))
+        status_code = response.status_code
+        self.assertEqual(status_code, 422)
+        self.assertIn('msg', data)
+
+        # Test with too many items in auth header
+        auth_header = "Bearer {} BANANA".format(access_token)
+        response = self.client.get('/partially-protected',
+                                   headers={'Authorization': auth_header})
+        data = json.loads(response.get_data(as_text=True))
+        status_code = response.status_code
+        self.assertEqual(status_code, 422)
+        self.assertIn('msg', data)
+
     def test_bad_tokens(self):
         # Test expired access token
         response = self.client.post('/auth/login')
@@ -262,6 +337,54 @@ class TestEndpoints(unittest.TestCase):
                                    self.app.config['JWT_ALGORITHM']).decode('utf-8')
         auth_header = "Bearer {}".format(encoded_token)
         response = self.client.get('/protected', headers={'Authorization': auth_header})
+        data = json.loads(response.get_data(as_text=True))
+        status_code = response.status_code
+        self.assertEqual(status_code, 422)
+        self.assertIn('msg', data)
+
+    def test_optional_jwt_bad_tokens(self):
+        # Test expired access token
+        response = self.client.post('/auth/login')
+        data = json.loads(response.get_data(as_text=True))
+        access_token = data['access_token']
+        status_code, data = self._jwt_get('/partially-protected', access_token)
+        self.assertEqual(status_code, 200)
+        self.assertEqual(data, {'msg': 'protected hello world'})
+        time.sleep(2)
+        status_code, data = self._jwt_get('/partially-protected', access_token)
+        self.assertEqual(status_code, 401)
+        self.assertIn('msg', data)
+
+        # Test Bogus token
+        auth_header = "Bearer {}".format('this_is_totally_an_access_token')
+        response = self.client.get('/partially-protected',
+                                   headers={'Authorization': auth_header})
+        data = json.loads(response.get_data(as_text=True))
+        status_code = response.status_code
+        self.assertEqual(status_code, 422)
+        self.assertIn('msg', data)
+
+        # Test token that was signed with a different key
+        with self.app.test_request_context():
+            token = encode_access_token('foo', 'newsecret', 'HS256',
+                                        timedelta(minutes=5), True, {},
+                                        csrf=False)
+        auth_header = "Bearer {}".format(token)
+        response = self.client.get('/partially-protected',
+                                   headers={'Authorization': auth_header})
+        data = json.loads(response.get_data(as_text=True))
+        status_code = response.status_code
+        self.assertEqual(status_code, 422)
+        self.assertIn('msg', data)
+
+        # Test with valid token that is missing required claims
+        now = datetime.utcnow()
+        token_data = {'exp': now + timedelta(minutes=5)}
+        encoded_token = jwt.encode(token_data, self.app.config['SECRET_KEY'],
+                                   self.app.config['JWT_ALGORITHM']).decode('utf-8')
+        auth_header = "Bearer {}".format(encoded_token)
+        response = self.client.get('/partially-protected',
+                                   headers={'Authorization': auth_header})
         data = json.loads(response.get_data(as_text=True))
         status_code = response.status_code
         self.assertEqual(status_code, 422)
@@ -349,6 +472,43 @@ class TestEndpoints(unittest.TestCase):
                                      header_type='Bearer')
         self.assertIn('msg', data)
         self.assertEqual(status, 401)
+        self.assertEqual(data, {'msg': 'Missing Auth Header'})
+
+    def test_different_headers_jwt_optional(self):
+        response = self.client.post('/auth/login')
+        data = json.loads(response.get_data(as_text=True))
+        access_token = data['access_token']
+
+        self.app.config['JWT_HEADER_TYPE'] = 'JWT'
+        status, data = self._jwt_get('/partially-protected', access_token,
+                                     header_type='JWT')
+        self.assertEqual(data, {'msg': 'protected hello world'})
+        self.assertEqual(status, 200)
+
+        self.app.config['JWT_HEADER_TYPE'] = ''
+        status, data = self._jwt_get('/partially-protected', access_token,
+                                     header_type='')
+        self.assertEqual(data, {'msg': 'protected hello world'})
+        self.assertEqual(status, 200)
+
+        self.app.config['JWT_HEADER_TYPE'] = ''
+        status, data = self._jwt_get('/partially-protected', access_token,
+                                     header_type='Bearer')
+        self.assertIn('msg', data)
+        self.assertEqual(status, 422)
+
+        self.app.config['JWT_HEADER_TYPE'] = 'Bearer'
+        self.app.config['JWT_HEADER_NAME'] = 'Auth'
+        status, data = self._jwt_get('/partially-protected', access_token,
+                                     header_name='Auth', header_type='Bearer')
+        self.assertEqual(data, {'msg': 'protected hello world'})
+        self.assertEqual(status, 200)
+
+        status, data = self._jwt_get('/partially-protected', access_token,
+                                     header_name='Authorization',
+                                     header_type='Bearer')
+        self.assertEqual(status, 200)
+        self.assertEqual(data, {'msg': 'unprotected hello world'})
 
     def test_cookie_methods_fail_with_headers_configured(self):
         app = Flask(__name__)
@@ -398,6 +558,22 @@ class TestEndpoints(unittest.TestCase):
             csrf=False
         )
         status, data = self._jwt_get('/protected', access_token)
+        self.assertEqual(status, 422)
+        self.assertIn('msg', data)
+
+    def test_optional_jwt_with_different_algorithm(self):
+        self.app.config['JWT_ALGORITHM'] = 'HS256'
+        self.app.secret_key = 'test_secret'
+        access_token = encode_access_token(
+            identity='bobdobbs',
+            secret='test_secret',
+            algorithm='HS512',
+            expires_delta=timedelta(minutes=5),
+            fresh=True,
+            user_claims={},
+            csrf=False
+        )
+        status, data = self._jwt_get('/partially-protected', access_token)
         self.assertEqual(status, 422)
         self.assertIn('msg', data)
 

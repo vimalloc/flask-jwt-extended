@@ -36,6 +36,32 @@ def jwt_required(fn):
     return wrapper
 
 
+def jwt_optional(fn):
+    """
+    If you decorate a view with this, it will check the request for a valid
+    JWT and put it into the Flask application context before calling the view.
+    If no authorization header is present, the view will be called without the
+    application context being changed. Other authentication errors are not
+    affected.
+
+    :param fn: The view function to decorate
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            # If an acceptable JWT is found in the request, put it into
+            # the application context
+            jwt_data = _decode_jwt_from_request(request_type='access')
+            ctx_stack.top.jwt = jwt_data
+        except NoAuthorizationError:
+            # Allow request to proceed if no authorization header is present
+            # in the request, but don't modify application context
+            pass
+        # Return the decorated function in either case
+        return fn(*args, **kwargs)
+    return wrapper
+
+
 def fresh_jwt_required(fn):
     """
     If you decorate a vew with this, it will ensure that the requester has a

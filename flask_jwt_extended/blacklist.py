@@ -5,6 +5,7 @@ from functools import wraps
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import RevokedTokenError
+from flask_jwt_extended.utils import get_jti
 
 # TODO make simplekv an optional dependency if blacklist is disabled
 
@@ -80,13 +81,24 @@ def unrevoke_token(jti):
     """
     Revoke a token
 
-    :param jti: The jti of the token to revoke
+    :param jti: The jti of the token to unrevoke
     """
     _update_token(jti, revoked=False)
 
 
 @_verify_blacklist_enabled
-def get_stored_token(jti):
+def get_stored_token(jti=None, encoded_token=None):
+    """
+    Get the stored token for the passed in jti or encoded_token
+
+    :param jti: The jti of the token
+    :param encoded_token: The encoded JWT string
+    :return: Python dictionary with the token information
+    """
+    if jti is None and encoded_token is not None:
+        jti = get_jti(encoded_token)
+    elif jti is None and encoded_token is None:
+        raise ValueError('Either jti or encoded_token is required')
     return _get_token_from_store(jti)
 
 

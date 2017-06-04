@@ -32,6 +32,16 @@ def get_jwt_claims():
     return get_raw_jwt().get('user_claims', {})
 
 
+def get_jti(encoded_token):
+    """
+    Returns the JTI given the JWT encoded token
+
+    :param encoded_token: The encoded JWT string
+    :return: The JTI of the token
+    """
+    return decode_jwt(encoded_token, config.secret_key, config.algorithm, config.csrf_protect).get('jti')
+
+
 def _get_jwt_manager():
     try:
         return current_app.jwt_manager

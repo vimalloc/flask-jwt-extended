@@ -60,14 +60,15 @@ class _Config(object):
 
     @property
     def header_name(self):
-        name = current_app.config['JWT_HEADER_NAME']
-        if not name:
+        name = current_app.config['JWT_HEADER_NAME'] if 'JWT_HEADER_NAME' in current_app.config else 'Authorization'
+        if name == '':
             raise RuntimeError("JWT_ACCESS_HEADER_NAME cannot be empty")
         return name
 
     @property
     def header_type(self):
-        return current_app.config['JWT_HEADER_TYPE']
+        type_name = current_app.config['JWT_HEADER_TYPE'] if 'JWT_HEADER_TYPE' in current_app.config else 'Bearer'
+        return type_name
 
     @property
     def access_cookie_name(self):

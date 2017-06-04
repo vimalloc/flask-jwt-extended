@@ -36,10 +36,15 @@ class TestEndpoints(unittest.TestCase):
             }
             return jsonify(ret), 200
 
-        @self.app.route('/auth/token/<identity>', methods=['GET'])
-        def get_single_token(identity):
+        @self.app.route('/auth/token/jti/<jti>', methods=['GET'])
+        @self.app.route('/auth/token/encoded_token/<encoded_token>', methods=['GET'])
+        @self.app.route('/auth/token/encoded_token/', methods=['GET'])
+        def get_single_token(jti=None, encoded_token=None):
             try:
-                return jsonify(get_stored_token(identity)), 200
+                if jti is not None:
+                    return jsonify(get_stored_token(jti=jti)), 200
+                else:
+                    return jsonify(get_stored_token(encoded_token=encoded_token)), 200
             except KeyError:
                 return jsonify({"msg": "token not found"}), 404
 
@@ -399,12 +404,13 @@ class TestEndpoints(unittest.TestCase):
         self.assertEqual(len(data), 0)
 
     def test_get_stored_token(self):
-        self._login('test1')
+        access_token, refresh_token = self._login('test1')
         response = self.client.get('/auth/tokens')
         data = json.loads(response.get_data(as_text=True))
         refresh_jti = data[0]['token']['jti']
 
-        response = self.client.get('/auth/token/{}'.format(refresh_jti))
+        # Test getting the token by passing in JTI
+        response = self.client.get('/auth/token/jti/{}'.format(refresh_jti))
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 200)
@@ -412,7 +418,20 @@ class TestEndpoints(unittest.TestCase):
         self.assertIn('revoked', data)
         self.assertEqual(len(data), 2)
 
-        response = self.client.get('/auth/token/404notokenfound')
+        # Test getting the token by passing in the encoded token
+        response = self.client.get('/auth/token/encoded_token/{}'.format(refresh_token))
+        status_code = response.status_code
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(status_code, 200)
+        self.assertIn('token', data)
+        self.assertIn('revoked', data)
+        self.assertEqual(len(data), 2)
+
+        # Test passing neither throws an exception
+        with self.assertRaises(ValueError):
+            self.client.get('/auth/token/encoded_token/')
+
+        response = self.client.get('/auth/token/jti/404notokenfound')
         status_code = response.status_code
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(status_code, 404)

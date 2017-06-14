@@ -16,6 +16,7 @@ documentation is coming soon!
    basic_usage
    add_custom_data_claims
    tokens_from_complex_object
+   complex_objects_from_token
    refresh_tokens
    token_freshness
    changing_default_behavior

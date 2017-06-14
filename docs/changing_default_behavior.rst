@@ -1,6 +1,9 @@
 Changing Default Behaviors
 ==========================
 
+Changing callback functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 We provide what we think are sensible behaviors when attempting to access a
 protected endpoint. If the access token is not valid for any reason (missing,
 expired, tampered with, etc) we will return json in the format of {'msg': 'why
@@ -34,3 +37,25 @@ Possible loader functions are:
     * - **revoked_token_loader**
       - Function to call when a revoked token accesses a protected endpoint
       - None
+
+Dynamic token expires time
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also change the expires time for a token via the **expires_delta** kwarg
+in the **create_refresh_token** and **create_access_token** functions. This takes
+a **datetime.timedelta** and overrides the **JWT_REFRESH_TOKEN_EXPIRES** and
+**JWT_ACCESS_TOKEN_EXPIRES** options. This can be useful if you have different
+use cases for different tokens. An example of this might be you use short lived
+access tokens used in your web application, but you allow the creation of long
+lived access tokens that other developers can generate and use to interact with
+your api in their programs.
+
+.. code-block:: python
+
+  @app.route('/create-dev-token', methods=[POST])
+  @jwt_required
+  def create_dev_token():
+      username = get_jwt_identity()
+      expires = datatime.timedelta(days=365)
+      token = create_access_token(username, expires_delta=expires)
+      return jsonify({'token': token}), 201

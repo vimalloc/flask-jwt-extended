@@ -29,7 +29,7 @@ class TestEndpoints(unittest.TestCase):
 
         @self.app.route('/auth/login', methods=['POST'])
         def login():
-            username = request.json['username']
+            username = request.get_json()['username']
             ret = {
                 'access_token': create_access_token(username, fresh=True),
                 'refresh_token': create_refresh_token(username)

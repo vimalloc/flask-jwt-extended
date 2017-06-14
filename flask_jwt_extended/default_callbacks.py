@@ -74,3 +74,12 @@ def default_revoked_token_callback():
     return a general error message with a 401 status code
     """
     return jsonify({'msg': 'Token has been revoked'}), 401
+
+
+def default_user_loader_error_callback(identity):
+    """
+    By default, if a user_loader callback is defined and the callback
+    function returns None, we return a general error message with a 401
+    status code
+    """
+    return jsonify({'msg': "Error loading the user {}".format(identity)}), 401

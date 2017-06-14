@@ -11,9 +11,10 @@ from flask_jwt_extended.blacklist import check_if_token_revoked
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
     InvalidHeaderError, NoAuthorizationError, WrongTokenError,
-    FreshTokenRequired, CSRFError
+    FreshTokenRequired, CSRFError, UserLoadError
 )
 from flask_jwt_extended.tokens import decode_jwt
+from flask_jwt_extended.utils import has_user_loader, user_loader
 
 
 def jwt_required(fn):
@@ -28,10 +29,9 @@ def jwt_required(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        # Save the jwt in the context so that it can be accessed later by
-        # the various endpoints that is using this decorator
         jwt_data = _decode_jwt_from_request(request_type='access')
         ctx_stack.top.jwt = jwt_data
+        _load_user(jwt_data['identity'])
         return fn(*args, **kwargs)
     return wrapper
 
@@ -49,15 +49,11 @@ def jwt_optional(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         try:
-            # If an acceptable JWT is found in the request, put it into
-            # the application context
             jwt_data = _decode_jwt_from_request(request_type='access')
             ctx_stack.top.jwt = jwt_data
+            _load_user(jwt_data['identity'])
         except NoAuthorizationError:
-            # Allow request to proceed if no authorization header is present
-            # in the request, but don't modify application context
             pass
-        # Return the decorated function in either case
         return fn(*args, **kwargs)
     return wrapper
 
@@ -78,9 +74,8 @@ def fresh_jwt_required(fn):
         if not jwt_data['fresh']:
             raise FreshTokenRequired('Fresh token required')
 
-        # Save the jwt in the context so that it can be accessed later by
-        # the various endpoints that is using this decorator
         ctx_stack.top.jwt = jwt_data
+        _load_user(jwt_data['identity'])
         return fn(*args, **kwargs)
     return wrapper
 
@@ -93,12 +88,20 @@ def jwt_refresh_token_required(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        # Save the jwt in the context so that it can be accessed later by
-        # the various endpoints that is using this decorator
         jwt_data = _decode_jwt_from_request(request_type='refresh')
         ctx_stack.top.jwt = jwt_data
+        _load_user(jwt_data['identity'])
         return fn(*args, **kwargs)
     return wrapper
+
+
+def _load_user(identity):
+    if has_user_loader():
+        user = user_loader(identity)
+        if user is None:
+            raise UserLoadError("user_loader returned None for {}".format(identity))
+        else:
+            ctx_stack.top.jwt_user = user
 
 
 def _decode_jwt_from_headers():

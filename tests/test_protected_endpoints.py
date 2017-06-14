@@ -33,6 +33,16 @@ class TestEndpoints(unittest.TestCase):
             }
             return jsonify(ret), 200
 
+        @self.app.route('/auth/login2', methods=['POST'])
+        def login2():
+            expires = timedelta(minutes=5)
+            ret = {
+                'access_token': create_access_token('test', fresh=True,
+                                                    expires_delta=expires),
+                'refresh_token': create_refresh_token('test', expires_delta=expires),
+            }
+            return jsonify(ret), 200
+
         @self.app.route('/auth/refresh', methods=['POST'])
         @jwt_refresh_token_required
         def refresh():
@@ -340,6 +350,26 @@ class TestEndpoints(unittest.TestCase):
         status_code = response.status_code
         self.assertEqual(status_code, 422)
         self.assertIn('msg', data)
+
+    def test_expires_time_override(self):
+        # Test access token
+        response = self.client.post('/auth/login2')
+        data = json.loads(response.get_data(as_text=True))
+        access_token = data['access_token']
+        time.sleep(2)
+        status_code, data = self._jwt_get('/partially-protected', access_token)
+        self.assertEqual(status_code, 200)
+        self.assertEqual(data, {'msg': 'protected hello world'})
+
+        # Test refresh token
+        response = self.client.post('/auth/login2')
+        data = json.loads(response.get_data(as_text=True))
+        refresh_token = data['refresh_token']
+        time.sleep(2)
+        status_code, data = self._jwt_post('/auth/refresh', refresh_token)
+        self.assertEqual(status_code, 200)
+        self.assertIn('access_token', data)
+        self.assertNotIn('msg', data)
 
     def test_optional_jwt_bad_tokens(self):
         # Test expired access token

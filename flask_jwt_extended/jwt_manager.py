@@ -297,7 +297,7 @@ class JWTManager(object):
         """
         return self._user_loader_callback(identity)
 
-    def create_refresh_token(self, identity):
+    def create_refresh_token(self, identity, expires_delta=None):
         """
         Creates a new refresh token
 
@@ -309,13 +309,19 @@ class JWTManager(object):
                          query disk twice, once for initially finding the identity
                          in your login endpoint, and once for setting addition data
                          in the JWT via the user_claims_loader
+        :param expires_delta: A datetime.timedelta for how long this token should
+                              last before it expires. If this is None, it will
+                              use the 'JWT_REFRESH_TOKEN_EXPIRES` config value
         :return: A new refresh token
         """
+        if expires_delta is None:
+            expires_delta = config.refresh_expires
+
         refresh_token = encode_refresh_token(
             identity=self._user_identity_callback(identity),
             secret=config.encode_key,
             algorithm=config.algorithm,
-            expires_delta=config.refresh_expires,
+            expires_delta=expires_delta,
             csrf=config.csrf_protect
         )
 
@@ -326,7 +332,7 @@ class JWTManager(object):
             store_token(decoded_token, revoked=False)
         return refresh_token
 
-    def create_access_token(self, identity, fresh=False):
+    def create_access_token(self, identity, fresh=False, expires_delta=None):
         """
         Creates a new access token
 
@@ -340,13 +346,19 @@ class JWTManager(object):
                          in the JWT via the user_claims_loader
         :param fresh: If this token should be marked as fresh, and can thus access
                       fresh_jwt_required protected endpoints. Defaults to False
+        :param expires_delta: A datetime.timedelta for how long this token should
+                              last before it expires. If this is None, it will
+                              use the 'JWT_ACCESS_TOKEN_EXPIRES` config value
         :return: A new access token
         """
+        if expires_delta is None:
+            expires_delta = config.access_expires
+
         access_token = encode_access_token(
             identity=self._user_identity_callback(identity),
             secret=config.encode_key,
             algorithm=config.algorithm,
-            expires_delta=config.access_expires,
+            expires_delta=expires_delta,
             fresh=fresh,
             user_claims=self._user_claims_callback(identity),
             csrf=config.csrf_protect
@@ -356,3 +368,4 @@ class JWTManager(object):
                                        config.algorithm, csrf=config.csrf_protect)
             store_token(decoded_token, revoked=False)
         return access_token
+

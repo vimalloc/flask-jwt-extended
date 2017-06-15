@@ -6,19 +6,18 @@ from flask_jwt_extended.blacklist import store_token
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
     JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
-    RevokedTokenError, FreshTokenRequired, CSRFError
+    RevokedTokenError, FreshTokenRequired, CSRFError, UserLoadError
 )
 from flask_jwt_extended.default_callbacks import (
     default_expired_token_callback, default_user_claims_callback,
     default_user_identity_callback, default_invalid_token_callback,
-    default_unauthorized_callback,
-    default_needs_fresh_token_callback,
-    default_revoked_token_callback
+    default_unauthorized_callback, default_needs_fresh_token_callback,
+    default_revoked_token_callback, default_user_loader_error_callback
 )
 from flask_jwt_extended.tokens import (
-    encode_refresh_token, decode_jwt,
-    encode_access_token
+    encode_refresh_token, decode_jwt, encode_access_token
 )
+from flask_jwt_extended.utils import get_jwt_identity
 
 
 class JWTManager(object):
@@ -39,6 +38,8 @@ class JWTManager(object):
         self._unauthorized_callback = default_unauthorized_callback
         self._needs_fresh_token_callback = default_needs_fresh_token_callback
         self._revoked_token_callback = default_revoked_token_callback
+        self._user_loader_callback = None
+        self._user_loader_error_callback = default_user_loader_error_callback
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
@@ -100,6 +101,14 @@ class JWTManager(object):
         @app.errorhandler(FreshTokenRequired)
         def handle_fresh_token_required(e):
             return self._needs_fresh_token_callback()
+
+        @app.errorhandler(UserLoadError)
+        def handler_user_load_error(e):
+            # The identity is already saved before this exception was raised,
+            # otherwise a different exception would be raised, which is why we
+            # can safely call get_jwt_identity() here
+            identity = get_jwt_identity()
+            return self._user_loader_error_callback(identity)
 
     @staticmethod
     def _set_default_configuration_options(app):
@@ -244,6 +253,50 @@ class JWTManager(object):
         self._revoked_token_callback = callback
         return callback
 
+    def user_loader_callback_loader(self, callback):
+        """
+        Sets the callback method to be called to load a user on a protected
+        endpoint.
+
+        By default this is not is not used.
+
+        If a callback method is passed in here, it must take one argument,
+        which is the identity of the user to load. It must return the user
+        object, or None in the case of an error (which will cause the TODO
+        error handler to be hit)
+        """
+        self._user_loader_callback = callback
+        return callback
+
+    def user_loader_error_loader(self, callback):
+        """
+        Sets the callback method to be called if a user fails or is refused
+        to load when calling the _user_loader_callback function (indicated by
+        that function returning None)
+
+        The default implementation will return json:
+        '{"msg": "Error loading the user <identity>"}' with a 400 status code.
+
+        Callback must be a function that takes one argument, the identity of the
+        user who failed to load.
+        """
+        self._user_loader_error_callback = callback
+        return callback
+
+    def has_user_loader(self):
+        """
+        Returns True if a user_loader_callback has been defined in this
+        application, False otherwise
+        """
+        return self._user_loader_callback is not None
+
+    def user_loader(self, identity):
+        """
+        Calls the _user_loader_callback function (if it is defined) and returns
+        the resulting user from this callback.
+        """
+        return self._user_loader_callback(identity)
+
     def create_refresh_token(self, identity, expires_delta=None):
         """
         Creates a new refresh token
@@ -315,3 +368,4 @@ class JWTManager(object):
                                        config.algorithm, csrf=config.csrf_protect)
             store_token(decoded_token, revoked=False)
         return access_token
+

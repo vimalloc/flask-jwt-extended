@@ -32,7 +32,12 @@ class TestJWTManager(unittest.TestCase):
     def test_default_user_claims_callback(self):
         identity = 'foobar'
         m = JWTManager(self.app)
-        assert m._user_claims_callback(identity) == {}
+        self.assertEqual(m._user_claims_callback(identity), {})
+
+    def test_default_user_identity_callback(self):
+        identity = 'foobar'
+        m = JWTManager(self.app)
+        self.assertEqual(m._user_identity_callback(identity), identity)
 
     def test_default_expired_token_callback(self):
         with self.app.test_request_context():
@@ -79,6 +84,24 @@ class TestJWTManager(unittest.TestCase):
 
             self.assertEqual(status_code, 401)
             self.assertEqual(data, {'msg': 'Token has been revoked'})
+
+    def test_default_user_loader_callback(self):
+        m = JWTManager(self.app)
+        self.assertEqual(m._user_loader_callback, None)
+
+    def test_default_user_loader_error_callback(self):
+        with self.app.test_request_context():
+            identity = 'foobar'
+            m = JWTManager(self.app)
+            result = m._user_loader_error_callback(identity)
+            status_code, data = self._parse_callback_result(result)
+
+            self.assertEqual(status_code, 401)
+            self.assertEqual(data, {'msg': 'Error loading the user foobar'})
+
+    def test_default_has_user_loader(self):
+        m = JWTManager(self.app)
+        self.assertEqual(m.has_user_loader(), False)
 
     def test_custom_user_claims_callback(self):
         identity = 'foobar'
@@ -159,3 +182,33 @@ class TestJWTManager(unittest.TestCase):
 
             self.assertEqual(status_code, 422)
             self.assertEqual(data, {'err': 'Nice knowing you!'})
+
+    def test_custom_user_loader(self):
+        with self.app.test_request_context():
+            m = JWTManager(self.app)
+
+            @m.user_loader_callback_loader
+            def custom_user_loader(identity):
+                if identity == 'foo':
+                    return None
+                return identity
+
+            identity = 'foobar'
+            result = m._user_loader_callback(identity)
+            self.assertEqual(result, identity)
+            self.assertEqual(m.has_user_loader(), True)
+
+    def test_custom_user_loader_error_callback(self):
+        with self.app.test_request_context():
+            m = JWTManager(self.app)
+
+            @m.user_loader_error_loader
+            def custom_user_loader_error(identity):
+                return jsonify({'msg': 'Not found'}), 404
+
+            identity = 'foobar'
+            result = m._user_loader_error_callback(identity)
+            status_code, data = self._parse_callback_result(result)
+
+            self.assertEqual(status_code, 404)
+            self.assertEqual(data, {'msg': 'Not found'})

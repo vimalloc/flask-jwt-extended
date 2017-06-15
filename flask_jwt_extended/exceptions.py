@@ -54,3 +54,11 @@ class FreshTokenRequired(JWTExtendedException):
     protected by fresh_jwt_required
     """
     pass
+
+
+class UserLoadError(JWTExtendedException):
+    """
+    Error raised when a user_loader callback function returns None, indicating
+    that it cannot or will not load a user for the given identity.
+    """
+    pass

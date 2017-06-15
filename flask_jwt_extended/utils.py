@@ -1,4 +1,6 @@
 from flask import current_app
+from werkzeug.local import LocalProxy
+
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
@@ -6,6 +8,10 @@ except ImportError:  # pragma: no cover
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.tokens import decode_jwt
+
+
+# Proxy to access the current user
+current_user = LocalProxy(lambda: get_current_user())
 
 
 def get_raw_jwt():
@@ -30,6 +36,15 @@ def get_jwt_claims():
     claims are present, an empty dict is returned
     """
     return get_raw_jwt().get('user_claims', {})
+
+
+def get_current_user():
+    """
+    Returns the loaded user from a user_loader callback in a protected endpoint.
+    If no user was loaded, or if no user_loader callback was defined, this will
+    return None
+    """
+    return getattr(ctx_stack.top, 'jwt_user', None)
 
 
 def get_jti(encoded_token):
@@ -58,6 +73,16 @@ def create_access_token(*args, **kwargs):
 def create_refresh_token(*args, **kwargs):
     jwt_manager = _get_jwt_manager()
     return jwt_manager.create_refresh_token(*args, **kwargs)
+
+
+def user_loader(*args, **kwargs):
+    jwt_manager = _get_jwt_manager()
+    return jwt_manager.user_loader(*args, **kwargs)
+
+
+def has_user_loader(*args, **kwargs):
+    jwt_manager = _get_jwt_manager()
+    return jwt_manager.has_user_loader(*args, **kwargs)
 
 
 def get_csrf_token(encoded_token):

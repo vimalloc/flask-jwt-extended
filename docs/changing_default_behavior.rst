@@ -37,6 +37,12 @@ Possible loader functions are:
     * - **revoked_token_loader**
       - Function to call when a revoked token accesses a protected endpoint
       - None
+    * - **user_loader_callback_loader**
+      - Function to call to load a user object from a token
+      - Takes one argument - The identity of the token to load a user from
+    * - **user_loader_error_loader**
+      - Function that is called when the user_loader callback function returns **None**
+      - Takes one argument - The identity of the user who failed to load
 
 Dynamic token expires time
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

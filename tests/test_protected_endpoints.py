@@ -72,7 +72,6 @@ class TestEndpoints(unittest.TestCase):
                 return jsonify({'msg': "protected hello world"})
             return jsonify({'msg': "unprotected hello world"})
 
-
     def _jwt_post(self, url, jwt):
         response = self.client.post(url, content_type='application/json',
                                     headers={'Authorization': 'Bearer {}'.format(jwt)})

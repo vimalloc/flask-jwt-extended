@@ -58,10 +58,10 @@ your api in their programs.
 
 .. code-block:: python
 
-  @app.route('/create-dev-token', methods=[POST])
+  @app.route('/create-dev-token', methods=['POST'])
   @jwt_required
   def create_dev_token():
       username = get_jwt_identity()
-      expires = datatime.timedelta(days=365)
+      expires = datetime.timedelta(days=365)
       token = create_access_token(username, expires_delta=expires)
       return jsonify({'token': token}), 201

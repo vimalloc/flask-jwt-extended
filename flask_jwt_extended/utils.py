@@ -85,6 +85,16 @@ def has_user_loader(*args, **kwargs):
     return jwt_manager.has_user_loader(*args, **kwargs)
 
 
+def has_token_in_blacklist_callback(*args, **kwargs):
+    jwt_manager = _get_jwt_manager()
+    return jwt_manager.has_token_in_blacklist_callback(*args, **kwargs)
+
+
+def token_in_blacklist(*args, **kwargs):
+    jwt_manager = _get_jwt_manager()
+    return jwt_manager.token_in_blacklist(*args, **kwargs)
+
+
 def get_csrf_token(encoded_token):
     token = decode_jwt(encoded_token, config.decode_key, config.algorithm, csrf=True)
     return token['csrf']

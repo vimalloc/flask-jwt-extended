@@ -171,23 +171,22 @@ class _Config(object):
         return current_app.config['JWT_BLACKLIST_ENABLED']
 
     @property
-    def blacklist_store(self):
-        # simplekv object: https://pypi.python.org/pypi/simplekv/
-        store = current_app.config['JWT_BLACKLIST_STORE']
-        if not isinstance(store, simplekv.KeyValueStore):
-            raise RuntimeError("JWT_BLACKLIST_STORE must be a simplekv KeyValueStore")
-        return store
-
-    @property
     def blacklist_checks(self):
         check_type = current_app.config['JWT_BLACKLIST_TOKEN_CHECKS']
-        if check_type not in ('all', 'refresh'):
-            raise RuntimeError('JWT_BLACKLIST_TOKEN_CHECKS must be "all" or "refresh"')
+        if not isinstance(check_type, list):
+            check_type = [check_type]
+        for item in check_type:
+            if item not in ('access', 'refresh'):
+                raise RuntimeError('JWT_BLACKLIST_TOKEN_CHECKS must be "access" or "refresh"')
         return check_type
 
     @property
     def blacklist_access_tokens(self):
-        return 'all' in self.blacklist_checks
+        return 'access' in self.blacklist_checks
+
+    @property
+    def blacklist_refresh_tokens(self):
+        return 'refresh' in self.blacklist_checks
 
     @property
     def secret_key(self):

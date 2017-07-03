@@ -2,7 +2,6 @@ import datetime
 
 from jwt import ExpiredSignatureError, InvalidTokenError
 
-from flask_jwt_extended.blacklist import store_token
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
     JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
@@ -15,7 +14,7 @@ from flask_jwt_extended.default_callbacks import (
     default_revoked_token_callback, default_user_loader_error_callback
 )
 from flask_jwt_extended.tokens import (
-    encode_refresh_token, decode_jwt, encode_access_token
+    encode_refresh_token, encode_access_token
 )
 from flask_jwt_extended.utils import get_jwt_identity
 

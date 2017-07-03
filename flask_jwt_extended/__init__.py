@@ -9,7 +9,3 @@ from .utils import (
     unset_jwt_cookies, get_raw_jwt, get_current_user, current_user,
     get_jti
 )
-from .blacklist import (
-    revoke_token, unrevoke_token, get_stored_tokens, get_all_stored_tokens,
-    get_stored_token
-)

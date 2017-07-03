@@ -1,7 +1,6 @@
 import datetime
 from warnings import warn
 
-import simplekv
 from flask import current_app
 
 # Older versions of pyjwt do not have the requires_cryptography set. Also,

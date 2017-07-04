@@ -9,7 +9,7 @@ from flask_jwt_extended import (
 
 # Setup flask
 app = Flask(__name__)
-app.secret_key = 'super-secret'
+app.secret_key = 'ChangeMe!'
 
 # Enable blacklisting and specify what kind of tokens to check
 # against the blacklist

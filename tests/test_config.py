@@ -47,16 +47,15 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.algorithm, 'HS256')
             self.assertEqual(config.is_asymmetric, False)
             self.assertEqual(config.blacklist_enabled, False)
-            self.assertEqual(config.blacklist_checks, 'refresh')
-            self.assertEqual(config.blacklist_access_tokens, False)
+            self.assertEqual(config.blacklist_checks, ['access', 'refresh'])
+            self.assertEqual(config.blacklist_access_tokens, True)
+            self.assertEqual(config.blacklist_refresh_tokens, True)
 
             self.assertEqual(config.secret_key, self.app.secret_key)
             self.assertEqual(config.encode_key, self.app.secret_key)
             self.assertEqual(config.decode_key, self.app.secret_key)
             self.assertEqual(config.cookie_max_age, None)
 
-            with self.assertRaises(RuntimeError):
-                config.blacklist_store
             with self.assertRaises(RuntimeError):
                 config.public_key
             with self.assertRaises(RuntimeError):
@@ -93,7 +92,7 @@ class TestEndpoints(unittest.TestCase):
 
         self.app.config['JWT_BLACKLIST_ENABLED'] = True
         self.app.config['JWT_BLACKLIST_STORE'] = sample_store
-        self.app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'all'
+        self.app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
 
         self.app.secret_key = 'banana'
 
@@ -127,9 +126,9 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.algorithm, 'HS512')
 
             self.assertEqual(config.blacklist_enabled, True)
-            self.assertEqual(config.blacklist_store, sample_store)
-            self.assertEqual(config.blacklist_checks, 'all')
-            self.assertEqual(config.blacklist_access_tokens, True)
+            self.assertEqual(config.blacklist_checks, ['refresh'])
+            self.assertEqual(config.blacklist_access_tokens, False)
+            self.assertEqual(config.blacklist_refresh_tokens, True)
 
             self.assertEqual(config.secret_key, 'banana')
             self.assertEqual(config.cookie_max_age, 2147483647)
@@ -156,10 +155,6 @@ class TestEndpoints(unittest.TestCase):
             self.app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 'banana'
             with self.assertRaises(RuntimeError):
                 config.refresh_expires
-
-            self.app.config['JWT_BLACKLIST_STORE'] = {}
-            with self.assertRaises(RuntimeError):
-                config.blacklist_store
 
             self.app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'banana'
             with self.assertRaises(RuntimeError):

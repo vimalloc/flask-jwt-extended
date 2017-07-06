@@ -92,7 +92,7 @@ def login():
         'access_token': access_token,
         'refresh_token': refresh_token
     }
-    return jsonify(ret), 200
+    return jsonify(ret), 201
 
 
 # A blacklisted refresh tokens will not be able to access this endpoint
@@ -105,7 +105,7 @@ def refresh():
     access_jti = get_jti(encoded_token=access_token)
     revoked_store.set(access_jti, 'false', ACCESS_EXPIRES * 1.2)
     ret = {'access_token': access_token}
-    return jsonify(ret), 200
+    return jsonify(ret), 201
 
 
 # Endpoint for revoking the current users access token

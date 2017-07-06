@@ -50,11 +50,21 @@ def get_current_user():
 def get_jti(encoded_token):
     """
     Returns the JTI given the JWT encoded token
-
-    :param encoded_token: The encoded JWT string
-    :return: The JTI of the token
     """
-    return decode_jwt(encoded_token, config.secret_key, config.algorithm, config.csrf_protect).get('jti')
+    return decode_token(encoded_token).get('jti')
+
+
+def decode_token(encoded_token):
+    """
+    Returns the decoded token from an encoded one. This does all the checks
+    to insure that the decoded token is valid before returning it.
+    """
+    return decode_jwt(
+        encoded_token=encoded_token,
+        secret=config.decode_key,
+        algorithm=config.algorithm,
+        csrf=config.csrf_protect
+    )
 
 
 def _get_jwt_manager():

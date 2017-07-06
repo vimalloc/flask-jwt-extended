@@ -32,11 +32,11 @@ class _Config(object):
 
     @property
     def encode_key(self):
-        return self.private_key if self.is_asymmetric else self.secret_key
+        return self._private_key if self.is_asymmetric else self._secret_key
 
     @property
     def decode_key(self):
-        return self.public_key if self.is_asymmetric else self.secret_key
+        return self._public_key if self.is_asymmetric else self._secret_key
 
     @property
     def token_location(self):
@@ -188,7 +188,7 @@ class _Config(object):
         return 'refresh' in self.blacklist_checks
 
     @property
-    def secret_key(self):
+    def _secret_key(self):
         key = current_app.config['JWT_SECRET_KEY']
         if not key:
             key = current_app.config.get('SECRET_KEY', None)
@@ -199,7 +199,7 @@ class _Config(object):
         return key
 
     @property
-    def public_key(self):
+    def _public_key(self):
         key = current_app.config['JWT_PUBLIC_KEY']
         if not key:
             raise RuntimeError('JWT_PUBLIC_KEY must be set to use '
@@ -208,7 +208,7 @@ class _Config(object):
         return key
 
     @property
-    def private_key(self):
+    def _private_key(self):
         key = current_app.config['JWT_PRIVATE_KEY']
         if not key:
             raise RuntimeError('JWT_PRIVATE_KEY must be set to use '

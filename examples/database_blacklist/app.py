@@ -32,7 +32,7 @@ def setup_sqlalchemy():
 
 # Define our callback function to check if a token has been revoked or not
 @jwt.token_in_blacklist_loader
-def check_if_token_in_blacklist(decoded_token):
+def check_if_token_revoked(decoded_token):
     return is_token_revoked(decoded_token)
 
 
@@ -86,9 +86,9 @@ def modify_token(token_id):
     # Get and verify the desired revoked status from the body
     revoke = request.json.get('revoke_status', None)
     if revoke is None:
-        return jsonify({"msg": "Missing 'revoke_status' in body"}), 400
+        return jsonify({"msg": "Missing 'revoke' in body"}), 400
     if not isinstance(revoke, bool):
-        return jsonify({"msg": "'revoke_status' must be a boolean"}), 400
+        return jsonify({"msg": "'revoke' must be a boolean"}), 400
 
     # Revoke or unrevoke the token based on what was passed to this function
     user_identity = get_jwt_identity()
@@ -100,7 +100,7 @@ def modify_token(token_id):
             unrevoke_token(token_id, user_identity)
             return jsonify({'msg': 'Token unrevoked'}), 200
     except TokenNotFound:
-        return jsonify({'msg': 'The specified token was not found'}), 200
+        return jsonify({'msg': 'The specified token was not found'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

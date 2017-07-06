@@ -47,7 +47,7 @@ def is_token_revoked(decoded_token):
     """
     jti = decoded_token['jti']
     try:
-        token = TokenBlacklist.query.filter_by(jti=jti)
+        token = TokenBlacklist.query.filter_by(jti=jti).one()
         return token.revoked
     except NoResultFound:
         return True
@@ -92,7 +92,7 @@ def prune_database():
     Delete tokens that have expired from the database.
 
     How (and if) you call this is entirely up you. You could expose it to an
-    endpoint that only administrators could call, you could run it as a cron
+    endpoint that only administrators could call, you could run it as a cron,
     set it up with flask cli, etc.
     """
     now = datetime.now()

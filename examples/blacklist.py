@@ -21,7 +21,10 @@ jwt = JWTManager(app)
 # speed is the primary concern, redis is a good bet. If data
 # persistence is more important for you, postgres is another
 # great option. In this example, we will be using an in memory
-# store, just to show you how this might work
+# store, just to show you how this might work. For more
+# complete examples, check out these:
+# https://github.com/vimalloc/flask-jwt-extended/examples/redis_blacklist.py
+# https://github.com/vimalloc/flask-jwt-extended/examples/database_blacklist
 blacklist = set()
 
 
@@ -66,7 +69,7 @@ def refresh():
 
 
 # Endpoint for revoking the current users access token
-@app.route('/logout', methods=['POST'])
+@app.route('/logout', methods=['DELETE'])
 @jwt_required
 def logout():
     jti = get_raw_jwt()['jti']
@@ -75,7 +78,7 @@ def logout():
 
 
 # Endpoint for revoking the current users refresh token
-@app.route('/logout2', methods=['POST'])
+@app.route('/logout2', methods=['DELETE'])
 @jwt_refresh_token_required
 def logout2():
     jti = get_raw_jwt()['jti']

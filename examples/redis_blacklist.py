@@ -48,7 +48,8 @@ app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
 jwt = JWTManager(app)
 
 # Setup our redis connection for storing the blacklisted tokens
-revoked_store = redis.StrictRedis(host='localhost', port=6379, db=0)
+revoked_store = redis.StrictRedis(host='localhost', port=6379, db=0,
+                                  decode_responses=True)
 
 
 # Create our function to check if a token has been blacklisted. In this simple
@@ -109,7 +110,7 @@ def refresh():
 
 
 # Endpoint for revoking the current users access token
-@app.route('/auth/access_revoke', methods=['POST'])
+@app.route('/auth/access_revoke', methods=['DELETE'])
 @jwt_required
 def logout():
     jti = get_raw_jwt()['jti']
@@ -118,7 +119,7 @@ def logout():
 
 
 # Endpoint for revoking the current users refresh token
-@app.route('/auth/refresh_revoke', methods=['POST'])
+@app.route('/auth/refresh_revoke', methods=['DELETE'])
 @jwt_refresh_token_required
 def logout2():
     jti = get_raw_jwt()['jti']

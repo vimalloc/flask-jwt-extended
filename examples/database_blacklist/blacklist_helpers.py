@@ -3,9 +3,9 @@ from datetime import datetime
 from sqlalchemy.orm.exc import NoResultFound
 from flask_jwt_extended import decode_token
 
-from .exceptions import TokenNotFound
-from .models import TokenBlacklist
-from .app import db
+from exceptions import TokenNotFound
+from database import TokenBlacklist
+from extensions import db
 
 
 def _epoch_utc_to_datetime(epoch_utc):

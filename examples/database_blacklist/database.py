@@ -1,4 +1,4 @@
-from .app import db
+from extensions import db
 
 
 class TokenBlacklist(db.Model):
@@ -11,7 +11,7 @@ class TokenBlacklist(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
+            'token_id': self.id,
             'jti': self.jti,
             'token_type': self.token_type,
             'user_identity': self.user_identity,

@@ -37,12 +37,7 @@ $ tox
 ```
 
 ### Generating Documentation
-You can generate a local copy of the documentation. First, make sure you have
-the flask sphinx theme cloned
-```
-$ git submodule update --init
-```
-
+You can generate a local copy of the documentation. In the `docs` directory, run:
 Then, in the docs directory, run
 ```
 $ make clean && make html

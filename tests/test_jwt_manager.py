@@ -3,6 +3,7 @@ import json
 
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
+from flask_jwt_extended.utils import has_user_loader
 
 
 class TestJWTManager(unittest.TestCase):
@@ -101,7 +102,8 @@ class TestJWTManager(unittest.TestCase):
 
     def test_default_has_user_loader(self):
         m = JWTManager(self.app)
-        self.assertEqual(m.has_user_loader(), False)
+        with self.app.app_context():
+            self.assertEqual(has_user_loader(), False)
 
     def test_custom_user_claims_callback(self):
         identity = 'foobar'
@@ -196,7 +198,7 @@ class TestJWTManager(unittest.TestCase):
             identity = 'foobar'
             result = m._user_loader_callback(identity)
             self.assertEqual(result, identity)
-            self.assertEqual(m.has_user_loader(), True)
+            self.assertEqual(has_user_loader(), True)
 
     def test_custom_user_loader_error_callback(self):
         with self.app.test_request_context():

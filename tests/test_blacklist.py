@@ -3,7 +3,7 @@ import json
 
 import simplekv.memory
 from flask import Flask, jsonify, request
-from flask_jwt_extended.utils import get_jwt_identity, get_raw_jwt, get_jti
+from flask_jwt_extended.utils import get_jwt_identity, get_jti
 
 from flask_jwt_extended import (
     JWTManager, create_access_token, jwt_required, create_refresh_token,

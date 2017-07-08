@@ -294,34 +294,6 @@ class JWTManager(object):
         self._token_in_blacklist_callback = callback
         return callback
 
-    def has_token_in_blacklist_callback(self):
-        """
-        Returns True if a token_in_blacklist_callback has been defined in this
-        application, False otherwise
-        """
-        return self._token_in_blacklist_callback is not None
-
-    def token_in_blacklist(self, decrypted_token):
-        """
-        Calls the _token_in_blacklist_callback callback function with the given
-        decrypted token, and returns the results
-        """
-        return self._token_in_blacklist_callback(decrypted_token)
-
-    def has_user_loader(self):
-        """
-        Returns True if a user_loader_callback has been defined in this
-        application, False otherwise
-        """
-        return self._user_loader_callback is not None
-
-    def user_loader(self, identity):
-        """
-        Calls the _user_loader_callback function (if it is defined) and returns
-        the resulting user from this callback.
-        """
-        return self._user_loader_callback(identity)
-
     def create_refresh_token(self, identity, expires_delta=None):
         """
         Creates a new refresh token

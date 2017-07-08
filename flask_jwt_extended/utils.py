@@ -71,7 +71,7 @@ def _get_jwt_manager():
     try:
         return current_app.jwt_manager
     except AttributeError:  # pragma: no cover
-        raise RuntimeError("You must initialize a JWTManager with this flask"
+        raise RuntimeError("You must initialize a JWTManager with this flask "
                            "application before using this method")
 
 
@@ -85,24 +85,24 @@ def create_refresh_token(*args, **kwargs):
     return jwt_manager.create_refresh_token(*args, **kwargs)
 
 
+def has_user_loader():
+    jwt_manager = _get_jwt_manager()
+    return jwt_manager._user_loader_callback is not None
+
+
 def user_loader(*args, **kwargs):
     jwt_manager = _get_jwt_manager()
-    return jwt_manager.user_loader(*args, **kwargs)
+    return jwt_manager._user_loader_callback(*args, **kwargs)
 
 
-def has_user_loader(*args, **kwargs):
+def has_token_in_blacklist_callback():
     jwt_manager = _get_jwt_manager()
-    return jwt_manager.has_user_loader(*args, **kwargs)
-
-
-def has_token_in_blacklist_callback(*args, **kwargs):
-    jwt_manager = _get_jwt_manager()
-    return jwt_manager.has_token_in_blacklist_callback(*args, **kwargs)
+    return jwt_manager._token_in_blacklist_callback is not None
 
 
 def token_in_blacklist(*args, **kwargs):
     jwt_manager = _get_jwt_manager()
-    return jwt_manager.token_in_blacklist(*args, **kwargs)
+    return jwt_manager._token_in_blacklist_callback(*args, **kwargs)
 
 
 def get_csrf_token(encoded_token):

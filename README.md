@@ -42,8 +42,8 @@ $ tox
 ```
 
 ### Generating Documentation
-You can generate a local copy of the documentation. In the `docs` directory, run:
-Then, in the docs directory, run
+You can generate a local copy of the documentation. After installing the requirements,
+go to the `docs` directory and run:
 ```
 $ make clean && make html
 ```

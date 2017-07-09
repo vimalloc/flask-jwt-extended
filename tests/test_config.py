@@ -2,7 +2,6 @@ import unittest
 import warnings
 from datetime import timedelta
 
-import simplekv.memory
 from flask import Flask
 
 from flask_jwt_extended.config import config

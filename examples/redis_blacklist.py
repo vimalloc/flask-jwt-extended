@@ -2,29 +2,26 @@
 # things will generally speedy, and it can be (mostly) persistent by dumping
 # the data to disk (see: https://redis.io/topics/persistence). The drawbacks
 # to using redis is you have a higher chance of encountering data loss (in
-# this case, 'forgetting' that a token was revoked), due to events like
-# power outages in between making a change to redis and that change being
-# dumped for a disk.
+# this case, 'forgetting' that a token was revoked), when events like
+# power outages occur.
 #
-# So when does it make sense to use redis for a blacklist? If you are blacklist
-# every token on logout but doing nothing besides that (not keeping track of
-# what tokens are blacklisted, not providing the option un-revoke blacklisted
-# tokens, or view tokens that are currently active for a given user), then redis
-# is a great choice. Worst case, a few tokens might slip between the cracks in
-# the case of a power outage or other such event, but 99.999% of the time tokens
-# will be properly blacklisted, and the security of your application should be
-# peachy.
+# When does it make sense to use redis for a blacklist? If you are blacklisting
+# every token on logout, and not doing nothing besides that (such as keeping
+# track of what tokens are blacklisted, providing options to un-revoke
+# blacklisted tokens, or view tokens that are currently active for a user),
+# then redis is a great choice. In the worst case, a few tokens might slip
+# between the cracks in the case of a power outage or other such event, but
+# 99.99% of the time tokens will be properly blacklisted.
 #
 # Redis also has the benefit of supporting an expires time when storing data.
-# Utilizing this, you will not need to manually prune back down the data
-# store to keep it from blowing up on you over time. We will show how this
-# could work in this example.
+# Utilizing this, you will not need to manually prune down the stored tokens
+# to keep it from blowing up over time. This code includes how to do this.
 #
-# If you intend to use some of the other features in your blacklist (tracking
+# If you intend to use some other features in your blacklist (tracking
 # what tokens are currently active, option to revoke or unrevoke specific
-# tokens, etc), data integrity is probably more important to your app then
-# raw performance, in which case a sql base solution (such as postgres) is
-# probably a better fit for your blacklist. Check out the "sql_blacklist.py"
+# tokens, etc), data integrity is probably more important to you then
+# raw performance. In this case a database solution (such as postgres) is
+# probably a better fit for your blacklist. Check out the "database_blacklist"
 # example for how that might work.
 import redis
 from datetime import timedelta
@@ -38,7 +35,6 @@ app = Flask(__name__)
 app.secret_key = 'ChangeMe!'
 
 # Setup the flask-jwt-extended extension. See:
-# http://flask-jwt-extended.readthedocs.io/en/latest/options.html
 ACCESS_EXPIRES = timedelta(minutes=15)
 REFRESH_EXPIRES = timedelta(days=30)
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = ACCESS_EXPIRES
@@ -53,18 +49,18 @@ revoked_store = redis.StrictRedis(host='localhost', port=6379, db=0,
 
 
 # Create our function to check if a token has been blacklisted. In this simple
-# case, we will just store the tokens jti (unique identifier) in the redis
-# store whenever we create it with a revoked status of False. This function
-# will grab the revoked status from the store and return it. If a token doesn't
-# exist in our store, we don't know where it came from (as we are adding newly
-# created # tokens to our store), so we are going to considered to be a
-# revoked token for safety purposes. This is obviously optional.
+# case, we will just store the tokens jti (unique identifier) in redis
+# whenever we create a new token (with the revoked status being 'false'). This
+# function will return the revoked status of a token. If a token doesn't
+# exist in this store, we don't know where it came from (as we are adding newly
+# created tokens to our store with a revoked status of 'false'). In this case
+# we will consider the token to be revoked, for safety purposes.
 @jwt.token_in_blacklist_loader
-def check_if_token_in_blacklist(decrypted_token):
+def check_if_token_is_revoked(decrypted_token):
     jti = decrypted_token['jti']
     entry = revoked_store.get(jti)
     if entry is None:
-        return False
+        return True
     return entry == 'true'
 
 
@@ -79,7 +75,7 @@ def login():
     access_token = create_access_token(identity=username)
     refresh_token = create_refresh_token(identity=username)
 
-    # Store the tokens in our store with a status of not currently revoked. We
+    # Store the tokens in redis with a status of not currently revoked. We
     # can use the `get_jti()` method to get the unique identifier string for
     # each token. We can also set an expires time on these tokens in redis,
     # so they will get automatically removed after they expire. We will set

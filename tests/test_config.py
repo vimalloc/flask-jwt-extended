@@ -55,8 +55,6 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.cookie_max_age, None)
 
     def test_override_configs(self):
-        sample_store = simplekv.memory.DictStore()
-
         self.app.config['JWT_TOKEN_LOCATION'] = ['cookies']
         self.app.config['JWT_HEADER_NAME'] = 'TestHeader'
         self.app.config['JWT_HEADER_TYPE'] = 'TestType'

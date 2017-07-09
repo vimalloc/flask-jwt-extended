@@ -1,7 +1,6 @@
 import unittest
 import json
 
-import simplekv.memory
 from flask import Flask, jsonify, request
 from flask_jwt_extended.utils import get_jwt_identity, get_jti
 
@@ -17,7 +16,6 @@ class TestEndpoints(unittest.TestCase):
         self.app = Flask(__name__)
         self.app.secret_key = 'super=secret'
         self.app.config['JWT_BLACKLIST_ENABLED'] = True
-        self.app.config['JWT_BLACKLIST_STORE'] = simplekv.memory.DictStore()
         self.jwt_manager = JWTManager(self.app)
         self.client = self.app.test_client()
         self.blacklist = set()

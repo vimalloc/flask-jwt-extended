@@ -85,7 +85,6 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_ALGORITHM'] = 'HS512'
 
         self.app.config['JWT_BLACKLIST_ENABLED'] = True
-        self.app.config['JWT_BLACKLIST_STORE'] = sample_store
         self.app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
 
         self.app.secret_key = 'banana'

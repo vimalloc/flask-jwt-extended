@@ -36,7 +36,7 @@ class JWTEncodeDecodeTests(unittest.TestCase):
             identity = 'user1'
             token = encode_access_token(identity, secret, algorithm, token_expire_delta,
                                         fresh=True, user_claims=user_claims, csrf=False)
-            data = jwt.decode(token, secret, algorithm=algorithm)
+            data = jwt.decode(token, secret, algorithms=[algorithm])
             self.assertIn('exp', data)
             self.assertIn('iat', data)
             self.assertIn('nbf', data)
@@ -60,7 +60,7 @@ class JWTEncodeDecodeTests(unittest.TestCase):
             identity = 12345  # identity can be anything json serializable
             token = encode_access_token(identity, secret, algorithm, token_expire_delta,
                                         fresh=False, user_claims=user_claims, csrf=True)
-            data = jwt.decode(token, secret, algorithm=algorithm)
+            data = jwt.decode(token, secret, algorithms=[algorithm])
             self.assertIn('exp', data)
             self.assertIn('iat', data)
             self.assertIn('nbf', data)
@@ -105,7 +105,7 @@ class JWTEncodeDecodeTests(unittest.TestCase):
             identity = 'user1'
             token = encode_refresh_token(identity, secret, algorithm,
                                          token_expire_delta, csrf=False)
-            data = jwt.decode(token, secret, algorithm=algorithm)
+            data = jwt.decode(token, secret, algorithms=[algorithm])
             self.assertIn('exp', data)
             self.assertIn('iat', data)
             self.assertIn('nbf', data)
@@ -125,7 +125,7 @@ class JWTEncodeDecodeTests(unittest.TestCase):
             identity = 12345  # identity can be anything json serializable
             token = encode_refresh_token(identity, secret, algorithm,
                                          token_expire_delta, csrf=True)
-            data = jwt.decode(token, secret, algorithm=algorithm)
+            data = jwt.decode(token, secret, algorithms=[algorithm])
             self.assertIn('exp', data)
             self.assertIn('iat', data)
             self.assertIn('nbf', data)

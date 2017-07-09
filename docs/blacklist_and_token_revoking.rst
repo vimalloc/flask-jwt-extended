@@ -3,35 +3,39 @@ Blacklist and Token Revoking
 
 This extension supports optional token revoking out of the box. This will
 allow you to revoke a specific token so that it can no longer access your endpoints.
-In order to revoke a token, we need some storage where we can save a list of all
-the tokens we have created, as well as if they have been revoked or not. In order
-to make the underlying storage as agnostic as possible, we use `simplekv
-<http://pythonhosted.org/simplekv/>`_ to provide assess to a variety of backends.
 
-In production, it is important to use a backend that can have some sort of
-persistent storage, so we don't 'forget' that we revoked a token if the flask
-process is restarted. We also need something that can be safely used by the
-multiple thread and processes running your application. At present we believe
-redis is a good fit for this. It has the added benefit of removing expired tokens
-from the store automatically, so it wont blow up into something huge.
+You will have to choose what tokens you want to check against the blacklist. In
+most cases, you will probably want to check both refresh and access tokens, which
+is the default behavior. However, if the extra overhead of checking tokens is a
+concern you could instead only check the refresh tokens, and set the access
+tokens to have a short expires time so any damage a compromised token could
+cause is minimal.
 
-We also have to choose what tokens we want to check against the blacklist. We could
-check all tokens (refresh and access), or only the refresh tokens. There are pros
-and cons to either way, namely extra overhead on jwt_required endpoints vs someone
-being able to use an access token freely until it expires. In this example, we are
-looking at all tokens:
+Blacklisting works by is providing a callback function to this extension, using the
+**@jwt.token_in_blacklist_loader** decorator. This method will be called whenever the
+specified tokens (``'access'`` and/or ``'refresh'``) are used to access a protected endpoint.
+If the callback function says that the token is revoked, we will not allow the
+call to continue, otherwise we will allow the call to access the endpoint as normal.
+
+
+Here is a basic example of this in action.
+
 
 .. literalinclude:: ../examples/blacklist.py
 
-If you want better performance (ie, not having to check the blacklist store
-with every request), you could check only the refresh tokens. This makes it
-so any call to a jwt_required endpoint does not need to check the blacklist
-store, but on the flip side would allow a compromised access token to be used
-until it expired. If using the approach, you should set the access tokens to
-have a very short lifetime to help combat this.
+In production, you will likely want to use either a database or in memory store
+(such as redis) to store your tokens. In memory stores are great if you are wanting
+to revoke a token when the users logs out, as they are blazing fast. A downside
+to using redis is that in the case of a power outage or other such event, it's
+possible that you might 'forget' that some tokens have been revoked, depending
+on if the redis data was synced to disk.
 
-It's worth noting that if your selected backend support the `time to live mixin
-<http://pythonhosted.org/simplekv/#simplekv.TimeToLiveMixin>`_ (such as redis),
-keys will be automatically deleted from the store at some point after they have
-expired. This prevents your store from blowing up with old keys without you having
-to do any work to prune it back down.
+In contrast to that, databases are great if the data persistance is of the highest
+importance (for example, if you have very long lived tokens that other developers
+use to access your api), or if you want to add some addition features like showing
+users all of their active tokens, and letting them revoke and unrevoke those tokens.
+
+For more in depth examples of these, check out:
+
+- https://github.com/vimalloc/flask-jwt-extended/examples/redis_blacklist.py
+- https://github.com/vimalloc/flask-jwt-extended/examples/database_blacklist

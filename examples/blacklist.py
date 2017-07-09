@@ -44,6 +44,7 @@ def check_if_token_in_blacklist(decrypted_token):
     return jti in blacklist
 
 
+# Standard login endpoint
 @app.route('/login', methods=['POST'])
 def login():
     username = request.json.get('username', None)
@@ -58,6 +59,8 @@ def login():
     return jsonify(ret), 200
 
 
+# Standard refresh endpoint. A blacklisted refresh token
+# will not be able to access this endpoint
 @app.route('/refresh', methods=['POST'])
 @jwt_refresh_token_required
 def refresh():

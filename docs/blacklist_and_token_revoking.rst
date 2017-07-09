@@ -37,5 +37,5 @@ users all of their active tokens, and letting them revoke and unrevoke those tok
 
 For more in depth examples of these, check out:
 
-- https://github.com/vimalloc/flask-jwt-extended/examples/redis_blacklist.py
-- https://github.com/vimalloc/flask-jwt-extended/examples/database_blacklist
+- https://github.com/vimalloc/flask-jwt-extended/blob/master/examples/redis_blacklist.py
+- https://github.com/vimalloc/flask-jwt-extended/tree/master/examples/database_blacklist

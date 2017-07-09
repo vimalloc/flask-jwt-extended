@@ -15,6 +15,9 @@ easier. These include:
 * Token revoking
 * Storing tokens in cookies and CSRF protection
 
+### Upgrading to the 3.x.x releases
+[See here](https://github.com/vimalloc/flask-jwt-extended/releases/tag/3.0.0) for
+help upgrading to the 3.x.x releases.
 
 ### Installation
 [View Installation Instructions](http://flask-jwt-extended.readthedocs.io/en/latest/installation.html)

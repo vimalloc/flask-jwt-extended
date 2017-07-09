@@ -4,6 +4,8 @@
 [![PyPI version](https://badge.fury.io/py/Flask-JWT-Extended.svg)](https://badge.fury.io/py/Flask-JWT-Extended)
 [![Documentation Status](https://readthedocs.org/projects/flask-jwt-extended/badge/)](http://flask-jwt-extended.readthedocs.io/en/latest/)
 
+### Why Flask-JWT-Extended?
+
 Flask-JWT-Extended adds support for using JSON Web Tokens (JWT) to Flask for protecting views.
 
 This has several **optional** features built it to make working with JSON Web Tokens

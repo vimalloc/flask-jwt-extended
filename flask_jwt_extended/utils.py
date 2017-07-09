@@ -50,18 +50,28 @@ def get_current_user():
 def get_jti(encoded_token):
     """
     Returns the JTI given the JWT encoded token
-
-    :param encoded_token: The encoded JWT string
-    :return: The JTI of the token
     """
-    return decode_jwt(encoded_token, config.secret_key, config.algorithm, config.csrf_protect).get('jti')
+    return decode_token(encoded_token).get('jti')
+
+
+def decode_token(encoded_token):
+    """
+    Returns the decoded token from an encoded one. This does all the checks
+    to insure that the decoded token is valid before returning it.
+    """
+    return decode_jwt(
+        encoded_token=encoded_token,
+        secret=config.decode_key,
+        algorithm=config.algorithm,
+        csrf=config.csrf_protect
+    )
 
 
 def _get_jwt_manager():
     try:
         return current_app.jwt_manager
     except AttributeError:  # pragma: no cover
-        raise RuntimeError("You must initialize a JWTManager with this flask"
+        raise RuntimeError("You must initialize a JWTManager with this flask "
                            "application before using this method")
 
 
@@ -75,14 +85,24 @@ def create_refresh_token(*args, **kwargs):
     return jwt_manager.create_refresh_token(*args, **kwargs)
 
 
+def has_user_loader():
+    jwt_manager = _get_jwt_manager()
+    return jwt_manager._user_loader_callback is not None
+
+
 def user_loader(*args, **kwargs):
     jwt_manager = _get_jwt_manager()
-    return jwt_manager.user_loader(*args, **kwargs)
+    return jwt_manager._user_loader_callback(*args, **kwargs)
 
 
-def has_user_loader(*args, **kwargs):
+def has_token_in_blacklist_callback():
     jwt_manager = _get_jwt_manager()
-    return jwt_manager.has_user_loader(*args, **kwargs)
+    return jwt_manager._token_in_blacklist_callback is not None
+
+
+def token_in_blacklist(*args, **kwargs):
+    jwt_manager = _get_jwt_manager()
+    return jwt_manager._token_in_blacklist_callback(*args, **kwargs)
 
 
 def get_csrf_token(encoded_token):

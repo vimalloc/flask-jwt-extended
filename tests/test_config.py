@@ -2,7 +2,6 @@ import unittest
 import warnings
 from datetime import timedelta
 
-import simplekv.memory
 from flask import Flask
 
 from flask_jwt_extended.config import config
@@ -47,24 +46,15 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.algorithm, 'HS256')
             self.assertEqual(config.is_asymmetric, False)
             self.assertEqual(config.blacklist_enabled, False)
-            self.assertEqual(config.blacklist_checks, 'refresh')
-            self.assertEqual(config.blacklist_access_tokens, False)
+            self.assertEqual(config.blacklist_checks, ['access', 'refresh'])
+            self.assertEqual(config.blacklist_access_tokens, True)
+            self.assertEqual(config.blacklist_refresh_tokens, True)
 
-            self.assertEqual(config.secret_key, self.app.secret_key)
             self.assertEqual(config.encode_key, self.app.secret_key)
             self.assertEqual(config.decode_key, self.app.secret_key)
             self.assertEqual(config.cookie_max_age, None)
 
-            with self.assertRaises(RuntimeError):
-                config.blacklist_store
-            with self.assertRaises(RuntimeError):
-                config.public_key
-            with self.assertRaises(RuntimeError):
-                config.private_key
-
     def test_override_configs(self):
-        sample_store = simplekv.memory.DictStore()
-
         self.app.config['JWT_TOKEN_LOCATION'] = ['cookies']
         self.app.config['JWT_HEADER_NAME'] = 'TestHeader'
         self.app.config['JWT_HEADER_TYPE'] = 'TestType'
@@ -92,8 +82,7 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_ALGORITHM'] = 'HS512'
 
         self.app.config['JWT_BLACKLIST_ENABLED'] = True
-        self.app.config['JWT_BLACKLIST_STORE'] = sample_store
-        self.app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'all'
+        self.app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
 
         self.app.secret_key = 'banana'
 
@@ -127,11 +116,10 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.algorithm, 'HS512')
 
             self.assertEqual(config.blacklist_enabled, True)
-            self.assertEqual(config.blacklist_store, sample_store)
-            self.assertEqual(config.blacklist_checks, 'all')
-            self.assertEqual(config.blacklist_access_tokens, True)
+            self.assertEqual(config.blacklist_checks, ['refresh'])
+            self.assertEqual(config.blacklist_access_tokens, False)
+            self.assertEqual(config.blacklist_refresh_tokens, True)
 
-            self.assertEqual(config.secret_key, 'banana')
             self.assertEqual(config.cookie_max_age, 2147483647)
 
     def test_invalid_config_options(self):
@@ -157,25 +145,21 @@ class TestEndpoints(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 config.refresh_expires
 
-            self.app.config['JWT_BLACKLIST_STORE'] = {}
-            with self.assertRaises(RuntimeError):
-                config.blacklist_store
-
             self.app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'banana'
             with self.assertRaises(RuntimeError):
                 config.blacklist_checks
 
             self.app.secret_key = None
             with self.assertRaises(RuntimeError):
-                config.secret_key
+                config.decode_key
 
             self.app.secret_key = ''
             with self.assertRaises(RuntimeError):
-                config.secret_key
+                config.decode_key
 
             self.app.secret_key = None
             with self.assertRaises(RuntimeError):
-                config.encode_key
+                config.decode_key
 
             self.app.config['JWT_ALGORITHM'] = 'RS256'
             self.app.config['JWT_PUBLIC_KEY'] = None
@@ -234,5 +218,3 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.is_asymmetric, True)
             self.assertEqual(config.encode_key, 'MOCK_RSA_PRIVATE_KEY')
             self.assertEqual(config.decode_key, 'MOCK_RSA_PUBLIC_KEY')
-            self.assertEqual(config.private_key, 'MOCK_RSA_PRIVATE_KEY')
-            self.assertEqual(config.public_key, 'MOCK_RSA_PUBLIC_KEY')

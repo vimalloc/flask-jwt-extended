@@ -7,14 +7,16 @@ try:
 except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as ctx_stack
 
-from flask_jwt_extended.blacklist import check_if_token_revoked
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
     InvalidHeaderError, NoAuthorizationError, WrongTokenError,
-    FreshTokenRequired, CSRFError, UserLoadError
+    FreshTokenRequired, CSRFError, UserLoadError, RevokedTokenError
 )
 from flask_jwt_extended.tokens import decode_jwt
-from flask_jwt_extended.utils import has_user_loader, user_loader
+from flask_jwt_extended.utils import (
+    has_user_loader, user_loader, token_in_blacklist,
+    has_token_in_blacklist_callback
+)
 
 
 def jwt_required(fn):
@@ -104,6 +106,21 @@ def _load_user(identity):
             ctx_stack.top.jwt_user = user
 
 
+def _token_blacklisted(decoded_token, request_type):
+    if not config.blacklist_enabled:
+        return False
+    if not has_token_in_blacklist_callback():
+        raise RuntimeError("A token_in_blacklist_callback must be provided via "
+                           "the '@token_in_blacklist_loader' if "
+                           "JWT_BLACKLIST_ENABLED is True")
+
+    if config.blacklist_access_tokens and request_type == 'access':
+        return token_in_blacklist(decoded_token)
+    if config.blacklist_refresh_tokens and request_type == 'refresh':
+        return token_in_blacklist(decoded_token)
+    return False
+
+
 def _decode_jwt_from_headers():
     header_name = config.header_name
     header_type = config.header_type
@@ -184,8 +201,7 @@ def _decode_jwt_from_request(request_type):
         raise WrongTokenError('Only {} tokens can access this endpoint'.format(request_type))
 
     # If blacklisting is enabled, see if this token has been revoked
-    if config.blacklist_enabled:
-        check_if_token_revoked(decoded_token)
+    if _token_blacklisted(decoded_token, request_type):
+        raise RevokedTokenError('Token has been revoked')
 
     return decoded_token
-

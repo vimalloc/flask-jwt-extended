@@ -1,7 +1,6 @@
 import datetime
 from warnings import warn
 
-import simplekv
 from flask import current_app
 
 # Older versions of pyjwt do not have the requires_cryptography set. Also,
@@ -33,11 +32,11 @@ class _Config(object):
 
     @property
     def encode_key(self):
-        return self.private_key if self.is_asymmetric else self.secret_key
+        return self._private_key if self.is_asymmetric else self._secret_key
 
     @property
     def decode_key(self):
-        return self.public_key if self.is_asymmetric else self.secret_key
+        return self._public_key if self.is_asymmetric else self._secret_key
 
     @property
     def token_location(self):
@@ -171,26 +170,25 @@ class _Config(object):
         return current_app.config['JWT_BLACKLIST_ENABLED']
 
     @property
-    def blacklist_store(self):
-        # simplekv object: https://pypi.python.org/pypi/simplekv/
-        store = current_app.config['JWT_BLACKLIST_STORE']
-        if not isinstance(store, simplekv.KeyValueStore):
-            raise RuntimeError("JWT_BLACKLIST_STORE must be a simplekv KeyValueStore")
-        return store
-
-    @property
     def blacklist_checks(self):
         check_type = current_app.config['JWT_BLACKLIST_TOKEN_CHECKS']
-        if check_type not in ('all', 'refresh'):
-            raise RuntimeError('JWT_BLACKLIST_TOKEN_CHECKS must be "all" or "refresh"')
+        if not isinstance(check_type, list):
+            check_type = [check_type]
+        for item in check_type:
+            if item not in ('access', 'refresh'):
+                raise RuntimeError('JWT_BLACKLIST_TOKEN_CHECKS must be "access" or "refresh"')
         return check_type
 
     @property
     def blacklist_access_tokens(self):
-        return 'all' in self.blacklist_checks
+        return 'access' in self.blacklist_checks
 
     @property
-    def secret_key(self):
+    def blacklist_refresh_tokens(self):
+        return 'refresh' in self.blacklist_checks
+
+    @property
+    def _secret_key(self):
         key = current_app.config['JWT_SECRET_KEY']
         if not key:
             key = current_app.config.get('SECRET_KEY', None)
@@ -201,7 +199,7 @@ class _Config(object):
         return key
 
     @property
-    def public_key(self):
+    def _public_key(self):
         key = current_app.config['JWT_PUBLIC_KEY']
         if not key:
             raise RuntimeError('JWT_PUBLIC_KEY must be set to use '
@@ -210,7 +208,7 @@ class _Config(object):
         return key
 
     @property
-    def private_key(self):
+    def _private_key(self):
         key = current_app.config['JWT_PRIVATE_KEY']
         if not key:
             raise RuntimeError('JWT_PRIVATE_KEY must be set to use '

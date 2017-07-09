@@ -2,7 +2,6 @@ import datetime
 
 from jwt import ExpiredSignatureError, InvalidTokenError
 
-from flask_jwt_extended.blacklist import store_token
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
     JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
@@ -15,7 +14,7 @@ from flask_jwt_extended.default_callbacks import (
     default_revoked_token_callback, default_user_loader_error_callback
 )
 from flask_jwt_extended.tokens import (
-    encode_refresh_token, decode_jwt, encode_access_token
+    encode_refresh_token, encode_access_token
 )
 from flask_jwt_extended.utils import get_jwt_identity
 
@@ -40,6 +39,7 @@ class JWTManager(object):
         self._revoked_token_callback = default_revoked_token_callback
         self._user_loader_callback = None
         self._user_loader_error_callback = default_user_loader_error_callback
+        self._token_in_blacklist_callback = None
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
@@ -162,8 +162,7 @@ class JWTManager(object):
 
         # Options for blacklisting/revoking tokens
         app.config.setdefault('JWT_BLACKLIST_ENABLED', False)
-        app.config.setdefault('JWT_BLACKLIST_STORE', None)
-        app.config.setdefault('JWT_BLACKLIST_TOKEN_CHECKS', 'refresh')
+        app.config.setdefault('JWT_BLACKLIST_TOKEN_CHECKS', ['access', 'refresh'])
 
     def user_claims_loader(self, callback):
         """
@@ -283,19 +282,17 @@ class JWTManager(object):
         self._user_loader_error_callback = callback
         return callback
 
-    def has_user_loader(self):
+    def token_in_blacklist_loader(self, callback):
         """
-        Returns True if a user_loader_callback has been defined in this
-        application, False otherwise
-        """
-        return self._user_loader_callback is not None
+        Sets the callback function for checking if a token has been revoked.
 
-    def user_loader(self, identity):
+        This callback function must take one paramater, which is the full
+        decoded token dictionary. This should return True if the token has been
+        blacklisted (or is otherwise considered revoked, or an invalid token),
+        False otherwise.
         """
-        Calls the _user_loader_callback function (if it is defined) and returns
-        the resulting user from this callback.
-        """
-        return self._user_loader_callback(identity)
+        self._token_in_blacklist_callback = callback
+        return callback
 
     def create_refresh_token(self, identity, expires_delta=None):
         """
@@ -324,12 +321,6 @@ class JWTManager(object):
             expires_delta=expires_delta,
             csrf=config.csrf_protect
         )
-
-        # If blacklisting is enabled, store this token in our key-value store
-        if config.blacklist_enabled:
-            decoded_token = decode_jwt(refresh_token, config.decode_key,
-                                       config.algorithm, csrf=config.csrf_protect)
-            store_token(decoded_token, revoked=False)
         return refresh_token
 
     def create_access_token(self, identity, fresh=False, expires_delta=None):
@@ -363,9 +354,5 @@ class JWTManager(object):
             user_claims=self._user_claims_callback(identity),
             csrf=config.csrf_protect
         )
-        if config.blacklist_enabled and config.blacklist_access_tokens:
-            decoded_token = decode_jwt(access_token, config.decode_key,
-                                       config.algorithm, csrf=config.csrf_protect)
-            store_token(decoded_token, revoked=False)
         return access_token
 

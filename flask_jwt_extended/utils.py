@@ -27,7 +27,7 @@ def get_jwt_identity():
     Returns the identity of the JWT in this context. If no JWT is present,
     None is returned.
     """
-    return get_raw_jwt().get('identity', None)
+    return get_raw_jwt().get(config.identity_claim, None)
 
 
 def get_jwt_claims():
@@ -63,7 +63,8 @@ def decode_token(encoded_token):
         encoded_token=encoded_token,
         secret=config.decode_key,
         algorithm=config.algorithm,
-        csrf=config.csrf_protect
+        csrf=config.csrf_protect,
+        identity_claim=config.identity_claim
     )
 
 
@@ -106,7 +107,13 @@ def token_in_blacklist(*args, **kwargs):
 
 
 def get_csrf_token(encoded_token):
-    token = decode_jwt(encoded_token, config.decode_key, config.algorithm, csrf=True)
+    token = decode_jwt(
+        encoded_token,
+        config.decode_key,
+        config.algorithm,
+        csrf=True,
+        identity_claim=config.identity_claim
+    )
     return token['csrf']
 
 

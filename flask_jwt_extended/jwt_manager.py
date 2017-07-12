@@ -164,6 +164,8 @@ class JWTManager(object):
         app.config.setdefault('JWT_BLACKLIST_ENABLED', False)
         app.config.setdefault('JWT_BLACKLIST_TOKEN_CHECKS', ['access', 'refresh'])
 
+        app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
+
     def user_claims_loader(self, callback):
         """
         This sets the callback method for adding custom user claims to a JWT.

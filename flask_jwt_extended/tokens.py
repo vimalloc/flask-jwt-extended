@@ -25,7 +25,7 @@ def _encode_jwt(additional_token_data, expires_delta, secret, algorithm):
 
 
 def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
-                        user_claims, csrf):
+                        user_claims, csrf, identity_claim):
     """
     Creates a new encoded (utf-8) access token.
 
@@ -40,11 +40,12 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
                         be json serializable
     :param csrf: Whether to include a csrf double submit claim in this token
                  (boolean)
+    :param identity_claim: Which claim should be used to store the identity in
     :return: Encoded access token
     """
     # Create the jwt
     token_data = {
-        'identity': identity,
+        identity_claim: identity,
         'fresh': fresh,
         'type': 'access',
         'user_claims': user_claims,
@@ -54,7 +55,7 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
     return _encode_jwt(token_data, expires_delta, secret, algorithm)
 
 
-def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf):
+def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf, identity_claim):
     """
     Creates a new encoded (utf-8) refresh token.
 
@@ -65,10 +66,11 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf):
                                (datetime.timedelta)
     :param csrf: Whether to include a csrf double submit claim in this token
                  (boolean)
+    :param identity_claim: Which claim should be used to store the identity in
     :return: Encoded refresh token
     """
     token_data = {
-        'identity': identity,
+        identity_claim: identity,
         'type': 'refresh',
     }
     if csrf:

@@ -331,7 +331,8 @@ class TestEndpoints(unittest.TestCase):
         # Test token that was signed with a different key
         with self.app.test_request_context():
             token = encode_access_token('foo', 'newsecret', 'HS256',
-                                        timedelta(minutes=5), True, {}, csrf=False)
+                                        timedelta(minutes=5), True, {}, csrf=False,
+                                        identity_claim='identity')
         auth_header = "Bearer {}".format(token)
         response = self.client.get('/protected', headers={'Authorization': auth_header})
         data = json.loads(response.get_data(as_text=True))
@@ -397,7 +398,7 @@ class TestEndpoints(unittest.TestCase):
         with self.app.test_request_context():
             token = encode_access_token('foo', 'newsecret', 'HS256',
                                         timedelta(minutes=5), True, {},
-                                        csrf=False)
+                                        csrf=False, identity_claim='identity')
         auth_header = "Bearer {}".format(token)
         response = self.client.get('/partially-protected',
                                    headers={'Authorization': auth_header})
@@ -584,7 +585,8 @@ class TestEndpoints(unittest.TestCase):
             expires_delta=timedelta(minutes=5),
             fresh=True,
             user_claims={},
-            csrf=False
+            csrf=False,
+            identity_claim='identity'
         )
         status, data = self._jwt_get('/protected', access_token)
         self.assertEqual(status, 422)
@@ -600,7 +602,8 @@ class TestEndpoints(unittest.TestCase):
             expires_delta=timedelta(minutes=5),
             fresh=True,
             user_claims={},
-            csrf=False
+            csrf=False,
+            identity_claim='identity'
         )
         status, data = self._jwt_get('/partially-protected', access_token)
         self.assertEqual(status, 422)

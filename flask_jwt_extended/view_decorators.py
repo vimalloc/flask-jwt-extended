@@ -33,7 +33,7 @@ def jwt_required(fn):
     def wrapper(*args, **kwargs):
         jwt_data = _decode_jwt_from_request(request_type='access')
         ctx_stack.top.jwt = jwt_data
-        _load_user(jwt_data['identity'])
+        _load_user(jwt_data[config.identity_claim])
         return fn(*args, **kwargs)
     return wrapper
 
@@ -53,7 +53,7 @@ def jwt_optional(fn):
         try:
             jwt_data = _decode_jwt_from_request(request_type='access')
             ctx_stack.top.jwt = jwt_data
-            _load_user(jwt_data['identity'])
+            _load_user(jwt_data[config.identity_claim])
         except NoAuthorizationError:
             pass
         return fn(*args, **kwargs)
@@ -77,7 +77,7 @@ def fresh_jwt_required(fn):
             raise FreshTokenRequired('Fresh token required')
 
         ctx_stack.top.jwt = jwt_data
-        _load_user(jwt_data['identity'])
+        _load_user(jwt_data[config.identity_claim])
         return fn(*args, **kwargs)
     return wrapper
 
@@ -92,7 +92,7 @@ def jwt_refresh_token_required(fn):
     def wrapper(*args, **kwargs):
         jwt_data = _decode_jwt_from_request(request_type='refresh')
         ctx_stack.top.jwt = jwt_data
-        _load_user(jwt_data['identity'])
+        _load_user(jwt_data[config.identity_claim])
         return fn(*args, **kwargs)
     return wrapper
 

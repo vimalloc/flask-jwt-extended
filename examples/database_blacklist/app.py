@@ -56,8 +56,8 @@ def register_endpoints(app):
         refresh_token = create_refresh_token(identity=username)
 
         # Store the tokens in our store with a status of not currently revoked.
-        add_token_to_database(access_token)
-        add_token_to_database(refresh_token)
+        add_token_to_database(access_token, app.config['JWT_IDENTITY_CLAIM'])
+        add_token_to_database(refresh_token, app.config['JWT_IDENTITY_CLAIM'])
 
         ret = {
             'access_token': access_token,
@@ -72,7 +72,7 @@ def register_endpoints(app):
         # Do the same thing that we did in the login endpoint here
         current_user = get_jwt_identity()
         access_token = create_access_token(identity=current_user)
-        add_token_to_database(access_token)
+        add_token_to_database(access_token, app.config['JWT_IDENTITY_CLAIM'])
         return jsonify({'access_token': access_token}), 201
 
     # Provide a way for a user to look at their tokens

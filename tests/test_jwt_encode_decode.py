@@ -30,24 +30,25 @@ class JWTEncodeDecodeTests(unittest.TestCase):
         algorithm = 'HS256'
         token_expire_delta = timedelta(minutes=5)
         user_claims = {'foo': 'bar'}
+        identity_claim = 'identity'
 
         # Check with a fresh token
         with self.app.test_request_context():
             identity = 'user1'
             token = encode_access_token(identity, secret, algorithm, token_expire_delta,
                                         fresh=True, user_claims=user_claims, csrf=False,
-                                        identity_claim='identity')
+                                        identity_claim=identity_claim)
             data = jwt.decode(token, secret, algorithms=[algorithm])
             self.assertIn('exp', data)
             self.assertIn('iat', data)
             self.assertIn('nbf', data)
             self.assertIn('jti', data)
-            self.assertIn('identity', data)
+            self.assertIn(identity_claim, data)
             self.assertIn('fresh', data)
             self.assertIn('type', data)
             self.assertIn('user_claims', data)
             self.assertNotIn('csrf', data)
-            self.assertEqual(data['identity'], identity)
+            self.assertEqual(data[identity_claim], identity)
             self.assertEqual(data['fresh'], True)
             self.assertEqual(data['type'], 'access')
             self.assertEqual(data['user_claims'], user_claims)
@@ -61,18 +62,18 @@ class JWTEncodeDecodeTests(unittest.TestCase):
             identity = 12345  # identity can be anything json serializable
             token = encode_access_token(identity, secret, algorithm, token_expire_delta,
                                         fresh=False, user_claims=user_claims, csrf=True,
-                                        identity_claim='identity')
+                                        identity_claim=identity_claim)
             data = jwt.decode(token, secret, algorithms=[algorithm])
             self.assertIn('exp', data)
             self.assertIn('iat', data)
             self.assertIn('nbf', data)
             self.assertIn('jti', data)
-            self.assertIn('identity', data)
+            self.assertIn(identity_claim, data)
             self.assertIn('fresh', data)
             self.assertIn('type', data)
             self.assertIn('user_claims', data)
             self.assertIn('csrf', data)
-            self.assertEqual(data['identity'], identity)
+            self.assertEqual(data[identity_claim], identity)
             self.assertEqual(data['fresh'], False)
             self.assertEqual(data['type'], 'access')
             self.assertEqual(data['user_claims'], user_claims)
@@ -86,16 +87,17 @@ class JWTEncodeDecodeTests(unittest.TestCase):
         # Check with non-serializable json
         with self.app.test_request_context():
             user_claims = datetime
+            identity_claim = 'identity'
             with self.assertRaises(Exception):
                 encode_access_token('user1', 'secret', 'HS256',
                                     timedelta(hours=1), True, user_claims,
-                                    csrf=True, identity_claim='identity')
+                                    csrf=True, identity_claim=identity_claim)
 
             user_claims = {'foo': timedelta(hours=4)}
             with self.assertRaises(Exception):
                 encode_access_token('user1', 'secret', 'HS256',
                                     timedelta(hours=1), True, user_claims,
-                                    csrf=True, identity_claim='identity')
+                                    csrf=True, identity_claim=identity_claim)
 
     def test_encode_refresh_token(self):
         secret = 'super-totally-secret-key'
@@ -212,6 +214,7 @@ class JWTEncodeDecodeTests(unittest.TestCase):
 
     def test_decode_invalid_jwt(self):
         with self.app.test_request_context():
+            identity_claim = 'identity'
             # Verify underlying pyjwt expires verification works
             with self.assertRaises(jwt.ExpiredSignatureError):
                 token_data = {
@@ -219,18 +222,19 @@ class JWTEncodeDecodeTests(unittest.TestCase):
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 decode_jwt(encoded_token, 'secret', 'HS256',
-                           csrf=False, identity_claim='identity')
+                           csrf=False, identity_claim=identity_claim)
 
             # Missing jti
             with self.assertRaises(JWTDecodeError):
+
                 token_data = {
                     'exp': datetime.utcnow() + timedelta(minutes=5),
-                    'identity': 'banana',
+                    identity_claim: 'banana',
                     'type': 'refresh'
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 decode_jwt(encoded_token, 'secret', 'HS256',
-                           csrf=False, identity_claim='identity')
+                           csrf=False, identity_claim=identity_claim)
 
             # Missing identity
             with self.assertRaises(JWTDecodeError):
@@ -241,61 +245,63 @@ class JWTEncodeDecodeTests(unittest.TestCase):
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 decode_jwt(encoded_token, 'secret', 'HS256',
-                           csrf=False, identity_claim='identity')
+                           csrf=False, identity_claim=identity_claim)
 
             # Non-matching identity claim
             with self.assertRaises(JWTDecodeError):
                 token_data = {
                     'exp': datetime.utcnow() + timedelta(minutes=5),
-                    'identity': 'banana',
+                    identity_claim: 'banana',
                     'type': 'refresh'
                 }
+                other_identity_claim = 'sub'
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
+                self.assertNotEqual(identity_claim, other_identity_claim)
                 decode_jwt(encoded_token, 'secret', 'HS256',
-                           csrf=False, identity_claim='sub')
+                           csrf=False, identity_claim=other_identity_claim)
 
             # Missing type
             with self.assertRaises(JWTDecodeError):
                 token_data = {
                     'jti': 'banana',
-                    'identity': 'banana',
+                    identity_claim: 'banana',
                     'exp': datetime.utcnow() + timedelta(minutes=5),
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 decode_jwt(encoded_token, 'secret', 'HS256',
-                           csrf=False, identity_claim='identity')
+                           csrf=False, identity_claim=identity_claim)
 
             # Missing fresh in access token
             with self.assertRaises(JWTDecodeError):
                 token_data = {
                     'jti': 'banana',
-                    'identity': 'banana',
+                    identity_claim: 'banana',
                     'exp': datetime.utcnow() + timedelta(minutes=5),
                     'type': 'access',
                     'user_claims': {}
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 decode_jwt(encoded_token, 'secret', 'HS256',
-                           csrf=False, identity_claim='identity')
+                           csrf=False, identity_claim=identity_claim)
 
             # Missing user claims in access token
             with self.assertRaises(JWTDecodeError):
                 token_data = {
                     'jti': 'banana',
-                    'identity': 'banana',
+                    identity_claim: 'banana',
                     'exp': datetime.utcnow() + timedelta(minutes=5),
                     'type': 'access',
                     'fresh': True
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 decode_jwt(encoded_token, 'secret', 'HS256',
-                           csrf=False, identity_claim='identity')
+                           csrf=False, identity_claim=identity_claim)
 
             # Bad token type
             with self.assertRaises(JWTDecodeError):
                 token_data = {
                     'jti': 'banana',
-                    'identity': 'banana',
+                    identity_claim: 'banana',
                     'exp': datetime.utcnow() + timedelta(minutes=5),
                     'type': 'banana',
                     'fresh': True,
@@ -303,13 +309,13 @@ class JWTEncodeDecodeTests(unittest.TestCase):
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 decode_jwt(encoded_token, 'secret', 'HS256',
-                           csrf=False, identity_claim='identity')
+                           csrf=False, identity_claim=identity_claim)
 
             # Missing csrf in csrf enabled token
             with self.assertRaises(JWTDecodeError):
                 token_data = {
                     'jti': 'banana',
-                    'identity': 'banana',
+                    identity_claim: 'banana',
                     'exp': datetime.utcnow() + timedelta(minutes=5),
                     'type': 'access',
                     'fresh': True,
@@ -317,7 +323,7 @@ class JWTEncodeDecodeTests(unittest.TestCase):
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 decode_jwt(encoded_token, 'secret', 'HS256', csrf=True,
-                           identity_claim='identity')
+                           identity_claim=identity_claim)
 
     def test_create_jwt_with_object(self):
         # Complex object to test building a JWT from. Normally if you are using

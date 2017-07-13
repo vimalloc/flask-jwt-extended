@@ -144,7 +144,13 @@ def _decode_jwt_from_headers():
             raise InvalidHeaderError(msg)
         token = parts[1]
 
-    return decode_jwt(token, config.decode_key, config.algorithm, csrf=False)
+    return decode_jwt(
+        encoded_token=token,
+        secret=config.decode_key,
+        algorithm=config.algorithm,
+        csrf=False,
+        identity_claim=config.identity_claim
+    )
 
 
 def _decode_jwt_from_cookies(request_type):
@@ -163,7 +169,8 @@ def _decode_jwt_from_cookies(request_type):
         encoded_token=encoded_token,
         secret=config.decode_key,
         algorithm=config.algorithm,
-        csrf=config.csrf_protect
+        csrf=config.csrf_protect,
+        identity_claim=config.identity_claim
     )
 
     # Verify csrf double submit tokens match if required

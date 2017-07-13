@@ -223,6 +223,10 @@ class _Config(object):
         # seconds a long ways in the future
         return None if self.session_cookie else 2147483647  # 2^31
 
+    @property
+    def identity_claim(self):
+        return current_app.config['JWT_IDENTITY_CLAIM']
+
 config = _Config()
 
 

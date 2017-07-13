@@ -30,6 +30,9 @@ General Options:
                                   such as ``RS*`` or ``ES*``. PEM format expected.
 ``JWT_PRIVATE_KEY``               The private key needed for asymmetric based signing algorithms,
                                   such as ``RS*`` or ``ES*``. PEM format expected.
+``JWT_IDENTITY_CLAIM``            Claim in the tokens that is used as source of identity.
+                                  For interoperativity, the JWT RFC recommends using ``'sub'``.
+                                  Defaults to ``'identity'``.
 ================================= =========================================
 
 

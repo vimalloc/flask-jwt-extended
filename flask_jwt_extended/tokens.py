@@ -25,7 +25,7 @@ def _encode_jwt(additional_token_data, expires_delta, secret, algorithm):
 
 
 def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
-                        user_claims, csrf):
+                        user_claims, csrf, identity_claim):
     """
     Creates a new encoded (utf-8) access token.
 
@@ -40,11 +40,12 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
                         be json serializable
     :param csrf: Whether to include a csrf double submit claim in this token
                  (boolean)
+    :param identity_claim: Which claim should be used to store the identity in
     :return: Encoded access token
     """
     # Create the jwt
     token_data = {
-        'identity': identity,
+        identity_claim: identity,
         'fresh': fresh,
         'type': 'access',
         'user_claims': user_claims,
@@ -54,7 +55,7 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
     return _encode_jwt(token_data, expires_delta, secret, algorithm)
 
 
-def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf):
+def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf, identity_claim):
     """
     Creates a new encoded (utf-8) refresh token.
 
@@ -65,10 +66,11 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf):
                                (datetime.timedelta)
     :param csrf: Whether to include a csrf double submit claim in this token
                  (boolean)
+    :param identity_claim: Which claim should be used to store the identity in
     :return: Encoded refresh token
     """
     token_data = {
-        'identity': identity,
+        identity_claim: identity,
         'type': 'refresh',
     }
     if csrf:
@@ -76,7 +78,7 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf):
     return _encode_jwt(token_data, expires_delta, secret, algorithm)
 
 
-def decode_jwt(encoded_token, secret, algorithm, csrf):
+def decode_jwt(encoded_token, secret, algorithm, csrf, identity_claim):
     """
     Decodes an encoded JWT
 
@@ -85,6 +87,7 @@ def decode_jwt(encoded_token, secret, algorithm, csrf):
     :param algorithm: Algorithm used to encode the JWT
     :param csrf: If this token is expected to have a CSRF double submit
                  value present (boolean)
+    :param identity_claim: expected claim that is used to identify the subject
     :return: Dictionary containing contents of the JWT
     """
     # This call verifies the ext, iat, and nbf claims
@@ -93,8 +96,8 @@ def decode_jwt(encoded_token, secret, algorithm, csrf):
     # Make sure that any custom claims we expect in the token are present
     if 'jti' not in data:
         raise JWTDecodeError("Missing claim: jti")
-    if 'identity' not in data:
-        raise JWTDecodeError("Missing claim: identity")
+    if identity_claim not in data:
+        raise JWTDecodeError("Missing claim: {}".format(identity_claim))
     if 'type' not in data or data['type'] not in ('refresh', 'access'):
         raise JWTDecodeError("Missing or invalid claim: type")
     if data['type'] == 'access':

@@ -54,6 +54,8 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.decode_key, self.app.secret_key)
             self.assertEqual(config.cookie_max_age, None)
 
+            self.assertEqual(config.identity_claim, 'identity')
+
     def test_override_configs(self):
         self.app.config['JWT_TOKEN_LOCATION'] = ['cookies']
         self.app.config['JWT_HEADER_NAME'] = 'TestHeader'
@@ -85,6 +87,8 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
 
         self.app.secret_key = 'banana'
+
+        self.app.config['JWT_IDENTITY_CLAIM'] = 'foo'
 
         with self.app.test_request_context():
             self.assertEqual(config.token_location, ['cookies'])
@@ -121,6 +125,8 @@ class TestEndpoints(unittest.TestCase):
             self.assertEqual(config.blacklist_refresh_tokens, True)
 
             self.assertEqual(config.cookie_max_age, 2147483647)
+
+            self.assertEqual(config.identity_claim, 'foo')
 
     def test_invalid_config_options(self):
         with self.app.test_request_context():

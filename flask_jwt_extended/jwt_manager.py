@@ -164,6 +164,8 @@ class JWTManager(object):
         app.config.setdefault('JWT_BLACKLIST_ENABLED', False)
         app.config.setdefault('JWT_BLACKLIST_TOKEN_CHECKS', ['access', 'refresh'])
 
+        app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
+
     def user_claims_loader(self, callback):
         """
         This sets the callback method for adding custom user claims to a JWT.
@@ -319,7 +321,8 @@ class JWTManager(object):
             secret=config.encode_key,
             algorithm=config.algorithm,
             expires_delta=expires_delta,
-            csrf=config.csrf_protect
+            csrf=config.csrf_protect,
+            identity_claim=config.identity_claim
         )
         return refresh_token
 
@@ -352,7 +355,8 @@ class JWTManager(object):
             expires_delta=expires_delta,
             fresh=fresh,
             user_claims=self._user_claims_callback(identity),
-            csrf=config.csrf_protect
+            csrf=config.csrf_protect,
+            identity_claim=config.identity_claim
         )
         return access_token
 

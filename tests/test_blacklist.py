@@ -16,6 +16,7 @@ class TestEndpoints(unittest.TestCase):
         self.app = Flask(__name__)
         self.app.secret_key = 'super=secret'
         self.app.config['JWT_BLACKLIST_ENABLED'] = True
+        self.app.config['JWT_IDENTITY_CLAIM'] = 'sub'
         self.jwt_manager = JWTManager(self.app)
         self.client = self.app.test_client()
         self.blacklist = set()

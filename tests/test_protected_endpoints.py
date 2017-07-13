@@ -22,6 +22,7 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_ALGORITHM'] = 'HS256'
         self.app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=1)
         self.app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(seconds=1)
+        self.app.config['JWT_IDENTITY_CLAIM'] = 'sub'
         self.jwt_manager = JWTManager(self.app)
         self.client = self.app.test_client()
 
@@ -454,6 +455,9 @@ class TestEndpoints(unittest.TestCase):
             claims_keys = [claim for claim in jwt]
             return jsonify(claims_keys), 200
 
+        # Grab custom identity claim
+        identity_claim = self.app.config['JWT_IDENTITY_CLAIM']
+
         # Login
         response = self.client.post('/auth/login')
         data = json.loads(response.get_data(as_text=True))
@@ -466,7 +470,7 @@ class TestEndpoints(unittest.TestCase):
         self.assertIn('iat', data)
         self.assertIn('nbf', data)
         self.assertIn('jti', data)
-        self.assertIn('identity', data)
+        self.assertIn(identity_claim, data)
         self.assertIn('fresh', data)
         self.assertIn('type', data)
         self.assertIn('user_claims', data)
@@ -836,12 +840,13 @@ class TestEndpointsWithCookies(unittest.TestCase):
 
     def test_access_endpoints_with_cookie_csrf_claim_not_string(self):
         now = datetime.utcnow()
+        identity_claim = self.app.config['JWT_IDENTITY_CLAIM']
         token_data = {
             'exp': now + timedelta(minutes=5),
             'iat': now,
             'nbf': now,
             'jti': 'banana',
-            'identity': 'banana',
+            identity_claim: 'banana',
             'type': 'refresh',
             'csrf': 404
         }

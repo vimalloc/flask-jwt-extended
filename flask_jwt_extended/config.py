@@ -45,7 +45,7 @@ class _Config(object):
             locations = [locations]
         for location in locations:
             if location not in ('headers', 'cookies'):
-                raise RuntimeError('JWT_LOCATION_LOCATION can only contain '
+                raise RuntimeError('JWT_TOKEN_LOCATION can only contain '
                                    '"headers" and/or "cookies"')
         return locations
 

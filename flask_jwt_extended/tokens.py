@@ -48,8 +48,12 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
         identity_claim: identity,
         'fresh': fresh,
         'type': 'access',
-        'user_claims': user_claims,
     }
+
+    # Add `user_claims` only is not empty or None.
+    if user_claims:
+        token_data['user_claims'] = user_claims
+
     if csrf:
         token_data['csrf'] = _create_csrf_token()
     return _encode_jwt(token_data, expires_delta, secret, algorithm)
@@ -104,7 +108,7 @@ def decode_jwt(encoded_token, secret, algorithm, csrf, identity_claim):
         if 'fresh' not in data:
             raise JWTDecodeError("Missing claim: fresh")
         if 'user_claims' not in data:
-            raise JWTDecodeError("Missing claim: user_claims")
+            data['user_claims'] = {}
     if csrf:
         if 'csrf' not in data:
             raise JWTDecodeError("Missing claim: csrf")

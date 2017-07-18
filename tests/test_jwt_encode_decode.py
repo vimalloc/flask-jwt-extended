@@ -83,6 +83,35 @@ class JWTEncodeDecodeTests(unittest.TestCase):
             self.assertLessEqual(exp_seconds, 60 * 5)
             self.assertGreater(exp_seconds, 60 * 4)
 
+    def test_encode_access_token__no_user_claims(self):
+        '''
+        To make JWT shorter, do not add `user_claims` if empty.
+        '''
+        secret = 'super-totally-secret-key'
+        algorithm = 'HS256'
+        token_expire_delta = timedelta(minutes=5)
+        identity_claim = 'sub'
+
+        # `user_claims` is empty dict
+        with self.app.test_request_context():
+            identity = 'user1'
+            token = encode_access_token(identity, secret, algorithm, token_expire_delta,
+                                        fresh=False, user_claims={}, csrf=False,
+                                        identity_claim=identity_claim)
+
+            data = jwt.decode(token, secret, algorithms=[algorithm])
+            self.assertNotIn('user_claims', data)
+
+        # `user_claims` is None
+        with self.app.test_request_context():
+            identity = 'user1'
+            token = encode_access_token(identity, secret, algorithm, token_expire_delta,
+                                        fresh=False, user_claims=None, csrf=False,
+                                        identity_claim=identity_claim)
+
+            data = jwt.decode(token, secret, algorithms=[algorithm])
+            self.assertNotIn('user_claims', data)
+
     def test_encode_invalid_access_token(self):
         # Check with non-serializable json
         with self.app.test_request_context():
@@ -212,6 +241,29 @@ class JWTEncodeDecodeTests(unittest.TestCase):
             self.assertEqual(data[identity_claim], 'banana')
             self.assertEqual(data['type'], 'refresh')
 
+    def test_decode_access_token__no_user_claims(self):
+        '''
+        Test decoding a valid access token without `user_claims`.
+        '''
+        identity_claim = 'sub'
+        with self.app.test_request_context():
+            now = datetime.utcnow()
+            token_data = {
+                'exp': now + timedelta(minutes=5),
+                'iat': now,
+                'nbf': now,
+                'jti': 'banana',
+                identity_claim: 'banana',
+                'fresh': True,
+                'type': 'access',
+            }
+            encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
+            data = decode_jwt(encoded_token, 'secret', 'HS256',
+                              csrf=False, identity_claim=identity_claim)
+
+            self.assertIn('user_claims', data)
+            self.assertEqual(data['user_claims'], {})
+
     def test_decode_invalid_jwt(self):
         with self.app.test_request_context():
             identity_claim = 'identity'
@@ -279,19 +331,6 @@ class JWTEncodeDecodeTests(unittest.TestCase):
                     'exp': datetime.utcnow() + timedelta(minutes=5),
                     'type': 'access',
                     'user_claims': {}
-                }
-                encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
-                decode_jwt(encoded_token, 'secret', 'HS256',
-                           csrf=False, identity_claim=identity_claim)
-
-            # Missing user claims in access token
-            with self.assertRaises(JWTDecodeError):
-                token_data = {
-                    'jti': 'banana',
-                    identity_claim: 'banana',
-                    'exp': datetime.utcnow() + timedelta(minutes=5),
-                    'type': 'access',
-                    'fresh': True
                 }
                 encoded_token = jwt.encode(token_data, 'secret', 'HS256').decode('utf-8')
                 decode_jwt(encoded_token, 'secret', 'HS256',

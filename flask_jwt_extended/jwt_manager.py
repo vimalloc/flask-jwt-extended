@@ -5,13 +5,16 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
     JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
-    RevokedTokenError, FreshTokenRequired, CSRFError, UserLoadError
+    RevokedTokenError, FreshTokenRequired, CSRFError, UserLoadError,
+    UserClaimsVerificationError
 )
 from flask_jwt_extended.default_callbacks import (
     default_expired_token_callback, default_user_claims_callback,
     default_user_identity_callback, default_invalid_token_callback,
     default_unauthorized_callback, default_needs_fresh_token_callback,
-    default_revoked_token_callback, default_user_loader_error_callback
+    default_revoked_token_callback, default_user_loader_error_callback,
+    default_claims_verification_callback,
+    default_claims_verification_failed_callback
 )
 from flask_jwt_extended.tokens import (
     encode_refresh_token, encode_access_token
@@ -40,6 +43,8 @@ class JWTManager(object):
         self._user_loader_callback = None
         self._user_loader_error_callback = default_user_loader_error_callback
         self._token_in_blacklist_callback = None
+        self._claims_verification_callback = default_claims_verification_callback
+        self._claims_verification_failed_callback = default_claims_verification_failed_callback
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
@@ -109,6 +114,10 @@ class JWTManager(object):
             # can safely call get_jwt_identity() here
             identity = get_jwt_identity()
             return self._user_loader_error_callback(identity)
+
+        @app.errorhandler(UserClaimsVerificationError)
+        def handle_failed_user_claims_verification(e):
+            return self._claims_verification_failed_callback()
 
     @staticmethod
     def _set_default_configuration_options(app):
@@ -294,6 +303,31 @@ class JWTManager(object):
         False otherwise.
         """
         self._token_in_blacklist_callback = callback
+        return callback
+
+    def claims_verification_loader(self, callback):
+        """
+        Sets the callback function for checking if the custom user claims are
+        valid for this access token.
+
+        This callback function must take one parameter, which is the custom
+        user claims present in the access token. This callback function should
+        return True if the user claims are valid, False otherwise.
+        """
+        self._claims_verification_callback = callback
+        return callback
+
+    def claims_verification_failed_loader(self, callback):
+        """
+        Sets the callback method to be called if the user claims verification
+        method returns False, indicating that the user claims are not valid.
+
+        The default implementation will return the json:
+        '{"msg": "User claims verification failed"})' with a 400 status code
+
+        Callback must be a function that takes no arguments.
+        """
+        self._claims_verification_failed_callback = callback
         return callback
 
     def create_refresh_token(self, identity, expires_delta=None):

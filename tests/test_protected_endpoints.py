@@ -22,7 +22,6 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_ALGORITHM'] = 'HS256'
         self.app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=1)
         self.app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(seconds=1)
-        self.app.config['JWT_IDENTITY_CLAIM'] = 'sub'
         self.jwt_manager = JWTManager(self.app)
         self.client = self.app.test_client()
 

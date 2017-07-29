@@ -62,3 +62,11 @@ class UserLoadError(JWTExtendedException):
     that it cannot or will not load a user for the given identity.
     """
     pass
+
+
+class UserClaimsVerificationError(JWTExtendedException):
+    """
+    Error raised when the claims_verification_callback function returns False,
+    indicating that the expected user claims are invalid
+    """
+    pass

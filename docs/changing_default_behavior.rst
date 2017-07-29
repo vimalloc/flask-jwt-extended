@@ -43,6 +43,12 @@ Possible loader functions are:
     * - **user_loader_error_loader**
       - Function that is called when the user_loader callback function returns **None**
       - Takes one argument - The identity of the user who failed to load
+    * - **claims_verification_loader**
+      - Function that is called to verify the custom **user_claims** data. Must return True or False
+      - Takes one argument - The custom user_claims dict in an access token
+    * - **claims_verification_failed_loader**
+      - Function that is called when the user claims verification callback returns False
+      - None
 
 Dynamic token expires time
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

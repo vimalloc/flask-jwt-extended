@@ -106,6 +106,11 @@ def token_in_blacklist(*args, **kwargs):
     return jwt_manager._token_in_blacklist_callback(*args, **kwargs)
 
 
+def verify_token_claims(*args, **kwargs):
+    jwt_manager = _get_jwt_manager()
+    return jwt_manager._claims_verification_callback(*args, **kwargs)
+
+
 def get_csrf_token(encoded_token):
     token = decode_jwt(
         encoded_token,

@@ -10,12 +10,13 @@ except ImportError:  # pragma: no cover
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
     InvalidHeaderError, NoAuthorizationError, WrongTokenError,
-    FreshTokenRequired, CSRFError, UserLoadError, RevokedTokenError
+    FreshTokenRequired, CSRFError, UserLoadError, RevokedTokenError,
+    UserClaimsVerificationError
 )
 from flask_jwt_extended.tokens import decode_jwt
 from flask_jwt_extended.utils import (
     has_user_loader, user_loader, token_in_blacklist,
-    has_token_in_blacklist_callback
+    has_token_in_blacklist_callback, verify_token_claims
 )
 
 
@@ -206,6 +207,11 @@ def _decode_jwt_from_request(request_type):
     # Make sure the type of token we received matches the request type we expect
     if decoded_token['type'] != request_type:
         raise WrongTokenError('Only {} tokens can access this endpoint'.format(request_type))
+
+    # Check if the custom claims in access tokens are valid
+    if request_type == 'access':
+        if not verify_token_claims(decoded_token['user_claims']):
+            raise UserClaimsVerificationError('user_claims verification failed')
 
     # If blacklisting is enabled, see if this token has been revoked
     if _token_blacklisted(decoded_token, request_type):

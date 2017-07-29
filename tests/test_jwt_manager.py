@@ -214,3 +214,24 @@ class TestJWTManager(unittest.TestCase):
 
             self.assertEqual(status_code, 404)
             self.assertEqual(data, {'msg': 'Not found'})
+
+    def test_claims_verification(self):
+        with self.app.test_request_context():
+            m = JWTManager(self.app)
+
+            @m.claims_verification_loader
+            def user_claims_verification(claims):
+                return 'foo' in claims
+
+            @m.claims_verification_failed_loader
+            def user_claims_verification_failed():
+                return jsonify({'msg': 'Test'}), 404
+
+            result = m._claims_verification_callback({'bar': 'baz'})
+            self.assertEqual(result, False)
+
+            result = m._claims_verification_failed_callback()
+            status_code, data = self._parse_callback_result(result)
+
+            self.assertEqual(status_code, 404)
+            self.assertEqual(data, {'msg': 'Test'})

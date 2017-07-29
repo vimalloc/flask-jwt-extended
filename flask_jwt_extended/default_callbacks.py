@@ -83,3 +83,18 @@ def default_user_loader_error_callback(identity):
     status code
     """
     return jsonify({'msg': "Error loading the user {}".format(identity)}), 401
+
+
+def default_claims_verification_callback(user_claims):
+    """
+    By default, we do not do any verification of the user claims.
+    """
+    return True
+
+
+def default_claims_verification_failed_callback():
+    """
+    By default, if the user claims verification failed, we return a generic
+    error message with a 400 status code
+    """
+    return jsonify({'msg': 'User claims verification failed'}), 400

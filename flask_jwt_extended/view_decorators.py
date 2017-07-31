@@ -22,7 +22,7 @@ from flask_jwt_extended.utils import (
 
 def jwt_required(fn):
     """
-    If you decorate a vew with this, it will ensure that the requester has a
+    If you decorate a view with this, it will ensure that the requester has a
     valid JWT before calling the actual view. This does not check the freshness
     of the token.
 

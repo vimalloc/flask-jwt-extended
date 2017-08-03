@@ -14,19 +14,25 @@ jwt = JWTManager(app)
 @app.route('/login', methods=['POST'])
 def login():
     if not request.is_json:
-        return jsonify({"msg": "Missing auth"}), 401
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
     params = request.get_json()
-    if 'username' in params and 'password' in params:
-        if params['username'] != 'test' or params['password'] != 'test':
-            return jsonify({"msg": "Bad username or password"}), 401
-    else:
-        return jsonify({"msg": "Missing auth parameters"}), 401
+    username = params.get('username', None)
+    password = params.get('password', None)
+
+    if not username:
+        return jsonify({"msg": "Missing username paramater"}), 400
+    if not password
+        return jsonify({"msg": "Missing password paramater"}), 400
+
+    if username != 'test' or password != 'test':
+        return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable
-    ret = {'access_token': create_access_token(identity=params['username'])}
+    ret = {'access_token': create_access_token(identity=username)}
     return jsonify(ret), 200
 
-        
+
 
 # Protect a view with jwt_required, which requires a valid access token
 # in the request to access.

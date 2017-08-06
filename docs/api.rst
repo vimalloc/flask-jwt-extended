@@ -1,5 +1,9 @@
 API Documentation
 =================
+In here you will find the API for everything exposed in this extension.
+
+Configuring JWT Options
+~~~~~~~~~~~~~~~~~~~~~~~
 .. currentmodule:: flask_jwt_extended
 
 .. module:: flask_jwt_extended

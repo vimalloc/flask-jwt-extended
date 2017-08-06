@@ -90,3 +90,6 @@ ENV/
 
 # pycharm
 .idea/
+
+# MacOS specific crap
+.DS_Store

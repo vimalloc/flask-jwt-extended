@@ -76,14 +76,49 @@ def _get_jwt_manager():
                            "application before using this method")
 
 
-def create_access_token(*args, **kwargs):
+def create_access_token(identity, fresh=False, expires_delta=None):
+    """
+    Creates a new access token
+
+    :param identity: The identity of this token. This can be any data that is
+                     json serializable. It can also be an object, in which case
+                     you can use the user_identity_loader to define a function
+                     that will be called to pull a json serializable identity
+                     out of this object. This is useful so you don't need to
+                     query disk twice, once for initially finding the identity
+                     in your login endpoint, and once for setting addition data
+                     in the JWT via the user_claims_loader
+    :param fresh: If this token should be marked as fresh, and can thus access
+                  fresh_jwt_required protected endpoints. Defaults to False
+    :param expires_delta: A datetime.timedelta for how long this token should
+                          last before it expires. If this is None, it will
+                          use the 'JWT_ACCESS_TOKEN_EXPIRES` config value
+    :return: A new access token
+    """
+
     jwt_manager = _get_jwt_manager()
-    return jwt_manager.create_access_token(*args, **kwargs)
+    return jwt_manager._create_access_token(identity, fresh, expires_delta)
 
 
-def create_refresh_token(*args, **kwargs):
+def create_refresh_token(identity, expires_delta=None):
+    """
+    Creates a new refresh token
+
+    :param identity: The identity of this token. This can be any data that is
+                     json serializable. It can also be an object, in which case
+                     you can use the user_identity_loader to define a function
+                     that will be called to pull a json serializable identity
+                     out of this object. This is useful so you don't need to
+                     query disk twice, once for initially finding the identity
+                     in your login endpoint, and once for setting addition data
+                     in the JWT via the user_claims_loader
+    :param expires_delta: A datetime.timedelta for how long this token should
+                          last before it expires. If this is None, it will
+                          use the 'JWT_REFRESH_TOKEN_EXPIRES` config value
+    :return: A new refresh token
+    """
     jwt_manager = _get_jwt_manager()
-    return jwt_manager.create_refresh_token(*args, **kwargs)
+    return jwt_manager._create_refresh_token(identity, expires_delta)
 
 
 def has_user_loader():

@@ -23,6 +23,13 @@ from flask_jwt_extended.utils import get_jwt_identity
 
 
 class JWTManager(object):
+    """
+    This object is used to hold the JWT settings and callback functions.
+    Instances :class:`JWTManager` are *not* bound to specific apps, so
+    you can create one in the main body of your code and then bind it
+    to your app in a factory function.
+    """
+
     def __init__(self, app=None):
         """
         Create the JWTManager instance. You can either pass a flask application
@@ -330,23 +337,7 @@ class JWTManager(object):
         self._claims_verification_failed_callback = callback
         return callback
 
-    def create_refresh_token(self, identity, expires_delta=None):
-        """
-        Creates a new refresh token
-
-        :param identity: The identity of this token. This can be any data that is
-                         json serializable. It can also be an object, in which case
-                         you can use the user_identity_loader to define a function
-                         that will be called to pull a json serializable identity
-                         out of this object. This is useful so you don't need to
-                         query disk twice, once for initially finding the identity
-                         in your login endpoint, and once for setting addition data
-                         in the JWT via the user_claims_loader
-        :param expires_delta: A datetime.timedelta for how long this token should
-                              last before it expires. If this is None, it will
-                              use the 'JWT_REFRESH_TOKEN_EXPIRES` config value
-        :return: A new refresh token
-        """
+    def _create_refresh_token(self, identity, expires_delta=None):
         if expires_delta is None:
             expires_delta = config.refresh_expires
 
@@ -360,25 +351,7 @@ class JWTManager(object):
         )
         return refresh_token
 
-    def create_access_token(self, identity, fresh=False, expires_delta=None):
-        """
-        Creates a new access token
-
-        :param identity: The identity of this token. This can be any data that is
-                         json serializable. It can also be an object, in which case
-                         you can use the user_identity_loader to define a function
-                         that will be called to pull a json serializable identity
-                         out of this object. This is useful so you don't need to
-                         query disk twice, once for initially finding the identity
-                         in your login endpoint, and once for setting addition data
-                         in the JWT via the user_claims_loader
-        :param fresh: If this token should be marked as fresh, and can thus access
-                      fresh_jwt_required protected endpoints. Defaults to False
-        :param expires_delta: A datetime.timedelta for how long this token should
-                              last before it expires. If this is None, it will
-                              use the 'JWT_ACCESS_TOKEN_EXPIRES` config value
-        :return: A new access token
-        """
+    def _create_access_token(self, identity, fresh=False, expires_delta=None):
         if expires_delta is None:
             expires_delta = config.access_expires
 

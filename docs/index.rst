@@ -6,8 +6,7 @@
 Flask JWT Extended's documentation
 ==================================
 
-In here you will find examples of how to use Flask JWT Extended. Full API
-documentation is coming soon!
+In here you will find examples of how to use Flask JWT Extended.
 
 .. toctree::
    :maxdepth: 2
@@ -23,3 +22,4 @@ documentation is coming soon!
    options
    blacklist_and_token_revoking
    tokens_in_cookies
+   api

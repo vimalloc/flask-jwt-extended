@@ -11,8 +11,6 @@ matrix:
       env: TOXENV=py
     - python: 2.7
       env: TOXENV=py
-    - python: 2.6
-      env: TOXENV=py
     - python: pypy
       env: TOXENV=py
 sudo: false

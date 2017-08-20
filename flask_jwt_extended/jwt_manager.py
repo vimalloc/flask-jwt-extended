@@ -304,7 +304,7 @@ class JWTManager(object):
         """
         Sets the callback function for checking if a token has been revoked.
 
-        This callback function must take one paramater, which is the full
+        This callback function must take one parameter, which is the full
         decoded token dictionary. This should return True if the token has been
         blacklisted (or is otherwise considered revoked, or an invalid token),
         False otherwise.

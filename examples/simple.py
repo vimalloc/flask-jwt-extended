@@ -21,9 +21,9 @@ def login():
     password = params.get('password', None)
 
     if not username:
-        return jsonify({"msg": "Missing username paramater"}), 400
+        return jsonify({"msg": "Missing username parameter"}), 400
     if not password
-        return jsonify({"msg": "Missing password paramater"}), 400
+        return jsonify({"msg": "Missing password parameter"}), 400
 
     if username != 'test' or password != 'test':
         return jsonify({"msg": "Bad username or password"}), 401

@@ -1,11 +1,12 @@
 import pytest
 from datetime import timedelta
 from flask import Flask, jsonify, json
+from werkzeug.http import parse_cookie
 
 from flask_jwt_extended import (
     JWTManager, create_access_token, create_refresh_token, jwt_required,
     jwt_refresh_token_required, fresh_jwt_required, jwt_optional,
-    get_current_user
+    get_current_user, set_access_cookies
 )
 
 RSA_PRIVATE = """
@@ -72,6 +73,25 @@ def cartesian_product_header_configs():
     return configs
 
 
+def cartesian_product_cookie_configs():
+    token_locations = [['cookies'], ['cookies', 'headers']]
+    access_cookie_names = ['access_token_cookie', 'access_foo']
+    refresh_cookie_names = ['refresh_token_cookie', 'refresh_foo']
+
+    configs = []
+    for location in token_locations:
+        for access_name in access_cookie_names:
+            for refresh_name in refresh_cookie_names:
+                config_combination = {
+                    'JWT_TOKEN_LOCATION': location,
+                    'JWT_ACCESS_COOKIE_NAME': access_name,
+                    'JWT_REFRESH_COOKIE_NAME': refresh_name
+                }
+                configs.append(config_combination)
+    return configs
+
+
+COOKIE_COMBINATIONS = cartesian_product_cookie_configs()
 HEADER_COMBINATIONS = cartesian_product_header_configs()
 CONFIG_COMBINATIONS = cartesian_product_general_configs()
 
@@ -89,6 +109,13 @@ def app(request):
     def fresh_access_jwt():
         access_token = create_access_token('username', fresh=True)
         return jsonify(jwt=access_token)
+
+    @app.route('/cookie_fresh_access_jwt', methods=['POST'])
+    def cookie_fresh_access_jwt():
+        access_token = create_access_token('username', fresh=True)
+        resp = jsonify(success=True)
+        set_access_cookies(resp, access_token)
+        return resp
 
     @app.route('/not_fresh_access_jwt', methods=['POST'])
     def not_fresh_access_jwt():
@@ -149,6 +176,13 @@ def headers_app(request, app):
     return app
 
 
+@pytest.fixture(scope='function', params=COOKIE_COMBINATIONS)
+def cookies_app(request, app):
+    for key, value in request.param.items():
+        app.config[key] = value
+    return app
+
+
 def get_fresh_jwt(test_client):
     response = test_client.post('/fresh_access_jwt')
     json_data = json.loads(response.get_data(as_text=True))
@@ -173,7 +207,29 @@ def get_refresh_jwt(test_client):
     return json_data['jwt']
 
 
-def make_request(test_client, request_type, request_url, headers=None):
+def get_cookie_fresh_jwt(test_client):
+    app = test_client.application
+    access_cookie_name = app.config['JWT_ACCESS_COOKIE_NAME']
+
+    response = test_client.post('/cookie_fresh_access_jwt')
+    assert response.status_code == 200
+
+    cookies = response.headers.getlist('Set-Cookie')
+    for cookie in cookies:
+        parsed_cookie = parse_cookie(cookie)
+        for c_key, c_val in parsed_cookie.items():
+            if c_key == access_cookie_name:
+                return c_val
+    raise Exception('jwt cooke value not found')
+
+
+def make_request(test_client, request_type, request_url, headers=None, cookies=None):
+    if cookies is None:
+        cookies = {}
+    if cookies:
+        for c_key, c_val in cookies.items():
+            test_client.set_cookie('/', c_key, c_val)
+
     request_type = getattr(test_client, request_type.lower())
     return request_type(
         request_url,
@@ -188,6 +244,13 @@ def make_jwt_headers_request(test_client, jwt, request_type, request_url):
     header_type = app.config['JWT_HEADER_TYPE']
     headers = {header_name: '{} {}'.format(header_type, jwt).strip()}
     return make_request(test_client, request_type, request_url, headers=headers)
+
+
+def make_jwt_cookies_request(test_client, jwt, request_type, request_url):
+    app = test_client.application
+    cookie_name = app.config['JWT_ACCESS_COOKIE_NAME']
+    cookies = {cookie_name: jwt}
+    return make_request(test_client, request_type, request_url, cookies=cookies)
 
 
 @pytest.mark.parametrize("fail_endpoint", [
@@ -356,10 +419,27 @@ def test_bad_header_type_blocks_protected_endpoints(app, token_location, header_
     assert response.status_code == 422
     assert json_data in expected_json
 
+
+@pytest.mark.parametrize("success_endpoint", [
+    '/protected',
+    '/fresh_protected',
+    '/optional_protected',
+    '/not_protected',
+])
+def test_accessable_endpoints_with_fresh_jwt_in_cookies(cookies_app, success_endpoint):
+    test_client = cookies_app.test_client()
+    fresh_jwt = get_cookie_fresh_jwt(test_client)
+    response = make_jwt_cookies_request(test_client, fresh_jwt, 'GET', success_endpoint)
+    json_data = json.loads(response.get_data(as_text=True))
+
+    assert response.status_code == 200
+    assert json_data == {'foo': 'bar'}
+
 # TODO test sending in headers when cookie_locations and vice versa
 # TODO when using cookies with csrf, test GET and POST requests
 # TODO test that verifies the jwt identity claim actually changes (sub/identity)
 # TODO test possible combinations for jwt_optional
+# TODO simple test that the other cookie overrides are working
 
 
 # Various options we want to test stuff here (with different expectations for

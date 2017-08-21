@@ -76,7 +76,7 @@ HEADER_COMBINATIONS = cartesian_product_header_configs()
 CONFIG_COMBINATIONS = cartesian_product_general_configs()
 
 
-@pytest.fixture(scope='module', params=CONFIG_COMBINATIONS)
+@pytest.fixture(scope='function', params=CONFIG_COMBINATIONS)
 def app(request):
     app = Flask(__name__)
 
@@ -142,14 +142,14 @@ def app(request):
     return app
 
 
-@pytest.fixture(scope='module', params=HEADER_COMBINATIONS)
+@pytest.fixture(scope='function', params=HEADER_COMBINATIONS)
 def headers_app(request, app):
     for key, value in request.param.items():
         app.config[key] = value
     return app
 
 
-def fresh_login(test_client):
+def get_fresh_jwt(test_client):
     response = test_client.post('/fresh_access_jwt')
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
@@ -157,8 +157,16 @@ def fresh_login(test_client):
     return json_data['jwt']
 
 
-def non_fresh_login(test_client):
+def get_non_fresh_jwt(test_client):
     response = test_client.post('/not_fresh_access_jwt')
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 200
+    assert 'jwt' in json_data
+    return json_data['jwt']
+
+
+def get_refresh_jwt(test_client):
+    response = test_client.post('/refresh_jwt')
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
     assert 'jwt' in json_data
@@ -227,7 +235,7 @@ def test_accessable_endpoints_without_jwt(app, success_endpoint, token_location)
 ])
 def test_accessable_endpoints_with_fresh_jwt_in_headers(headers_app, success_endpoint):
     test_client = headers_app.test_client()
-    fresh_jwt = fresh_login(test_client)
+    fresh_jwt = get_fresh_jwt(test_client)
     response = make_jwt_headers_request(test_client, fresh_jwt, 'GET', success_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
@@ -238,7 +246,7 @@ def test_accessable_endpoints_with_fresh_jwt_in_headers(headers_app, success_end
 @pytest.mark.parametrize("failure_endpoint", ['/refresh_protected'])
 def test_blocked_endpoints_with_fresh_jwt_in_headers(headers_app, failure_endpoint):
     test_client = headers_app.test_client()
-    fresh_jwt = fresh_login(test_client)
+    fresh_jwt = get_fresh_jwt(test_client)
     response = make_jwt_headers_request(test_client, fresh_jwt, 'GET', failure_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
@@ -253,7 +261,7 @@ def test_blocked_endpoints_with_fresh_jwt_in_headers(headers_app, failure_endpoi
 ])
 def test_accessable_endpoints_with_non_fresh_jwt_in_headers(headers_app, success_endpoint):
     test_client = headers_app.test_client()
-    jwt = non_fresh_login(test_client)
+    jwt = get_non_fresh_jwt(test_client)
     response = make_jwt_headers_request(test_client, jwt, 'GET', success_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
@@ -267,7 +275,7 @@ def test_accessable_endpoints_with_non_fresh_jwt_in_headers(headers_app, success
 ])
 def test_blocked_endpoints_with_non_fresh_jwt_in_headers(headers_app, failure_endpoint):
     test_client = headers_app.test_client()
-    jwt = non_fresh_login(test_client)
+    jwt = get_non_fresh_jwt(test_client)
     response = make_jwt_headers_request(test_client, jwt, 'GET', failure_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
@@ -277,9 +285,81 @@ def test_blocked_endpoints_with_non_fresh_jwt_in_headers(headers_app, failure_en
     )
     assert (response.status_code, json_data) in expected_errors
 
-# TODO test sending in the wrong header name/type with a valid token
-# TODO test that verifies the jwt identity claim actually changes (sub/identity)
+
+@pytest.mark.parametrize("success_endpoint", [
+    '/refresh_protected',
+    '/not_protected'
+])
+def test_accessable_endpoints_with_refresh_jwt_in_headers(headers_app, success_endpoint):
+    test_client = headers_app.test_client()
+    jwt = get_refresh_jwt(test_client)
+    response = make_jwt_headers_request(test_client, jwt, 'GET', success_endpoint)
+    json_data = json.loads(response.get_data(as_text=True))
+
+    assert response.status_code == 200
+    assert json_data == {'foo': 'bar'}
+
+
+@pytest.mark.parametrize("failure_endpoint", [
+    '/fresh_protected',
+    '/protected',
+    '/optional_protected'
+])
+def test_blocked_endpoints_with_refresh_jwt_in_headers(headers_app, failure_endpoint):
+    test_client = headers_app.test_client()
+    jwt = get_refresh_jwt(test_client)
+    response = make_jwt_headers_request(test_client, jwt, 'GET', failure_endpoint)
+    json_data = json.loads(response.get_data(as_text=True))
+
+    assert response.status_code == 422
+    assert json_data == {'msg': 'Only access tokens can access this endpoint'}
+
+
+@pytest.mark.parametrize("token_location", ['headers', ['cookies', 'headers']])
+def test_bad_header_name_blocks_protected_endpoints(app, token_location):
+    app.config['JWT_TOKEN_LOCATION'] = token_location
+    app.config['JWT_HEADER_NAME'] = 'Foo'
+
+    test_client = app.test_client()
+    jwt = get_fresh_jwt(test_client)
+
+    headers = {'Authorization': 'Bearer {}'.format(jwt)}
+    response = make_request(test_client, 'GET', '/protected', headers=headers)
+    json_data = json.loads(response.get_data(as_text=True))
+
+    expected_json = (
+        {'msg': 'Missing Foo Header'},
+        {'msg': 'Missing JWT in headers and cookies'}
+    )
+    assert response.status_code == 401
+    assert json_data in expected_json
+
+
+@pytest.mark.parametrize("token_location", ['headers', ['cookies', 'headers']])
+@pytest.mark.parametrize("header_type", ['Foo', ''])
+def test_bad_header_type_blocks_protected_endpoints(app, token_location, header_type):
+    app.config['JWT_TOKEN_LOCATION'] = token_location
+    app.config['JWT_HEADER_TYPE'] = header_type
+
+    test_client = app.test_client()
+    jwt = get_fresh_jwt(test_client)
+
+    headers = {'Authorization': 'Bearer {}'.format(jwt)}
+    response = make_request(test_client, 'GET', '/protected', headers=headers)
+    json_data = json.loads(response.get_data(as_text=True))
+
+    expected_json = (
+        {'msg': "Bad Authorization header. Expected value '<JWT>'"},
+        {'msg': "Bad Authorization header. Expected value 'Foo <JWT>'"}
+    )
+
+    assert response.status_code == 422
+    assert json_data in expected_json
+
+# TODO test sending in headers when cookie_locations and vice versa
 # TODO when using cookies with csrf, test GET and POST requests
+# TODO test that verifies the jwt identity claim actually changes (sub/identity)
+# TODO test possible combinations for jwt_optional
 
 
 # Various options we want to test stuff here (with different expectations for

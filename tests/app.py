@@ -6,7 +6,8 @@ from werkzeug.http import parse_cookie
 from flask_jwt_extended import (
     JWTManager, create_access_token, create_refresh_token, jwt_required,
     jwt_refresh_token_required, fresh_jwt_required, jwt_optional,
-    get_current_user, set_access_cookies
+    get_current_user, set_access_cookies,
+    set_refresh_cookies
 )
 
 RSA_PRIVATE = """
@@ -122,6 +123,13 @@ def app(request):
         access_token = create_access_token('username', fresh=False)
         return jsonify(jwt=access_token)
 
+    @app.route('/cookie_not_fresh_access_jwt', methods=['POST'])
+    def cookie_not_fresh_access_jwt():
+        access_token = create_access_token('username', fresh=False)
+        resp = jsonify(success=True)
+        set_access_cookies(resp, access_token)
+        return resp
+
     @app.route('/custom_expires_access_jwt', methods=['POST'])
     def custom_expires_access():
         expires = timedelta(minutes=5)
@@ -132,6 +140,13 @@ def app(request):
     def refresh_jwt():
         refresh_token = create_refresh_token('username')
         return jsonify(jwt=refresh_token)
+
+    @app.route('/cookie_refresh_jwt', methods=['POST'])
+    def cookie_refresh_jwt():
+        refresh_token = create_refresh_token('username')
+        resp = jsonify(success=True)
+        set_refresh_cookies(resp, refresh_token)
+        return resp
 
     @app.route('/custom_expires_refresh_jwt', methods=['POST'])
     def custom_expires_refresh_jwt():
@@ -207,20 +222,41 @@ def get_refresh_jwt(test_client):
     return json_data['jwt']
 
 
-def get_cookie_fresh_jwt(test_client):
-    app = test_client.application
-    access_cookie_name = app.config['JWT_ACCESS_COOKIE_NAME']
-
-    response = test_client.post('/cookie_fresh_access_jwt')
-    assert response.status_code == 200
-
+def _get_jwt_from_response_cookie(response, cookie_name):
     cookies = response.headers.getlist('Set-Cookie')
     for cookie in cookies:
         parsed_cookie = parse_cookie(cookie)
         for c_key, c_val in parsed_cookie.items():
-            if c_key == access_cookie_name:
+            if c_key == cookie_name:
                 return c_val
     raise Exception('jwt cooke value not found')
+
+
+def get_cookie_fresh_jwt(test_client):
+    response = test_client.post('/cookie_fresh_access_jwt')
+    assert response.status_code == 200
+
+    app = test_client.application
+    access_cookie_name = app.config['JWT_ACCESS_COOKIE_NAME']
+    return _get_jwt_from_response_cookie(response, access_cookie_name)
+
+
+def get_cookie_non_fresh_jwt(test_client):
+    response = test_client.post('/cookie_not_fresh_access_jwt')
+    assert response.status_code == 200
+
+    app = test_client.application
+    access_cookie_name = app.config['JWT_ACCESS_COOKIE_NAME']
+    return _get_jwt_from_response_cookie(response, access_cookie_name)
+
+
+def get_cookie_refresh_jwt(test_client):
+    response = test_client.post('/cookie_refresh_jwt')
+    assert response.status_code == 200
+
+    app = test_client.application
+    access_cookie_name = app.config['JWT_REFRESH_COOKIE_NAME']
+    return _get_jwt_from_response_cookie(response, access_cookie_name)
 
 
 def make_request(test_client, request_type, request_url, headers=None, cookies=None):
@@ -271,8 +307,8 @@ def test_blocked_endpoints_without_jwt(app, fail_endpoint, token_location):
         {'msg': 'Missing cookie "refresh_token_cookie"'},
         {'msg': 'Missing JWT in headers and cookies'},
     )
-    assert response.status_code == 401
     assert json_data in expected_errors
+    assert response.status_code == 401
 
 
 @pytest.mark.parametrize("success_endpoint", [
@@ -286,8 +322,8 @@ def test_accessable_endpoints_without_jwt(app, success_endpoint, token_location)
     response = make_request(test_client, 'GET', success_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
-    assert response.status_code == 200
     assert json_data == {'foo': 'bar'}
+    assert response.status_code == 200
 
 
 @pytest.mark.parametrize("success_endpoint", [
@@ -302,8 +338,8 @@ def test_accessable_endpoints_with_fresh_jwt_in_headers(headers_app, success_end
     response = make_jwt_headers_request(test_client, fresh_jwt, 'GET', success_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
-    assert response.status_code == 200
     assert json_data == {'foo': 'bar'}
+    assert response.status_code == 200
 
 
 @pytest.mark.parametrize("failure_endpoint", ['/refresh_protected'])
@@ -313,8 +349,8 @@ def test_blocked_endpoints_with_fresh_jwt_in_headers(headers_app, failure_endpoi
     response = make_jwt_headers_request(test_client, fresh_jwt, 'GET', failure_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
-    assert response.status_code == 422
     assert json_data == {'msg': 'Only refresh tokens can access this endpoint'}
+    assert response.status_code == 422
 
 
 @pytest.mark.parametrize("success_endpoint", [
@@ -328,8 +364,8 @@ def test_accessable_endpoints_with_non_fresh_jwt_in_headers(headers_app, success
     response = make_jwt_headers_request(test_client, jwt, 'GET', success_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
-    assert response.status_code == 200
     assert json_data == {'foo': 'bar'}
+    assert response.status_code == 200
 
 
 @pytest.mark.parametrize("failure_endpoint", [
@@ -359,8 +395,8 @@ def test_accessable_endpoints_with_refresh_jwt_in_headers(headers_app, success_e
     response = make_jwt_headers_request(test_client, jwt, 'GET', success_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
-    assert response.status_code == 200
     assert json_data == {'foo': 'bar'}
+    assert response.status_code == 200
 
 
 @pytest.mark.parametrize("failure_endpoint", [
@@ -374,8 +410,8 @@ def test_blocked_endpoints_with_refresh_jwt_in_headers(headers_app, failure_endp
     response = make_jwt_headers_request(test_client, jwt, 'GET', failure_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
-    assert response.status_code == 422
     assert json_data == {'msg': 'Only access tokens can access this endpoint'}
+    assert response.status_code == 422
 
 
 @pytest.mark.parametrize("token_location", ['headers', ['cookies', 'headers']])
@@ -394,8 +430,8 @@ def test_bad_header_name_blocks_protected_endpoints(app, token_location):
         {'msg': 'Missing Foo Header'},
         {'msg': 'Missing JWT in headers and cookies'}
     )
-    assert response.status_code == 401
     assert json_data in expected_json
+    assert response.status_code == 401
 
 
 @pytest.mark.parametrize("token_location", ['headers', ['cookies', 'headers']])
@@ -416,8 +452,8 @@ def test_bad_header_type_blocks_protected_endpoints(app, token_location, header_
         {'msg': "Bad Authorization header. Expected value 'Foo <JWT>'"}
     )
 
-    assert response.status_code == 422
     assert json_data in expected_json
+    assert response.status_code == 422
 
 
 @pytest.mark.parametrize("success_endpoint", [
@@ -432,14 +468,104 @@ def test_accessable_endpoints_with_fresh_jwt_in_cookies(cookies_app, success_end
     response = make_jwt_cookies_request(test_client, fresh_jwt, 'GET', success_endpoint)
     json_data = json.loads(response.get_data(as_text=True))
 
-    assert response.status_code == 200
     assert json_data == {'foo': 'bar'}
+    assert response.status_code == 200
+
+
+# TODO when using cookies, actually send the wrong cookie type (refresh/access)
+#      into the header that expects the other type. The cookies have different
+#      names, so this test doesn't actually test that case
+@pytest.mark.parametrize("failure_endpoint", ['/refresh_protected'])
+def test_blocked_endpoints_with_fresh_jwt_in_headers(cookies_app, failure_endpoint):
+    test_client = cookies_app.test_client()
+    fresh_jwt = get_cookie_fresh_jwt(test_client)
+    response = make_jwt_cookies_request(test_client, fresh_jwt, 'GET', failure_endpoint)
+    json_data = json.loads(response.get_data(as_text=True))
+
+    expected_errors = (
+       {'msg': 'Missing cookie "{}"'.format(cookies_app.config['JWT_REFRESH_COOKIE_NAME'])},
+       {'msg': 'Missing JWT in headers and cookies'}
+    )
+    assert json_data in expected_errors
+    assert response.status_code == 401
+
+
+@pytest.mark.parametrize("success_endpoint", [
+    '/protected',
+    '/optional_protected',
+    '/not_protected',
+])
+def test_accessable_endpoints_with_non_fresh_jwt_in_cookies(cookies_app, success_endpoint):
+    test_client = cookies_app.test_client()
+    fresh_jwt = get_cookie_non_fresh_jwt(test_client)
+    response = make_jwt_cookies_request(test_client, fresh_jwt, 'GET', success_endpoint)
+    json_data = json.loads(response.get_data(as_text=True))
+
+    assert json_data == {'foo': 'bar'}
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize("failure_endpoint", [
+    '/refresh_protected',
+    '/fresh_protected'
+])
+def test_blocked_endpoints_with_non_fresh_jwt_in_cookies(cookies_app, failure_endpoint):
+    test_client = cookies_app.test_client()
+    fresh_jwt = get_cookie_non_fresh_jwt(test_client)
+    response = make_jwt_cookies_request(test_client, fresh_jwt, 'GET', failure_endpoint)
+    json_data = json.loads(response.get_data(as_text=True))
+
+    refresh_cookie_name = cookies_app.config['JWT_REFRESH_COOKIE_NAME']
+    expected_errors = (
+        {'msg': 'Missing cookie "{}"'.format(refresh_cookie_name)},
+        {'msg': 'Missing JWT in headers and cookies'},
+        {'msg': 'Fresh token required'}
+    )
+    assert json_data in expected_errors
+    assert response.status_code == 401
+
+
+@pytest.mark.parametrize("success_endpoint", [
+    '/refresh_protected',
+    '/not_protected'
+])
+def test_accessable_endpoints_with_refresh_jwt_in_cookies(cookies_app, success_endpoint):
+    test_client = cookies_app.test_client()
+    refresh_jwt = get_cookie_refresh_jwt(test_client)
+    response = make_jwt_cookies_request(test_client, refresh_jwt, 'GET', success_endpoint)
+    json_data = json.loads(response.get_data(as_text=True))
+
+    assert json_data == {'foo': 'bar'}
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize("failure_endpoint", [
+    '/fresh_protected',
+    '/protected',
+    '/optional_protected'
+])
+def test_blocked_endpoints_with_refresh_jwt_in_cookies(cookies_app, failure_endpoint):
+    test_client = cookies_app.test_client()
+    refresh_jwt = get_cookie_refresh_jwt(test_client)
+    response = make_jwt_cookies_request(test_client, refresh_jwt, 'GET', failure_endpoint)
+    json_data = json.loads(response.get_data(as_text=True))
+
+    # TODO is this right? I would expect an error about missing the cookie. I
+    #      think this is broke as we are only sending in the access cookie
+    #      not the refresh cookie when doing make_jwt_cookies_request
+    expected_errors = (
+        {'msg': 'Only access tokens can access this endpoint'},
+    )
+    assert json_data in expected_errors
+    assert response.status_code == 422
+
 
 # TODO test sending in headers when cookie_locations and vice versa
 # TODO when using cookies with csrf, test GET and POST requests
 # TODO test that verifies the jwt identity claim actually changes (sub/identity)
 # TODO test possible combinations for jwt_optional
 # TODO simple test that the other cookie overrides are working
+# TODO test having the access and refresh cookie be the same name?
 
 
 # Various options we want to test stuff here (with different expectations for

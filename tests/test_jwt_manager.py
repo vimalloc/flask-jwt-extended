@@ -24,11 +24,11 @@ class TestJWTManager(unittest.TestCase):
     def test_init_app(self):
         jwt_manager = JWTManager()
         jwt_manager.init_app(self.app)
-        self.assertIsInstance(jwt_manager, JWTManager)
+        self.assertEqual(jwt_manager, self.app.extensions['flask-jwt-extended'])
 
     def test_class_init(self):
         jwt_manager = JWTManager(self.app)
-        self.assertIsInstance(jwt_manager, JWTManager)
+        self.assertEqual(jwt_manager, self.app.extensions['flask-jwt-extended'])
 
     def test_default_user_claims_callback(self):
         identity = 'foobar'

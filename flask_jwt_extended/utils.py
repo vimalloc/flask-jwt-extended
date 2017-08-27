@@ -157,10 +157,14 @@ def get_csrf_token(encoded_token):
     return token['csrf']
 
 
-def set_access_cookies(response, encoded_access_token):
+def set_access_cookies(response, encoded_access_token, max_age=None):
     """
     Takes a flask response object, and configures it to set the encoded access
     token in a cookie (as well as a csrf access cookie if enabled)
+
+    :param max_age: If this is None, it will use the 'JWT_SESSION_COOKIE'
+                    config value. Else it will use max_age as cookie "max-age".
+                    Values should be integer number of seconds
     """
     if not config.jwt_in_cookies:
         raise RuntimeWarning("set_access_cookies() called without "
@@ -169,7 +173,7 @@ def set_access_cookies(response, encoded_access_token):
     # Set the access JWT in the cookie
     response.set_cookie(config.access_cookie_name,
                         value=encoded_access_token,
-                        max_age=config.cookie_max_age,
+                        max_age=max_age or config.cookie_max_age,
                         secure=config.cookie_secure,
                         httponly=True,
                         domain=config.cookie_domain,
@@ -179,17 +183,21 @@ def set_access_cookies(response, encoded_access_token):
     if config.csrf_protect and config.csrf_in_cookies:
         response.set_cookie(config.access_csrf_cookie_name,
                             value=get_csrf_token(encoded_access_token),
-                            max_age=config.cookie_max_age,
+                            max_age=max_age or config.cookie_max_age,
                             secure=config.cookie_secure,
                             httponly=False,
                             domain=config.cookie_domain,
                             path=config.access_csrf_cookie_path)
 
 
-def set_refresh_cookies(response, encoded_refresh_token):
+def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
     """
     Takes a flask response object, and configures it to set the encoded refresh
     token in a cookie (as well as a csrf refresh cookie if enabled)
+
+    :param max_age: If this is None, it will use the 'JWT_SESSION_COOKIE'
+                    config value. Else it will use max_age as cookie "max-age".
+                    Values should be integer number of seconds
     """
     if not config.jwt_in_cookies:
         raise RuntimeWarning("set_refresh_cookies() called without "
@@ -198,7 +206,7 @@ def set_refresh_cookies(response, encoded_refresh_token):
     # Set the refresh JWT in the cookie
     response.set_cookie(config.refresh_cookie_name,
                         value=encoded_refresh_token,
-                        max_age=config.cookie_max_age,
+                        max_age=max_age or config.cookie_max_age,
                         secure=config.cookie_secure,
                         httponly=True,
                         domain=config.cookie_domain,
@@ -208,7 +216,7 @@ def set_refresh_cookies(response, encoded_refresh_token):
     if config.csrf_protect and config.csrf_in_cookies:
         response.set_cookie(config.refresh_csrf_cookie_name,
                             value=get_csrf_token(encoded_refresh_token),
-                            max_age=config.cookie_max_age,
+                            max_age=max_age or config.cookie_max_age,
                             secure=config.cookie_secure,
                             httponly=False,
                             domain=config.cookie_domain,

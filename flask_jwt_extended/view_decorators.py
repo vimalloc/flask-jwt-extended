@@ -55,7 +55,7 @@ def jwt_optional(fn):
             jwt_data = _decode_jwt_from_request(request_type='access')
             ctx_stack.top.jwt = jwt_data
             _load_user(jwt_data[config.identity_claim])
-        except NoAuthorizationError:
+        except (NoAuthorizationError, InvalidHeaderError):
             pass
         return fn(*args, **kwargs)
     return wrapper

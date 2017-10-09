@@ -24,8 +24,10 @@ from flask_jwt_extended.utils import get_jwt_identity
 
 class JWTManager(object):
     """
-    This object is used to hold the JWT settings and callback functions.
-    Instances :class:`JWTManager` are *not* bound to specific apps, so
+    An object used to hold JWT settings and callback functions for the
+    Flask-JWT-Extended extension.
+
+    Instances of :class:`JWTManager` are *not* bound to specific apps, so
     you can create one in the main body of your code and then bind it
     to your app in a factory function.
     """
@@ -34,7 +36,7 @@ class JWTManager(object):
         """
         Create the JWTManager instance. You can either pass a flask application
         in directly here to register this extension with the flask app, or
-        call init_app after creating this object
+        call init_app after creating this object (in a factory pattern).
 
         :param app: A flask application
         """
@@ -59,7 +61,7 @@ class JWTManager(object):
 
     def init_app(self, app):
         """
-        Register this extension with the flask app
+        Register this extension with the flask app.
 
         :param app: A flask application
         """
@@ -186,155 +188,184 @@ class JWTManager(object):
 
     def user_claims_loader(self, callback):
         """
-        This sets the callback method for adding custom user claims to a JWT.
+        This decorator sets the callback function for adding custom claims to an
+        access token when :func:`~flask_jwt_extended.create_access_token` is
+        called. By default, no extra user claims will be added to the JWT.
 
-        By default, no extra user claims will be added to the JWT.
-
-        Callback must be a function that takes only one argument, which is the
-        identity of the JWT being created.
+        The callback function must be a function that takes only one argument,
+        which is the object passed into
+        :func:`~flask_jwt_extended.create_access_token`, and returns the custom
+        claims you want included in the access tokens. This returned claims
+        must be JSON serializable.
         """
         self._user_claims_callback = callback
         return callback
 
     def user_identity_loader(self, callback):
         """
-        This sets the callback method for adding custom user claims to a JWT.
+        This decorator sets the callback function for getting the JSON
+        serializable identity out of whatever object is passed into
+        :func:`~flask_jwt_extended.create_access_token` and
+        :func:`~flask_jwt_extended.create_refresh_token`. By default, this will
+        return the unmodified object that is passed in as the `identity` kwarg
+        to the above functions.
 
-        By default, no extra user claims will be added to the JWT.
-
-        Callback must be a function that takes only one argument, which is the
-        identity of the JWT being created.
+        The callback function must be a function that takes only one argument,
+        which is the object passed into
+        :func:`~flask_jwt_extended.create_access_token` or
+        :func:`~flask_jwt_extended.create_refresh_token`, and returns the
+        JSON serializable identity of this token.
         """
         self._user_identity_callback = callback
         return callback
 
     def expired_token_loader(self, callback):
         """
-        Sets the callback method to be called if an expired JWT is received
+        This decorator sets the callback function that will be called if an
+        expired JWT attempts to access a protected endpoint. The default
+        implementation will return a 401 status code with the JSON:
 
-        The default implementation will return json '{"msg": "Token has expired"}'
-        with a 401 status code.
+        {"msg": "Token has expired"}
 
-        Callback must be a function that takes zero arguments.
+        The callback must be a function that takes zero arguments, and returns
+        a Flask response.
         """
         self._expired_token_callback = callback
         return callback
 
     def invalid_token_loader(self, callback):
         """
-        Sets the callback method to be called if an invalid JWT is received.
+        This decorator sets the callback function that will be called if an
+        invalid JWT attempts to access a protected endpoint. The default
+        implementation will return a 422 status code with the JSON:
 
-        The default implementation will return json '{"msg": <err>}' with a 401
-        status code.
+        {"msg": "<error description>"}
 
-        Callback must be a function that takes only one argument, which is the
-        error message of why the token is invalid.
+        The callback must be a function that takes only one argument, which is
+        a string which contains the reason why a token is invalid, and returns
+        a Flask response.
         """
         self._invalid_token_callback = callback
         return callback
 
     def unauthorized_loader(self, callback):
         """
-        Sets the callback method to be called if an invalid JWT is received
+        This decorator sets the callback function that will be called if an
+        no JWT can be found when attempting to access a protected endpoint.
+        The default implementation will return a 401 status code with the JSON:
 
-        The default implementation will return '{"msg": "Missing Authorization Header"}'
-        json with a 401 status code.
+        {"msg": "<error description>"}
 
-        Callback must be a function that takes only one argument, which is the
-        error message of why the token is invalid.
+        The callback must be a function that takes only one argument, which is
+        a string which contains the reason why a JWT could not be found, and
+        returns a Flask response.
         """
         self._unauthorized_callback = callback
         return callback
 
     def needs_fresh_token_loader(self, callback):
         """
-        Sets the callback method to be called if a valid and non-fresh token
-        attempts to access an endpoint protected with @fresh_jwt_required.
+        This decorator sets the callback function that will be called if a
+        valid and non-fresh token attempts to access an endpoint protected with
+        the :func:`~flask_jwt_extended.fresh_jwt_required` decorator. The
+        default implementation will return a 401 status code with the JSON:
 
-        The default implementation will return json '{"msg": "Fresh token required"}'
-        with a 401 status code.
+        {"msg": "Fresh token required"}
 
-        Callback must be a function that takes no arguments.
+        The callback must be a function that takes no arguments, and returns
+        a Flask response.
         """
         self._needs_fresh_token_callback = callback
         return callback
 
     def revoked_token_loader(self, callback):
         """
-        Sets the callback method to be called if a blacklisted (revoked) token
-        attempt to access a protected endpoint
+        This decorator sets the callback function that will be called if a
+        revoked token attempts to access a protected endpoint. The default
+        implementation will return a 401 status code with the JSON:
 
-        The default implementation will return json '{"msg": "Token has been revoked"}'
-        with a 401 status code.
+        {"msg": "Token has been revoked"}
 
-        Callback must be a function that takes no arguments.
+        The callback must be a function that takes no arguments, and returns
+        a Flask response.
         """
         self._revoked_token_callback = callback
         return callback
 
     def user_loader_callback_loader(self, callback):
         """
-        Sets the callback method to be called to load a user on a protected
-        endpoint.
-
+        This decorator sets the callback function that will be called to
+        automatically load an object when a protected endpoint is accessed.
         By default this is not is not used.
 
-        If a callback method is passed in here, it must take one argument,
-        which is the identity of the user to load. It must return the user
-        object, or None in the case of an error (which will cause the TODO
-        error handler to be hit)
+        The callback must take one argument which is the identity JWT accessing
+        the protected endpoint, and it must return any object (which can then
+        be accessed via the :attr:`~flask_jwt_extended.current_user` LocalProxy
+        in the protected endpoint), or `None` in the case of a user not being
+        able to be loaded for any reason. If this callback function returns
+        `None`, the :meth:`~flask_jwt_extended.JWTManager.user_loader_error_loader`
+        will be called.
         """
         self._user_loader_callback = callback
         return callback
 
     def user_loader_error_loader(self, callback):
         """
-        Sets the callback method to be called if a user fails or is refused
-        to load when calling the _user_loader_callback function (indicated by
-        that function returning None)
+        This decorator sets the callback function that will be called if `None`
+        is returned from the
+        :meth:`~flask_jwt_extended.JWTManager.user_loader_callback_loader`
+        callback function. The default implementation will return
+        a 400 status code with the JSON:
 
-        The default implementation will return json:
-        '{"msg": "Error loading the user <identity>"}' with a 400 status code.
+        {"msg": "Error loading the user <identity>"}
 
-        Callback must be a function that takes one argument, the identity of the
-        user who failed to load.
+        The callback must be a function that takes one argument, which is the
+        identity of the user who failed to load, and must return a Flask response.
         """
         self._user_loader_error_callback = callback
         return callback
 
     def token_in_blacklist_loader(self, callback):
         """
-        Sets the callback function for checking if a token has been revoked.
+        This decorator sets the callback function that will be called when
+        a protected endpoint is accessed and will check if the JWT has been
+        been revoked. By default, this callback is not used.
 
-        This callback function must take one parameter, which is the full
-        decoded token dictionary. This should return True if the token has been
-        blacklisted (or is otherwise considered revoked, or an invalid token),
-        False otherwise.
+        The callback must be a function that takes one argument, which is the
+        decoded JWT (python dictionary), and returns `True` if the token
+        has been blacklisted (or is otherwise considered revoked), or `False`
+        otherwise.
         """
         self._token_in_blacklist_callback = callback
         return callback
 
     def claims_verification_loader(self, callback):
         """
-        Sets the callback function for checking if the custom user claims are
-        valid for this access token.
+        This decorator sets the callback function that will be called when
+        a protected endpoint is accessed, and will check if the custom claims
+        in the JWT are valid. By default, this callback is not used. The
+        error returned if the claims are invalid can be controlled via the
+        :meth:`~flask_jwt_extended.JWTManager.claims_verification_failed_loader`
+        decorator.
 
-        This callback function must take one parameter, which is the custom
-        user claims present in the access token. This callback function should
-        return True if the user claims are valid, False otherwise.
+        This callback must be a function that takes one argument, which is the
+        custom claims (python dict) present in the JWT, and returns `True` if the
+        claims are valid, or `False` otherwise.
         """
         self._claims_verification_callback = callback
         return callback
 
     def claims_verification_failed_loader(self, callback):
         """
-        Sets the callback method to be called if the user claims verification
-        method returns False, indicating that the user claims are not valid.
+        This decorator sets the callback function that will be called if
+        the :meth:`~flask_jwt_extended.JWTManager.claims_verification_loader`
+        callback returns False, indicating that the user claims are not valid.
+        The default implementation will return a 400 status code with the JSON:
 
-        The default implementation will return the json:
-        '{"msg": "User claims verification failed"})' with a 400 status code
+        {"msg": "User claims verification failed"}
 
-        Callback must be a function that takes no arguments.
+        This callback must be a function that takes no arguments, and returns
+        a Flask response.
         """
         self._claims_verification_failed_callback = callback
         return callback

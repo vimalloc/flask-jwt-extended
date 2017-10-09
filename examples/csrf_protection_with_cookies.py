@@ -1,12 +1,13 @@
 from flask import Flask, jsonify, request
 
-from flask_jwt_extended import JWTManager, jwt_required, \
-    create_access_token, jwt_refresh_token_required, \
-    create_refresh_token, get_jwt_identity, set_access_cookies, \
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    jwt_refresh_token_required, create_refresh_token,
+    get_jwt_identity, set_access_cookies,
     set_refresh_cookies, unset_jwt_cookies
+)
 
 app = Flask(__name__)
-app.secret_key = 'super-secret'  # Change this!
 
 # Configure application to store JWTs in cookies
 app.config['JWT_TOKEN_LOCATION'] = ['cookies']
@@ -24,13 +25,16 @@ app.config['JWT_ACCESS_COOKIE_PATH'] = '/api/'
 app.config['JWT_REFRESH_COOKIE_PATH'] = '/token/refresh'
 
 # Enable csrf double submit protection. See this for a thorough
-# explination: http://www.redotheweb.com/2015/11/09/api-security.html
+# explanation: http://www.redotheweb.com/2015/11/09/api-security.html
 app.config['JWT_COOKIE_CSRF_PROTECT'] = True
+
+# Set the secret key to sign the JWTs with
+app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
 
 jwt = JWTManager(app)
 
 
-# By default, the CRSF cookies will be called  csrf_access_token and
+# By default, the CRSF cookies will be called csrf_access_token and
 # csrf_refresh_token, and in protected endpoints we will look for the
 # CSRF token in the 'X-CSRF-TOKEN' header. You can modify all of these
 # with various app.config options. Check the options page for details.
@@ -90,6 +94,7 @@ def logout():
 def protected():
     username = get_jwt_identity()
     return jsonify({'hello': 'from {}'.format(username)}), 200
+
 
 if __name__ == '__main__':
     app.run()

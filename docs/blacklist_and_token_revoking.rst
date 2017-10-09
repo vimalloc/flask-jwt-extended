@@ -12,10 +12,11 @@ tokens to have a short expires time so any damage a compromised token could
 cause is minimal.
 
 Blacklisting works by is providing a callback function to this extension, using the
-**@jwt.token_in_blacklist_loader** decorator. This method will be called whenever the
-specified tokens (``'access'`` and/or ``'refresh'``) are used to access a protected endpoint.
-If the callback function says that the token is revoked, we will not allow the
-call to continue, otherwise we will allow the call to access the endpoint as normal.
+:meth:`~flask_jwt_extended.JWTManager.token_in_blacklist_loader` decorator.
+This method will be called whenever the specified tokens (`access` and/or `refresh`)
+are used to access a protected endpoint. If the callback function says that the
+token is revoked, we will not allow the call to continue, otherwise we will
+allow the call to access the endpoint as normal.
 
 
 Here is a basic example of this in action.

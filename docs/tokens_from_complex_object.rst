@@ -1,26 +1,31 @@
 Tokens from Complex Objects
 ===========================
 
-A common pattern will be to have your users information (such as username and
-password) stored on disk somewhere. Lets say for example that we have a database
-which contains usernames, hashed passwords, and user roles. In the
-access token, we want the identity to be the username, and we want
-to store the users role as an additional claim.  We can do this with the
-**user_claims_loader** mentioned in the last section. However, is we pass just
-the identity (username) to the **user_claims_loader**,
-we would have to look up this user from the database twice. First time, when
-they access the login endpoint and we need to verify their username and password,
-and second time in the **user_claims_loader** function, so that we can fine what roles
-this user has. This isn't a huge deal, but obviously it could be more efficient.
+A very common setup is to have your users information (usernames,
+passwords, roles, etc) stored in a database. Now, lets pretend that we want to
+create an access tokens where the tokens identity is a username, and we also want
+to store a users roles as an additional claim in the token. We can do
+this with the :meth:`~flask_jwt_extended.JWTManager.user_claims_loader`
+decorator, discussed in the previous section. However, if we pass the username
+to the :meth:`~flask_jwt_extended.JWTManager.user_claims_loader`, we would end
+up needing to query this user from the database two times. The first time would
+be when login endpoint is hit and we need to verify a username and password.
+The second time would be in the
+:meth:`~flask_jwt_extended.JWTManager.user_claims_loader`
+function, because we need to query the roles for this user. This isn't a huge
+deal, but obviously it could be more efficient.
 
-This extension provides the ability to pass any object to the **create_access_token**
-method, which will then be passed to the **user_claims_loader** method. This lets
-us access the database only once. However, we still need to pull the username
-out of the object, to set as the identity for the access token. We have a second
-decorator we can use for this, **user_identity_loader**. This lets you create a
-function which takes any object passed in to the **create_access_token** and return
-a json serializable identity from that object.
+This extension provides the ability to pass any object to the
+:func:`~flask_jwt_extended.create_access_token` function, which will then be
+passed as is to the :meth:`~flask_jwt_extended.JWTManager.user_claims_loader`.
+This allows us access the database only once, but introduces a new
+issue that needs to be addressed. We still need to pull the username
+out of the object, so that we can have the username be the identity for the
+new token. We have a second decorator we can use for this,
+:meth:`~flask_jwt_extended.JWTManager.user_identity_loader`, which lets you
+take any object passed in to :func:`~flask_jwt_extended.create_access_token`
+and return a json serializable identity from that object.
 
-Here is an example of this in action
+Here is an example of this in action:
 
 .. literalinclude:: ../examples/tokens_from_complex_objects.py

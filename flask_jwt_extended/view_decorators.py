@@ -22,13 +22,13 @@ from flask_jwt_extended.utils import (
 
 def jwt_required(fn):
     """
-    If you decorate a view with this, it will ensure that the requester has a
-    valid JWT before calling the actual view. This does not check the freshness
-    of the token.
+    A decorator to protect a Flask endpoint.
 
-    See also: fresh_jwt_required()
+    If you decorate an endpoint with this, it will ensure that the requester
+    has a valid access token before allowing the endpoint to be called. This
+    does not check the freshness of the access token.
 
-    :param fn: The view function to decorate
+    See also: :func:`~flask_jwt_extended.fresh_jwt_required`
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -41,13 +41,17 @@ def jwt_required(fn):
 
 def jwt_optional(fn):
     """
-    If you decorate a view with this, it will check the request for a valid
-    JWT and put it into the Flask application context before calling the view.
-    If no authorization header is present, the view will be called without the
-    application context being changed. Other authentication errors are not
-    affected.
+    A decorator to optionally protect a Flask endpoint
 
-    :param fn: The view function to decorate
+    If an access token in present in the request, this will call the endpoint
+    with :func:`~flask_jwt_extended.get_jwt_identity` having the identity
+    of the access token. If no access token is present in the request,
+    this endpoint will still be called, but
+    :func:`~flask_jwt_extended.get_jwt_identity` will return `None` instead.
+
+    If there is an invalid access token in the request (expired, tampered with,
+    etc), this will still call the appropriate error handler instead of allowing
+    the endpoint to be called as if there is no access token in the request.
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -63,12 +67,13 @@ def jwt_optional(fn):
 
 def fresh_jwt_required(fn):
     """
-    If you decorate a vew with this, it will ensure that the requester has a
-    valid JWT before calling the actual view.
+    A decorator to protect a Flask endpoint.
 
-    See also: jwt_required()
+    If you decorate an endpoint with this, it will ensure that the requester
+    has a valid and fresh access token before allowing the endpoint to be
+    called.
 
-    :param fn: The view function to decorate
+    See also: :func:`~flask_jwt_extended.jwt_required`
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -85,9 +90,10 @@ def fresh_jwt_required(fn):
 
 def jwt_refresh_token_required(fn):
     """
-    If you decorate a view with this, it will insure that the requester has a
-    valid JWT refresh token before calling the actual view. If the token is
-    invalid, expired, not present, etc, the appropriate callback will be called
+    A decorator to protect a Flask endpoint.
+
+    If you decorate an endpoint with this, it will ensure that the requester
+    has a valid refresh token before allowing the endpoint to be called.
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):

@@ -1,9 +1,11 @@
 from flask import Flask, jsonify, request
-from flask_jwt_extended import JWTManager, jwt_required,\
-    create_access_token
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token
+)
 
 app = Flask(__name__)
-app.secret_key = 'super-secret'  # Change this!
+
+app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
 jwt = JWTManager(app)
 
 
@@ -14,9 +16,9 @@ jwt = JWTManager(app)
 def my_expired_token_callback():
     return jsonify({
         'status': 401,
-        'sub_status': 101,
+        'sub_status': 42,
         'msg': 'The token has expired'
-    }), 200
+    }), 401
 
 
 @app.route('/login', methods=['POST'])
@@ -34,6 +36,7 @@ def login():
 @jwt_required
 def protected():
     return jsonify({'hello': 'world'}), 200
+
 
 if __name__ == '__main__':
     app.run()

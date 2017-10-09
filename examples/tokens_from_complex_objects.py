@@ -1,33 +1,37 @@
 from flask import Flask, jsonify, request
-from flask_jwt_extended import JWTManager, jwt_required, \
-    create_access_token, get_jwt_identity
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity, get_jwt_claims
+)
 
 app = Flask(__name__)
-app.secret_key = 'super-secret'  # Change this!
 
-# Setup the Flask-JWT-Extended extension
+app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
 jwt = JWTManager(app)
 
 
-# This is a simple example of a complex object that we could build
-# a JWT from. In practice, this will normally be something that
-# requires a lookup from disk (such as SQLAlchemy)
+# This is an example of a complex object that we could build
+# a JWT from. In practice, this will likely be something
+# like a SQLAlchemy instance.
 class UserObject:
     def __init__(self, username, roles):
         self.username = username
         self.roles = roles
 
 
-# This method will get whatever object is passed into the
-# create_access_token method.
+# Create a function that will be called whenever create_access_token
+# is used. It will take whatever object is passed into the
+# create_access_token method, and lets us define what custom claims
+# should be added to the access token.
 @jwt.user_claims_loader
 def add_claims_to_access_token(user):
     return {'roles': user.roles}
 
 
-# This method will also get whatever object is passed into the
-# create_access_token method, and let us define what the identity
-# should be for this object
+# Create a function that will be called whenever create_access_token
+# is used. It will take whatever object is passed into the
+# create_access_token method, and lets us define what the identity
+# of the access token should be.
 @jwt.user_identity_loader
 def user_identity_lookup(user):
     return user.username
@@ -56,8 +60,12 @@ def login():
 @app.route('/protected', methods=['GET'])
 @jwt_required
 def protected():
-    current_user = get_jwt_identity()
-    return jsonify({'hello_from': current_user}), 200
+    ret = {
+        'current_identity': get_jwt_identity(),  # test
+        'current_roles': get_jwt_claims()  # ['foo', 'bar']
+    }
+    return jsonify(ret), 200
+
 
 if __name__ == '__main__':
     app.run()

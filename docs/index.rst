@@ -3,16 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Flask JWT Extended's documentation
+Flask-JWT-Extended's Documentation
 ==================================
 
-In here you will find examples of how to use Flask JWT Extended.
 
 .. toctree::
    :maxdepth: 2
 
    installation
    basic_usage
+   optional_endpoints
    add_custom_data_claims
    tokens_from_complex_object
    complex_objects_from_token

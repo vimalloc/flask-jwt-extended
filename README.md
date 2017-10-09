@@ -12,6 +12,7 @@ easier. These include:
 
 * Support for adding custom claims to JSON Web Tokens
 * Custom claims validation on received tokens
+* Verify custom claims when tokens access protected endpoints
 * Creating tokens from complex objects or complex object from received tokens
 * [Refresh tokens](https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/)
 * Token freshness and separate view decorators to only allow fresh tokens

@@ -1,6 +1,6 @@
 # Flask-JWT-Extended
 [![Build Status](https://travis-ci.org/vimalloc/flask-jwt-extended.svg?branch=master)](https://travis-ci.org/vimalloc/flask-jwt-extended)
-[![Coverage Status](https://coveralls.io/repos/github/vimalloc/flask-jwt-extended/badge.svg)](https://coveralls.io/github/vimalloc/flask-jwt-extended)
+[![Coverage Status](https://coveralls.io/repos/github/vimalloc/flask-jwt-extended/badge.svg?branch=master)](https://coveralls.io/github/vimalloc/flask-jwt-extended?branch=master)
 [![PyPI version](https://badge.fury.io/py/Flask-JWT-Extended.svg)](https://badge.fury.io/py/Flask-JWT-Extended)
 [![Documentation Status](https://readthedocs.org/projects/flask-jwt-extended/badge/)](http://flask-jwt-extended.readthedocs.io/en/latest/)
 

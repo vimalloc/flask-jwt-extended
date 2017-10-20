@@ -35,6 +35,8 @@ General Options:
 ``JWT_IDENTITY_CLAIM``            Claim in the tokens that is used as source of identity.
                                   For interoperativity, the JWT RFC recommends using ``'sub'``.
                                   Defaults to ``'identity'`` for legacy reasons.
+``JWT_USER_CLAIMS``               Claim in the tokens that is used to store user claims.
+                                  Defaults to ``'user_claims'``.
 ================================= =========================================
 
 

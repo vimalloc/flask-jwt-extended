@@ -37,7 +37,7 @@ def get_jwt_claims():
     in the JWT that is accessing the endpoint. If no custom user claims are
     present, an empty dict is returned instead.
     """
-    return get_raw_jwt().get('user_claims', {})
+    return get_raw_jwt().get(config.user_claims, {})
 
 
 def get_current_user():

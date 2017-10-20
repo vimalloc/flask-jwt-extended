@@ -185,6 +185,7 @@ class JWTManager(object):
         app.config.setdefault('JWT_BLACKLIST_TOKEN_CHECKS', ['access', 'refresh'])
 
         app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
+        app.config.setdefault('JWT_USER_CLAIMS', 'user_claims')
 
     def user_claims_loader(self, callback):
         """

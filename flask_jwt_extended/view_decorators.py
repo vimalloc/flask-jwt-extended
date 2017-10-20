@@ -216,8 +216,8 @@ def _decode_jwt_from_request(request_type):
 
     # Check if the custom claims in access tokens are valid
     if request_type == 'access':
-        if not verify_token_claims(decoded_token['user_claims']):
-            raise UserClaimsVerificationError('user_claims verification failed')
+        if not verify_token_claims(decoded_token[config.user_claims]):
+            raise UserClaimsVerificationError('User claims verification failed')
 
     # If blacklisting is enabled, see if this token has been revoked
     if _token_blacklisted(decoded_token, request_type):

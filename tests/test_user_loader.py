@@ -1,135 +1,85 @@
-import json
-import unittest
-from datetime import timedelta
-
-from flask import Flask, jsonify, request
+import pytest
+from flask import Flask, jsonify, json
 
 from flask_jwt_extended import (
-    JWTManager, create_access_token, create_refresh_token,
-    jwt_refresh_token_required, jwt_required, fresh_jwt_required,
-    jwt_optional, current_user
+    JWTManager, jwt_required, current_user, get_current_user,
+    create_access_token
 )
+from tests.utils import get_jwt_manager, make_headers
 
 
-class TestUserLoader(unittest.TestCase):
+@pytest.fixture(scope='function')
+def app():
+    app = Flask(__name__)
+    app.config['JWT_SECRET_KEY'] = 'foobarbaz'
+    JWTManager(app)
 
-    def setUp(self):
-        self.app = Flask(__name__)
-        self.app.secret_key = 'super=secret'
-        self.jwt_manager = JWTManager(self.app)
-        self.client = self.app.test_client()
+    @app.route('/get_user1', methods=['GET'])
+    @jwt_required
+    def get_user1():
+        return jsonify(foo=get_current_user()['username'])
 
-        @self.jwt_manager.user_loader_callback_loader
-        def user_loader(identity):
-            if identity == 'foobar':
-                return None
-            return identity
+    @app.route('/get_user2', methods=['GET'])
+    @jwt_required
+    def get_user2():
+        return jsonify(foo=current_user['username'])
 
-        @self.app.route('/auth/login', methods=['POST'])
-        def login():
-            username = request.get_json()['username']
-            ret = {
-                'access_token': create_access_token(username, fresh=True),
-                'refresh_token': create_refresh_token(username)
-            }
-            return jsonify(ret), 200
+    return app
 
-        @self.app.route('/refresh-protected')
-        @jwt_refresh_token_required
-        def refresh_endpoint():
-            return jsonify({'username': str(current_user)})
 
-        @self.app.route('/protected')
-        @jwt_required
-        def protected_endpoint():
-            return jsonify({'username': str(current_user)})
+@pytest.mark.parametrize("url", ['/get_user1', '/get_user2'])
+def test_load_valid_user(app, url):
+    jwt = get_jwt_manager(app)
 
-        @self.app.route('/fresh-protected')
-        @fresh_jwt_required
-        def fresh_protected_endpoint():
-            return jsonify({'username': str(current_user)})
+    @jwt.user_loader_callback_loader
+    def user_load_callback(identity):
+        return {'username': identity}
 
-        @self.app.route('/partially-protected')
-        @jwt_optional
-        def optional_endpoint():
-            return jsonify({'username': str(current_user)})
+    test_client = app.test_client()
+    with app.test_request_context():
+        access_token = create_access_token('username')
 
-    def _jwt_get(self, url, jwt):
-        response = self.client.get(url, content_type='application/json',
-                                   headers={'Authorization': 'Bearer {}'.format(jwt)})
-        status_code = response.status_code
-        data = json.loads(response.get_data(as_text=True))
-        return status_code, data
+    response = test_client.get(url, headers=make_headers(access_token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 200
+    assert json_data == {'foo': 'username'}
 
-    def test_user_loads(self):
-        response = self.client.post('/auth/login', content_type='application/json',
-                                    data=json.dumps({'username': 'test'}))
-        data = json.loads(response.get_data(as_text=True))
-        access_token = data['access_token']
-        refresh_token = data['refresh_token']
 
-        status, data = self._jwt_get('/protected', access_token)
-        self.assertEqual(status, 200)
-        self.assertEqual(data, {'username': 'test'})
+@pytest.mark.parametrize("url", ['/get_user1', '/get_user2'])
+def test_load_invalid_user(app, url):
+    jwt = get_jwt_manager(app)
 
-        status, data = self._jwt_get('/fresh-protected', access_token)
-        self.assertEqual(status, 200)
-        self.assertEqual(data, {'username': 'test'})
+    @jwt.user_loader_callback_loader
+    def user_load_callback(identity):
+        return None
 
-        status, data = self._jwt_get('/partially-protected', access_token)
-        self.assertEqual(status, 200)
-        self.assertEqual(data, {'username': 'test'})
+    test_client = app.test_client()
+    with app.test_request_context():
+        access_token = create_access_token('username')
 
-        status, data = self._jwt_get('/refresh-protected', refresh_token)
-        self.assertEqual(status, 200)
-        self.assertEqual(data, {'username': 'test'})
+    response = test_client.get(url, headers=make_headers(access_token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 401
+    assert json_data == {'msg': "Error loading the user username"}
 
-    def test_failed_user_loads(self):
-        response = self.client.post('/auth/login', content_type='application/json',
-                                    data=json.dumps({'username': 'foobar'}))
-        data = json.loads(response.get_data(as_text=True))
-        access_token = data['access_token']
-        refresh_token = data['refresh_token']
 
-        status, data = self._jwt_get('/protected', access_token)
-        self.assertEqual(status, 401)
-        self.assertEqual(data, {'msg': 'Error loading the user foobar'})
+@pytest.mark.parametrize("url", ['/get_user1', '/get_user2'])
+def test_custom_user_loader_errors(app, url):
+    jwt = get_jwt_manager(app)
 
-        status, data = self._jwt_get('/fresh-protected', access_token)
-        self.assertEqual(status, 401)
-        self.assertEqual(data, {'msg': 'Error loading the user foobar'})
+    @jwt.user_loader_callback_loader
+    def user_load_callback(identity):
+        return None
 
-        status, data = self._jwt_get('/partially-protected', access_token)
-        self.assertEqual(status, 401)
-        self.assertEqual(data, {'msg': 'Error loading the user foobar'})
+    @jwt.user_loader_error_loader
+    def user_loader_error(identity):
+        return jsonify(foo='bar'), 201
 
-        status, data = self._jwt_get('/refresh-protected', refresh_token)
-        self.assertEqual(status, 401)
-        self.assertEqual(data, {'msg': 'Error loading the user foobar'})
+    test_client = app.test_client()
+    with app.test_request_context():
+        access_token = create_access_token('username')
 
-    def test_custom_error_callback(self):
-        @self.jwt_manager.user_loader_error_loader
-        def custom_user_loader_error_callback(identity):
-            return jsonify({"msg": "Not found"}), 404
-
-        response = self.client.post('/auth/login', content_type='application/json',
-                                    data=json.dumps({'username': 'foobar'}))
-        data = json.loads(response.get_data(as_text=True))
-        access_token = data['access_token']
-        refresh_token = data['refresh_token']
-
-        status, data = self._jwt_get('/protected', access_token)
-        self.assertEqual(status, 404)
-        self.assertEqual(data, {'msg': 'Not found'})
-
-        status, data = self._jwt_get('/fresh-protected', access_token)
-        self.assertEqual(status, 404)
-        self.assertEqual(data, {'msg': 'Not found'})
-
-        status, data = self._jwt_get('/partially-protected', access_token)
-        self.assertEqual(status, 404)
-        self.assertEqual(data, {'msg': 'Not found'})
-
-        status, data = self._jwt_get('/refresh-protected', refresh_token)
-        self.assertEqual(status, 404)
-        self.assertEqual(data, {'msg': 'Not found'})
+    response = test_client.get(url, headers=make_headers(access_token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 201
+    assert json_data == {'foo': "bar"}

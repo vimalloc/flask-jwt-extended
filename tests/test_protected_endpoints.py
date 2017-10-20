@@ -272,8 +272,8 @@ class TestEndpoints(unittest.TestCase):
                                    headers={'Authorization': auth_header})
         data = json.loads(response.get_data(as_text=True))
         status_code = response.status_code
-        self.assertEqual(status_code, 422)
-        self.assertIn('msg', data)
+        self.assertEqual(data, {'msg': 'unprotected hello world'})
+        self.assertEqual(status_code, 200)
 
         # Test with type not being Bearer in authorization header
         auth_header = "BANANA {}".format(access_token)
@@ -281,8 +281,8 @@ class TestEndpoints(unittest.TestCase):
                                    headers={'Authorization': auth_header})
         data = json.loads(response.get_data(as_text=True))
         status_code = response.status_code
-        self.assertEqual(status_code, 422)
-        self.assertIn('msg', data)
+        self.assertEqual(data, {'msg': 'unprotected hello world'})
+        self.assertEqual(status_code, 200)
 
         # Test with too many items in auth header
         auth_header = "Bearer {} BANANA".format(access_token)
@@ -290,8 +290,8 @@ class TestEndpoints(unittest.TestCase):
                                    headers={'Authorization': auth_header})
         data = json.loads(response.get_data(as_text=True))
         status_code = response.status_code
-        self.assertEqual(status_code, 422)
-        self.assertIn('msg', data)
+        self.assertEqual(data, {'msg': 'unprotected hello world'})
+        self.assertEqual(status_code, 200)
 
     def test_bad_tokens(self):
         # Test expired access token
@@ -527,8 +527,8 @@ class TestEndpoints(unittest.TestCase):
         self.app.config['JWT_HEADER_TYPE'] = ''
         status, data = self._jwt_get('/partially-protected', access_token,
                                      header_type='Bearer')
-        self.assertIn('msg', data)
-        self.assertEqual(status, 422)
+        self.assertEqual(data, {'msg': 'unprotected hello world'})
+        self.assertEqual(status, 200)
 
         self.app.config['JWT_HEADER_TYPE'] = 'Bearer'
         self.app.config['JWT_HEADER_NAME'] = 'Auth'

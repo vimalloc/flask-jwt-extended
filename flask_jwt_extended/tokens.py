@@ -4,6 +4,7 @@ import uuid
 import jwt
 
 from flask_jwt_extended.exceptions import JWTDecodeError
+from flask_jwt_extended.config import config
 
 
 def _create_csrf_token():
@@ -52,7 +53,7 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
 
     # Add `user_claims` only is not empty or None.
     if user_claims:
-        token_data['user_claims'] = user_claims
+        token_data[config.user_claims] = user_claims
 
     if csrf:
         token_data['csrf'] = _create_csrf_token()
@@ -107,8 +108,8 @@ def decode_jwt(encoded_token, secret, algorithm, csrf, identity_claim):
     if data['type'] == 'access':
         if 'fresh' not in data:
             raise JWTDecodeError("Missing claim: fresh")
-        if 'user_claims' not in data:
-            data['user_claims'] = {}
+        if config.user_claims not in data:
+            data[config.user_claims] = {}
     if csrf:
         if 'csrf' not in data:
             raise JWTDecodeError("Missing claim: csrf")

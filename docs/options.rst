@@ -1,3 +1,5 @@
+.. _Configuration Options:
+
 Configuration Options
 =====================
 
@@ -32,7 +34,9 @@ General Options:
                                   such as ``RS*`` or ``ES*``. PEM format expected.
 ``JWT_IDENTITY_CLAIM``            Claim in the tokens that is used as source of identity.
                                   For interoperativity, the JWT RFC recommends using ``'sub'``.
-                                  Defaults to ``'identity'``.
+                                  Defaults to ``'identity'`` for legacy reasons.
+``JWT_USER_CLAIMS``               Claim in the tokens that is used to store user claims.
+                                  Defaults to ``'user_claims'``.
 ================================= =========================================
 
 
@@ -113,7 +117,7 @@ Blacklist Options:
 .. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
 
 ================================= =========================================
-``JWT_BLACKLIST_ENABLED``         Enable/disable token blacklisting and revoking. Defaults to ``False``
+``JWT_BLACKLIST_ENABLED``         Enable/disable token revoking. Defaults to ``False``
 ``JWT_BLACKLIST_TOKEN_CHECKS``    What token types to check against the blacklist. The options are
                                   ``'refresh'`` or  ``'access'``. You can pass in a list to check
                                   more then one type. Defaults to ``['access', 'refresh']``.

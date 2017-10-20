@@ -1,8 +1,8 @@
 JWT in Cookies
 ==============
-If the frontend that is consuming this backend is a website, you may be tempted
-to store your JWTs in the browser localStorage or sessionStorage. There is nothing
-necessarily wrong with this, but if you have any sort of XSS vulnerability on your
+If the frontend that is consuming this backend is a website, you may be storing
+JWTs in the browser localStorage or sessionStorage. There is nothing
+wrong with this, but if you have any sort of XSS vulnerability on your
 site, an attacker will be able to trivially steal your refresh and access tokens.
 If you want some additional security on your site, you can save your JWTs in a
 httponly cookie instead, which keeps javascript from being able to access the
@@ -41,7 +41,7 @@ local/session storage, and use them whenever they wanted. If this additional
 security is worth the added complexity of using cookies and double submit CSRF
 protection is a choice you will have to make.
 
-Here is an example of what this would look like:
+Here is an example of using cookies with CSRF protection:
 
 .. literalinclude::  ../examples/csrf_protection_with_cookies.py
 
@@ -51,7 +51,7 @@ to the caller, like such:
 
 .. code-block:: python
 
-  app.config('JWT_CSRF_IN_COOKIES') = False
+  app.config['JWT_CSRF_IN_COOKIES'] = False
   #...
   #...
   #...

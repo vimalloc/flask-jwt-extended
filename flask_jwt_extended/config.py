@@ -227,6 +227,10 @@ class _Config(object):
     def identity_claim(self):
         return current_app.config['JWT_IDENTITY_CLAIM']
 
+    @property
+    def user_claims(self):
+        return current_app.config['JWT_USER_CLAIMS']
+
 config = _Config()
 
 

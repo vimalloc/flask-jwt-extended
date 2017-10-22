@@ -9,10 +9,10 @@ from flask_jwt_extended import (
 
 # Setup flask
 app = Flask(__name__)
-app.secret_key = 'ChangeMe!'
 
 # Enable blacklisting and specify what kind of tokens to check
 # against the blacklist
+app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
 app.config['JWT_BLACKLIST_ENABLED'] = True
 app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
 jwt = JWTManager(app)
@@ -23,8 +23,8 @@ jwt = JWTManager(app)
 # great option. In this example, we will be using an in memory
 # store, just to show you how this might work. For more
 # complete examples, check out these:
-# https://github.com/vimalloc/flask-jwt-extended/examples/redis_blacklist.py
-# https://github.com/vimalloc/flask-jwt-extended/examples/database_blacklist
+# https://github.com/vimalloc/flask-jwt-extended/blob/master/examples/redis_blacklist.py
+# https://github.com/vimalloc/flask-jwt-extended/tree/master/examples/database_blacklist
 blacklist = set()
 
 
@@ -37,7 +37,7 @@ blacklist = set()
 # and to consider tokens that aren't in the blacklist
 # (aka tokens you didn't create) as revoked. These are
 # just two options, and this can be tailored to whatever
-#  your application needs.
+# your application needs.
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
     jti = decrypted_token['jti']

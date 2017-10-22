@@ -1,9 +1,11 @@
 from flask import Flask, jsonify, request
 
-from flask_jwt_extended import JWTManager, jwt_required, \
-    create_access_token,  jwt_refresh_token_required, \
-    create_refresh_token, get_jwt_identity, set_access_cookies, \
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    jwt_refresh_token_required, create_refresh_token,
+    get_jwt_identity, set_access_cookies,
     set_refresh_cookies, unset_jwt_cookies
+)
 
 # NOTE: This is just a basic example of how to enable cookies. This is
 #       vulnerable to CSRF attacks, and should not be used as is. See
@@ -11,7 +13,6 @@ from flask_jwt_extended import JWTManager, jwt_required, \
 
 
 app = Flask(__name__)
-app.secret_key = 'super-secret'  # Change this!
 
 # Configure application to store JWTs in cookies. Whenever you make
 # a request to a protected endpoint, you will need to send in the
@@ -26,12 +27,20 @@ app.config['JWT_TOKEN_LOCATION'] = ['cookies']
 app.config['JWT_ACCESS_COOKIE_PATH'] = '/api/'
 app.config['JWT_REFRESH_COOKIE_PATH'] = '/token/refresh'
 
+# Disable CSRF protection for this example. In almost every case,
+# this is a bad idea. See examples/csrf_protection_with_cookies.py
+# for how safely store JWTs in cookies
+app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+
+# Set the secret key to sign the JWTs with
+app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
+
 jwt = JWTManager(app)
 
 
 # Use the set_access_cookie() and set_refresh_cookie() on a response
-# object to set the JWTs. You can configure the cookie names, etc via
-# various app.config options
+# object to set the JWTs in the response cookies. You can configure
+# the cookie names and other settings via various app.config options
 @app.route('/token/auth', methods=['POST'])
 def login():
     username = request.json.get('username', None)
@@ -51,8 +60,7 @@ def login():
 
 
 # Same thing as login here, except we are only setting a new cookie
-# for the access token. Same idea as we have already seen with the
-# refresh tokens
+# for the access token.
 @app.route('/token/refresh', methods=['POST'])
 @jwt_refresh_token_required
 def refresh():
@@ -87,6 +95,7 @@ def logout():
 def protected():
     username = get_jwt_identity()
     return jsonify({'hello': 'from {}'.format(username)}), 200
+
 
 if __name__ == '__main__':
     app.run()

@@ -1,10 +1,13 @@
 from flask import Flask, jsonify, request
-from flask_jwt_extended import JWTManager, jwt_required, \
-    create_access_token, jwt_refresh_token_required, \
-    create_refresh_token, get_jwt_identity
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    jwt_refresh_token_required, create_refresh_token,
+    get_jwt_identity
+)
 
 app = Flask(__name__)
-app.secret_key = 'super-secret'  # Change this!
+
+app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
 jwt = JWTManager(app)
 
 
@@ -43,7 +46,8 @@ def refresh():
 @jwt_required
 def protected():
     username = get_jwt_identity()
-    return jsonify({'hello': 'from {}'.format(username)}), 200
+    return jsonify(logged_in_as=username), 200
+
 
 if __name__ == '__main__':
     app.run()

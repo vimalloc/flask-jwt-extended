@@ -7,7 +7,6 @@ from flask_jwt_extended import (
     create_refresh_token, set_access_cookies, set_refresh_cookies,
     unset_jwt_cookies
 )
-from flask_jwt_extended.config import config
 
 
 def _get_cookie_from_response(response, cookie_name):
@@ -51,60 +50,152 @@ def app():
     def protected():
         return jsonify(foo='bar')
 
+    @app.route('/post_protected', methods=['POST'])
+    @jwt_required
+    def post_protected():
+        return jsonify(foo='bar')
+
     @app.route('/refresh_protected', methods=['GET'])
     @jwt_refresh_token_required
     def refresh_protected():
         return jsonify(foo='bar')
 
+    @app.route('/post_refresh_protected', methods=['POST'])
+    @jwt_refresh_token_required
+    def post_refresh_protected():
+        return jsonify(foo='bar')
+
     return app
 
 
-def test_jwt_required_with_valid_cookies(app):
+@pytest.mark.parametrize("options", [
+    ('/refresh_token', 'refresh_token_cookie', '/refresh_protected'),
+    ('/access_token', 'access_token_cookie', '/protected')
+])
+def test_jwt_refresh_required_with_cookies(app, options):
     test_client = app.test_client()
+    auth_url, cookie_name, protected_url = options
 
     # Test without cookies
-    response = test_client.get('/protected')
+    response = test_client.get(protected_url)
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing cookie "access_token_cookie"'}
+    assert json_data == {'msg': 'Missing cookie "{}"'.format(cookie_name)}
 
     # Test after receiving cookies
-    test_client.get('/access_token')
-    response = test_client.get('/protected')
+    test_client.get(auth_url)
+    response = test_client.get(protected_url)
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
     assert json_data == {'foo': 'bar'}
 
     # Test after issuing a 'logout' to delete the cookies
     test_client.get('/delete_tokens')
-    response = test_client.get('/protected')
+    response = test_client.get(protected_url)
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing cookie "access_token_cookie"'}
+    assert json_data == {'msg': 'Missing cookie "{}"'.format(cookie_name)}
 
 
-def test_jwt_refresh_required_with_cookies(app):
+@pytest.mark.parametrize("options", [
+    ('/refresh_token', 'csrf_refresh_token', '/post_refresh_protected'),
+    ('/access_token', 'csrf_access_token', '/post_protected')
+])
+def test_default_access_csrf_protection(app, options):
     test_client = app.test_client()
+    auth_url, csrf_cookie_name, post_url = options
 
-    # Test without cookies
-    response = test_client.get('/refresh_protected')
+    # Get the jwt cookies and csrf double submit tokens
+    response = test_client.get(auth_url)
+    csrf_cookie = _get_cookie_from_response(response, csrf_cookie_name)
+    csrf_token = csrf_cookie[csrf_cookie_name]
+
+    # Test you cannot post without the additional csrf protection
+    response = test_client.post(post_url)
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing cookie "refresh_token_cookie"'}
+    assert json_data == {'msg': 'Missing CSRF token in headers'}
 
-    # Test after receiving cookies
-    test_client.get('/refresh_token')
-    response = test_client.get('/refresh_protected')
+    # Test that you can post with the csrf double submit value
+    csrf_headers = {'X-CSRF-TOKEN': csrf_token}
+    response = test_client.post(post_url, headers=csrf_headers)
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
     assert json_data == {'foo': 'bar'}
 
-    # Test after issuing a 'logout' to delete the cookies
-    test_client.get('/delete_tokens')
-    response = test_client.get('/protected')
+
+@pytest.mark.parametrize("options", [
+    ('/refresh_token', '/post_refresh_protected'),
+    ('/access_token', '/post_protected')
+])
+def test_csrf_disabled(app, options):
+    app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+    test_client = app.test_client()
+    auth_url, post_url = options
+
+    # Get the jwt cookies and csrf double submit tokens
+    test_client.get(auth_url)
+    response = test_client.post(post_url)
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 200
+    assert json_data == {'foo': 'bar'}
+
+
+@pytest.mark.parametrize("options", [
+    ('/refresh_token', 'csrf_refresh_token', '/post_refresh_protected'),
+    ('/access_token', 'csrf_access_token', '/post_protected')
+])
+def test_csrf_with_custom_header_names(app, options):
+    app.config['JWT_ACCESS_CSRF_HEADER_NAME'] = 'FOO'
+    app.config['JWT_REFRESH_CSRF_HEADER_NAME'] = 'FOO'
+    test_client = app.test_client()
+    auth_url, csrf_cookie_name, post_url = options
+
+    # Get the jwt cookies and csrf double submit tokens
+    response = test_client.get(auth_url)
+    csrf_cookie = _get_cookie_from_response(response, csrf_cookie_name)
+    csrf_token = csrf_cookie[csrf_cookie_name]
+
+    # Test that you can post with the csrf double submit value
+    csrf_headers = {'FOO': csrf_token}
+    response = test_client.post(post_url, headers=csrf_headers)
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 200
+    assert json_data == {'foo': 'bar'}
+
+
+@pytest.mark.parametrize("options", [
+    ('/refresh_token', 'csrf_refresh_token', '/refresh_protected', '/post_refresh_protected'),
+    ('/access_token', 'csrf_access_token', '/protected', '/post_protected')
+])
+def test_custom_csrf_methods(app, options):
+    app.config['JWT_CSRF_METHODS'] = ['GET']
+    test_client = app.test_client()
+    auth_url, csrf_cookie_name, get_url, post_url = options
+
+    # Get the jwt cookies and csrf double submit tokens
+    response = test_client.get(auth_url)
+    csrf_cookie = _get_cookie_from_response(response, csrf_cookie_name)
+    csrf_token = csrf_cookie[csrf_cookie_name]
+
+    # Insure we can now do posts without csrf
+    response = test_client.post(post_url)
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 200
+    assert json_data == {'foo': 'bar'}
+
+    # Insure GET requests now fail without csrf
+    response = test_client.get(get_url)
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing cookie "access_token_cookie"'}
+    assert json_data == {'msg': 'Missing CSRF token in headers'}
+
+    # Insure GET requests now succeed with csrf
+    csrf_headers = {'X-CSRF-TOKEN': csrf_token}
+    response = test_client.get(get_url, headers=csrf_headers)
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 200
+    assert json_data == {'foo': 'bar'}
 
 
 def test_setting_cookies_wihout_cookies_enabled(app):
@@ -278,6 +369,5 @@ def test_cookies_without_csrf(app):
     refresh_cookie = _get_cookie_from_response(response, 'refresh_token_cookie')
     assert 'refresh_token_cookie' in refresh_cookie
 
-# TODO test csrf with multi methods
 # TODO test headers
 # TODO test cookies and headers together

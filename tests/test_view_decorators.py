@@ -165,15 +165,6 @@ def test_jwt_optional(app):
     assert response.status_code == 401
     assert json_data == {'msg': 'Token has expired'}
 
-# test_jwt_manager
-# test_blacklisting
-# test_csrf_protection
-# test_complex_objects_from_token
-# test_token_from_complex_objects
-# test_fresh_jwt_required
-# test different header name
-# test different header type
-# test cookies without csrf
-# test cookies with csrf
-# test asymmetric crypto
-# test different name for user claims key in dict
+# TODO test different header name and type
+# TODO test asymmetric crypto
+# TODO test different name for user claims key in dict

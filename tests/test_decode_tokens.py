@@ -6,7 +6,8 @@ from flask import Flask
 from jwt import ExpiredSignatureError
 
 from flask_jwt_extended import (
-    JWTManager, create_access_token, decode_token, create_refresh_token
+    JWTManager, create_access_token, decode_token, create_refresh_token,
+    get_jti
 )
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import JWTDecodeError
@@ -110,3 +111,10 @@ def test_alternate_identity_claim(app, default_access_token):
         decoded = decode_token(token)
         assert 'sub' in decoded
         assert 'identity' not in decoded
+
+
+def test_get_jti(app, default_access_token):
+    token = _encode_token(app, default_access_token)
+
+    with app.test_request_context():
+        assert default_access_token['jti'] == get_jti(token)

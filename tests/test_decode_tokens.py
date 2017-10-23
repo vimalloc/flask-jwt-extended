@@ -11,7 +11,7 @@ from flask_jwt_extended import (
 )
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import JWTDecodeError
-from tests.utils import get_jwt_manager
+from tests.utils import get_jwt_manager, encode_token
 
 
 @pytest.fixture(scope='function')
@@ -36,16 +36,6 @@ def default_access_token(app):
         }
 
 
-def _encode_token(app, token_data):
-    with app.test_request_context():
-        token = jwt.encode(
-            token_data,
-            config.decode_key,
-            algorithm=config.algorithm
-        )
-        return token.decode('utf-8')
-
-
 @pytest.mark.parametrize("user_loader_return", [{}, None])
 def test_no_user_claims(app, user_loader_return):
     jwtM = get_jwt_manager(app)
@@ -67,7 +57,7 @@ def test_no_user_claims(app, user_loader_return):
 @pytest.mark.parametrize("missing_claim", ['jti', 'type', 'identity', 'fresh', 'csrf'])
 def test_missing_jti_claim(app, default_access_token, missing_claim):
     del default_access_token[missing_claim]
-    missing_jwt_token = _encode_token(app, default_access_token)
+    missing_jwt_token = encode_token(app, default_access_token)
 
     with pytest.raises(JWTDecodeError):
         with app.test_request_context():
@@ -76,7 +66,7 @@ def test_missing_jti_claim(app, default_access_token, missing_claim):
 
 def test_bad_token_type(app, default_access_token):
     default_access_token['type'] = 'banana'
-    bad_type_token = _encode_token(app, default_access_token)
+    bad_type_token = encode_token(app, default_access_token)
 
     with pytest.raises(JWTDecodeError):
         with app.test_request_context():
@@ -98,7 +88,7 @@ def test_alternate_identity_claim(app, default_access_token):
     app.config['JWT_IDENTITY_CLAIM'] = 'sub'
 
     # Insure decoding fails if the claim isn't there
-    token = _encode_token(app, default_access_token)
+    token = encode_token(app, default_access_token)
     with pytest.raises(JWTDecodeError):
         with app.test_request_context():
             decode_token(token)
@@ -106,7 +96,7 @@ def test_alternate_identity_claim(app, default_access_token):
     # Insure the claim exists in the decoded jwt
     del default_access_token['identity']
     default_access_token['sub'] = 'username'
-    token = _encode_token(app, default_access_token)
+    token = encode_token(app, default_access_token)
     with app.test_request_context():
         decoded = decode_token(token)
         assert 'sub' in decoded
@@ -114,7 +104,7 @@ def test_alternate_identity_claim(app, default_access_token):
 
 
 def test_get_jti(app, default_access_token):
-    token = _encode_token(app, default_access_token)
+    token = encode_token(app, default_access_token)
 
     with app.test_request_context():
         assert default_access_token['jti'] == get_jti(token)

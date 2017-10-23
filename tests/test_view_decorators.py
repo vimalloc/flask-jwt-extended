@@ -6,7 +6,7 @@ from flask_jwt_extended import (
     jwt_required, fresh_jwt_required, JWTManager, jwt_refresh_token_required,
     jwt_optional, create_access_token, create_refresh_token, get_jwt_identity
 )
-from tests.utils import make_headers
+from tests.utils import make_headers, encode_token, get_jwt_manager
 
 
 @pytest.fixture(scope='function')
@@ -71,6 +71,7 @@ def test_jwt_required(app):
 
 
 def test_fresh_jwt_required(app):
+    jwtM = get_jwt_manager(app)
     url = '/fresh_protected'
 
     test_client = app.test_client()
@@ -98,6 +99,16 @@ def test_fresh_jwt_required(app):
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
     assert json_data == {'msg': 'Only access tokens can access this endpoint'}
+
+    # Test with custom response
+    @jwtM.needs_fresh_token_loader
+    def custom_response():
+        return jsonify(msg='foobar'), 201
+
+    response = test_client.get(url, headers=make_headers(access_token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 201
+    assert json_data == {'msg': 'foobar'}
 
 
 def test_refresh_jwt_required(app):
@@ -164,6 +175,86 @@ def test_jwt_optional(app):
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
     assert json_data == {'msg': 'Token has expired'}
+
+
+def test_invalid_jwt(app):
+    url = '/protected'
+    jwtM = get_jwt_manager(app)
+    test_client = app.test_client()
+    invalid_token = "aaaaa.bbbbb.ccccc"
+
+    # Test default response
+    response = test_client.get(url, headers=make_headers(invalid_token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 422
+    assert json_data == {'msg': 'Invalid header padding'}
+
+    # Test custom response
+    @jwtM.invalid_token_loader
+    def custom_response(err_str):
+        return jsonify(msg='foobar'), 201
+
+    response = test_client.get(url, headers=make_headers(invalid_token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 201
+    assert json_data == {'msg': 'foobar'}
+
+
+def test_jwt_missing_claims(app):
+    url = '/protected'
+    test_client = app.test_client()
+    token = encode_token(app, {'foo': 'bar'})
+
+    response = test_client.get(url, headers=make_headers(token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 422
+    assert json_data == {'msg': 'Missing claim: jti'}
+
+
+def test_expired_token(app):
+    url = '/protected'
+    jwtM = get_jwt_manager(app)
+    test_client = app.test_client()
+    with app.test_request_context():
+        token = create_access_token('username', expires_delta=timedelta(minutes=-1))
+
+    # Test default response
+    response = test_client.get(url, headers=make_headers(token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 401
+    assert json_data == {'msg': 'Token has expired'}
+
+    # Test custom response
+    @jwtM.expired_token_loader
+    def custom_response():
+        return jsonify(msg='foobar'), 201
+
+    response = test_client.get(url, headers=make_headers(token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 201
+    assert json_data == {'msg': 'foobar'}
+
+
+def test_no_token(app):
+    url = '/protected'
+    jwtM = get_jwt_manager(app)
+    test_client = app.test_client()
+
+    # Test default response
+    response = test_client.get(url, headers=None)
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 401
+    assert json_data == {'msg': 'Missing Authorization Header'}
+
+    # Test custom response
+    @jwtM.unauthorized_loader
+    def custom_response(err_str):
+        return jsonify(msg='foobar'), 201
+
+    response = test_client.get(url, headers=None)
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 201
+    assert json_data == {'msg': 'foobar'}
 
 # TODO test different header name and type
 # TODO test asymmetric crypto

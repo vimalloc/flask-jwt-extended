@@ -128,6 +128,23 @@ def test_default_access_csrf_protection(app, options):
     ('/refresh_token', '/post_refresh_protected'),
     ('/access_token', '/post_protected')
 ])
+def test_non_matching_csrf_token(app, options):
+    test_client = app.test_client()
+    auth_url, post_url = options
+
+    # Get the jwt cookies and csrf double submit tokens
+    test_client.get(auth_url)
+    csrf_headers = {'X-CSRF-TOKEN': 'totally_wrong_token'}
+    response = test_client.post(post_url, headers=csrf_headers)
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 401
+    assert json_data == {'msg': 'CSRF double submit tokens do not match'}
+
+
+@pytest.mark.parametrize("options", [
+    ('/refresh_token', '/post_refresh_protected'),
+    ('/access_token', '/post_protected')
+])
 def test_csrf_disabled(app, options):
     app.config['JWT_COOKIE_CSRF_PROTECT'] = False
     test_client = app.test_client()

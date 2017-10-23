@@ -255,7 +255,3 @@ def test_no_token(app):
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 201
     assert json_data == {'msg': 'foobar'}
-
-# TODO test different header name and type
-# TODO test asymmetric crypto
-# TODO test different name for user claims key in dict

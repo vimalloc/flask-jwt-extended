@@ -385,6 +385,3 @@ def test_cookies_without_csrf(app):
     assert len(cookies) == 1
     refresh_cookie = _get_cookie_from_response(response, 'refresh_token_cookie')
     assert 'refresh_token_cookie' in refresh_cookie
-
-# TODO test headers
-# TODO test cookies and headers together

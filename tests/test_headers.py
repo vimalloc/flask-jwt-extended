@@ -70,6 +70,14 @@ def test_custom_header_type(app):
     assert response.status_code == 200
     assert json_data == {'foo': 'bar'}
 
+    # Insure header with too many parts fails
+    app.config['JWT_HEADER_TYPE'] = ''
+    access_headers = {'Authorization': 'Bearer {}'.format(access_token)}
+    response = test_client.get('/protected', headers=access_headers)
+    json_data = json.loads(response.get_data(as_text=True))
+    assert json_data == {'msg': "Bad Authorization header. Expected value '<JWT>'"}
+    assert response.status_code == 422
+
 
 def test_missing_headers(app):
     test_client = app.test_client()

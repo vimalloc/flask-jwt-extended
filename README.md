@@ -48,7 +48,7 @@ We are on irc! You can come chat with us in the ```#flask-jwt-extended``` channe
 ### Testing and Code Coverage
 We require 100% code coverage in our unit tests. You can run the tests locally
 with `tox` which will print out a code coverage report. Creating a pull request
-will run the tests against python 2.7, 3,4, 3,5, 3,6, and PyPy.
+will run the tests against python 2.7, 3.4, 3.5, 3.6, and PyPy.
 ```
 $ tox
 ```

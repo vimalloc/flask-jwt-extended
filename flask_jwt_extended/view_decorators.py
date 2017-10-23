@@ -34,6 +34,8 @@ def jwt_required(fn):
     def wrapper(*args, **kwargs):
         jwt_data = _decode_jwt_from_request(request_type='access')
         ctx_stack.top.jwt = jwt_data
+        if not verify_token_claims(jwt_data[config.user_claims]):
+            raise UserClaimsVerificationError('User claims verification failed')
         _load_user(jwt_data[config.identity_claim])
         return fn(*args, **kwargs)
     return wrapper
@@ -58,6 +60,8 @@ def jwt_optional(fn):
         try:
             jwt_data = _decode_jwt_from_request(request_type='access')
             ctx_stack.top.jwt = jwt_data
+            if not verify_token_claims(jwt_data[config.user_claims]):
+                raise UserClaimsVerificationError('User claims verification failed')
             _load_user(jwt_data[config.identity_claim])
         except (NoAuthorizationError, InvalidHeaderError):
             pass
@@ -77,12 +81,12 @@ def fresh_jwt_required(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        # Check if the token is fresh
         jwt_data = _decode_jwt_from_request(request_type='access')
+        ctx_stack.top.jwt = jwt_data
         if not jwt_data['fresh']:
             raise FreshTokenRequired('Fresh token required')
-
-        ctx_stack.top.jwt = jwt_data
+        if not verify_token_claims(jwt_data[config.user_claims]):
+            raise UserClaimsVerificationError('User claims verification failed')
         _load_user(jwt_data[config.identity_claim])
         return fn(*args, **kwargs)
     return wrapper
@@ -213,11 +217,6 @@ def _decode_jwt_from_request(request_type):
     # Make sure the type of token we received matches the request type we expect
     if decoded_token['type'] != request_type:
         raise WrongTokenError('Only {} tokens can access this endpoint'.format(request_type))
-
-    # Check if the custom claims in access tokens are valid
-    if request_type == 'access':
-        if not verify_token_claims(decoded_token[config.user_claims]):
-            raise UserClaimsVerificationError('User claims verification failed')
 
     # If blacklisting is enabled, see if this token has been revoked
     if _token_blacklisted(decoded_token, request_type):

@@ -255,3 +255,17 @@ def test_no_token(app):
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 201
     assert json_data == {'msg': 'foobar'}
+
+
+def test_different_token_algorightm(app):
+    url = '/protected'
+    test_client = app.test_client()
+    with app.test_request_context():
+        token = create_access_token('username')
+
+    app.config['JWT_ALGORITHM'] = 'HS512'
+
+    response = test_client.get(url, headers=make_headers(token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 422
+    assert json_data == {'msg': 'The specified alg value is not allowed'}

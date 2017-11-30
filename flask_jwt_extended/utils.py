@@ -28,7 +28,7 @@ def get_jwt_identity():
     In a protected endpoint, this will return the identity of the JWT that is
     accessing this endpoint. If no JWT is present,`None` is returned instead.
     """
-    return get_raw_jwt().get(config.identity_claim, None)
+    return get_raw_jwt().get(config.identity_claim_key, None)
 
 
 def get_jwt_claims():
@@ -37,7 +37,7 @@ def get_jwt_claims():
     in the JWT that is accessing the endpoint. If no custom user claims are
     present, an empty dict is returned instead.
     """
-    return get_raw_jwt().get(config.user_claims, {})
+    return get_raw_jwt().get(config.user_claims_key, {})
 
 
 def get_current_user():
@@ -60,19 +60,21 @@ def get_jti(encoded_token):
     return decode_token(encoded_token).get('jti')
 
 
-def decode_token(encoded_token):
+def decode_token(encoded_token, csrf_value=None):
     """
     Returns the decoded token (python dict) from an encoded JWT. This does all
     the checks to insure that the decoded token is valid before returning it.
 
     :param encoded_token: The encoded JWT to decode into a python dict.
+    :param csrf_value: Expected CSRF double submit value (optional)
     """
     return decode_jwt(
         encoded_token=encoded_token,
         secret=config.decode_key,
         algorithm=config.algorithm,
-        csrf=config.csrf_protect,
-        identity_claim=config.identity_claim
+        identity_claim_key=config.identity_claim_key,
+        user_claims_key=config.user_claims_key,
+        csrf_value=csrf_value
     )
 
 
@@ -153,13 +155,7 @@ def verify_token_claims(*args, **kwargs):
 
 
 def get_csrf_token(encoded_token):
-    token = decode_jwt(
-        encoded_token,
-        config.decode_key,
-        config.algorithm,
-        csrf=True,
-        identity_claim=config.identity_claim
-    )
+    token = decode_token(encoded_token)
     return token['csrf']
 
 

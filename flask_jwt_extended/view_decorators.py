@@ -1,7 +1,6 @@
 from functools import wraps
 
 from flask import request
-from werkzeug.security import safe_str_cmp
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
@@ -13,9 +12,8 @@ from flask_jwt_extended.exceptions import (
     FreshTokenRequired, CSRFError, UserLoadError, RevokedTokenError,
     UserClaimsVerificationError
 )
-from flask_jwt_extended.tokens import decode_jwt
 from flask_jwt_extended.utils import (
-    has_user_loader, user_loader, token_in_blacklist,
+    has_user_loader, user_loader, token_in_blacklist, decode_token,
     has_token_in_blacklist_callback, verify_token_claims
 )
 
@@ -34,9 +32,9 @@ def jwt_required(fn):
     def wrapper(*args, **kwargs):
         jwt_data = _decode_jwt_from_request(request_type='access')
         ctx_stack.top.jwt = jwt_data
-        if not verify_token_claims(jwt_data[config.user_claims]):
+        if not verify_token_claims(jwt_data[config.user_claims_key]):
             raise UserClaimsVerificationError('User claims verification failed')
-        _load_user(jwt_data[config.identity_claim])
+        _load_user(jwt_data[config.identity_claim_key])
         return fn(*args, **kwargs)
     return wrapper
 
@@ -60,9 +58,9 @@ def jwt_optional(fn):
         try:
             jwt_data = _decode_jwt_from_request(request_type='access')
             ctx_stack.top.jwt = jwt_data
-            if not verify_token_claims(jwt_data[config.user_claims]):
+            if not verify_token_claims(jwt_data[config.user_claims_key]):
                 raise UserClaimsVerificationError('User claims verification failed')
-            _load_user(jwt_data[config.identity_claim])
+            _load_user(jwt_data[config.identity_claim_key])
         except (NoAuthorizationError, InvalidHeaderError):
             pass
         return fn(*args, **kwargs)
@@ -85,9 +83,9 @@ def fresh_jwt_required(fn):
         ctx_stack.top.jwt = jwt_data
         if not jwt_data['fresh']:
             raise FreshTokenRequired('Fresh token required')
-        if not verify_token_claims(jwt_data[config.user_claims]):
+        if not verify_token_claims(jwt_data[config.user_claims_key]):
             raise UserClaimsVerificationError('User claims verification failed')
-        _load_user(jwt_data[config.identity_claim])
+        _load_user(jwt_data[config.identity_claim_key])
         return fn(*args, **kwargs)
     return wrapper
 
@@ -103,7 +101,7 @@ def jwt_refresh_token_required(fn):
     def wrapper(*args, **kwargs):
         jwt_data = _decode_jwt_from_request(request_type='refresh')
         ctx_stack.top.jwt = jwt_data
-        _load_user(jwt_data[config.identity_claim])
+        _load_user(jwt_data[config.identity_claim_key])
         return fn(*args, **kwargs)
     return wrapper
 
@@ -148,20 +146,14 @@ def _decode_jwt_from_headers():
         if len(parts) != 1:
             msg = "Bad {} header. Expected value '<JWT>'".format(header_name)
             raise InvalidHeaderError(msg)
-        token = parts[0]
+        encoded_token = parts[0]
     else:
         if parts[0] != header_type or len(parts) != 2:
             msg = "Bad {} header. Expected value '{} <JWT>'".format(header_name, header_type)
             raise InvalidHeaderError(msg)
-        token = parts[1]
+        encoded_token = parts[1]
 
-    return decode_jwt(
-        encoded_token=token,
-        secret=config.decode_key,
-        algorithm=config.algorithm,
-        csrf=False,
-        identity_claim=config.identity_claim
-    )
+    return decode_token(encoded_token)
 
 
 def _decode_jwt_from_cookies(request_type):
@@ -172,29 +164,18 @@ def _decode_jwt_from_cookies(request_type):
         cookie_key = config.refresh_cookie_name
         csrf_header_key = config.refresh_csrf_header_name
 
+    if config.csrf_protect and request.method in config.csrf_request_methods:
+        csrf_value = request.headers.get(csrf_header_key, None)
+        if not csrf_value:
+            raise CSRFError("Missing CSRF token in headers")
+    else:
+        csrf_value = None
+
     encoded_token = request.cookies.get(cookie_key)
     if not encoded_token:
         raise NoAuthorizationError('Missing cookie "{}"'.format(cookie_key))
 
-    decoded_token = decode_jwt(
-        encoded_token=encoded_token,
-        secret=config.decode_key,
-        algorithm=config.algorithm,
-        csrf=config.csrf_protect,
-        identity_claim=config.identity_claim
-    )
-
-    # Verify csrf double submit tokens match if required
-    if config.csrf_protect and request.method in config.csrf_request_methods:
-        csrf_token_in_token = decoded_token['csrf']
-        csrf_token_in_header = request.headers.get(csrf_header_key, None)
-
-        if not csrf_token_in_header:
-            raise CSRFError("Missing CSRF token in headers")
-        if not safe_str_cmp(csrf_token_in_header, csrf_token_in_token):
-            raise CSRFError("CSRF double submit tokens do not match")
-
-    return decoded_token
+    return decode_token(encoded_token, csrf_value=csrf_value)
 
 
 def _decode_jwt_from_request(request_type):

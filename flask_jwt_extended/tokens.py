@@ -2,9 +2,9 @@ import datetime
 import uuid
 
 import jwt
+from werkzeug.security import safe_str_cmp
 
-from flask_jwt_extended.exceptions import JWTDecodeError
-from flask_jwt_extended.config import config
+from flask_jwt_extended.exceptions import JWTDecodeError, CSRFError
 
 
 def _create_csrf_token():
@@ -26,7 +26,7 @@ def _encode_jwt(additional_token_data, expires_delta, secret, algorithm):
 
 
 def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
-                        user_claims, csrf, identity_claim):
+                        user_claims, csrf, identity_claim_key, user_claims_key):
     """
     Creates a new encoded (utf-8) access token.
 
@@ -41,26 +41,27 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
                         be json serializable
     :param csrf: Whether to include a csrf double submit claim in this token
                  (boolean)
-    :param identity_claim: Which claim should be used to store the identity in
+    :param identity_claim_key: Which key should be used to store the identity
+    :param user_claims_key: Which key should be used to store the user claims
     :return: Encoded access token
     """
-    # Create the jwt
     token_data = {
-        identity_claim: identity,
+        identity_claim_key: identity,
         'fresh': fresh,
         'type': 'access',
     }
 
-    # Add `user_claims` only is not empty or None.
+    # Don't add extra data to the token if user_claims is empty.
     if user_claims:
-        token_data[config.user_claims] = user_claims
+        token_data[user_claims_key] = user_claims
 
     if csrf:
         token_data['csrf'] = _create_csrf_token()
     return _encode_jwt(token_data, expires_delta, secret, algorithm)
 
 
-def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf, identity_claim):
+def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf,
+                         identity_claim_key):
     """
     Creates a new encoded (utf-8) refresh token.
 
@@ -71,11 +72,11 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf, ident
                                (datetime.timedelta)
     :param csrf: Whether to include a csrf double submit claim in this token
                  (boolean)
-    :param identity_claim: Which claim should be used to store the identity in
+    :param identity_claim_key: Which key should be used to store the identity
     :return: Encoded refresh token
     """
     token_data = {
-        identity_claim: identity,
+        identity_claim_key: identity,
         'type': 'refresh',
     }
     if csrf:
@@ -83,16 +84,17 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf, ident
     return _encode_jwt(token_data, expires_delta, secret, algorithm)
 
 
-def decode_jwt(encoded_token, secret, algorithm, csrf, identity_claim):
+def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
+               user_claims_key, csrf_value=None):
     """
     Decodes an encoded JWT
 
     :param encoded_token: The encoded JWT string to decode
     :param secret: Secret key used to encode the JWT
     :param algorithm: Algorithm used to encode the JWT
-    :param csrf: If this token is expected to have a CSRF double submit
-                 value present (boolean)
-    :param identity_claim: expected claim that is used to identify the subject
+    :param identity_claim_key: expected key that contains the identity
+    :param user_claims_key: expected key that contains the user claims
+    :param csrf_value: Expected double submit csrf value
     :return: Dictionary containing contents of the JWT
     """
     # This call verifies the ext, iat, and nbf claims
@@ -101,16 +103,18 @@ def decode_jwt(encoded_token, secret, algorithm, csrf, identity_claim):
     # Make sure that any custom claims we expect in the token are present
     if 'jti' not in data:
         raise JWTDecodeError("Missing claim: jti")
-    if identity_claim not in data:
-        raise JWTDecodeError("Missing claim: {}".format(identity_claim))
+    if identity_claim_key not in data:
+        raise JWTDecodeError("Missing claim: {}".format(identity_claim_key))
     if 'type' not in data or data['type'] not in ('refresh', 'access'):
         raise JWTDecodeError("Missing or invalid claim: type")
     if data['type'] == 'access':
         if 'fresh' not in data:
             raise JWTDecodeError("Missing claim: fresh")
-        if config.user_claims not in data:
-            data[config.user_claims] = {}
-    if csrf:
+        if user_claims_key not in data:
+            data[user_claims_key] = {}
+    if csrf_value:
         if 'csrf' not in data:
             raise JWTDecodeError("Missing claim: csrf")
+        if not safe_str_cmp(data['csrf'], csrf_value):
+            raise CSRFError("CSRF double submit tokens do not match")
     return data

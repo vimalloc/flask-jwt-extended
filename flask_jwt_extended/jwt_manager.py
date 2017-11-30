@@ -381,7 +381,7 @@ class JWTManager(object):
             algorithm=config.algorithm,
             expires_delta=expires_delta,
             csrf=config.csrf_protect,
-            identity_claim=config.identity_claim
+            identity_claim_key=config.identity_claim_key,
         )
         return refresh_token
 
@@ -397,7 +397,8 @@ class JWTManager(object):
             fresh=fresh,
             user_claims=self._user_claims_callback(identity),
             csrf=config.csrf_protect,
-            identity_claim=config.identity_claim
+            identity_claim_key=config.identity_claim_key,
+            user_claims_key=config.user_claims_key
         )
         return access_token
 

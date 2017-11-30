@@ -29,7 +29,7 @@ def default_access_token(app):
     with app.test_request_context():
         return {
             'jti': '1234',
-            config.identity_claim: 'username',
+            config.identity_claim_key: 'username',
             'type': 'access',
             'fresh': True,
             'csrf': 'abcd'
@@ -49,9 +49,9 @@ def test_no_user_claims(app, user_loader_return):
     with app.test_request_context():
         token = create_access_token('username')
         pure_decoded = jwt.decode(token, config.decode_key, algorithms=[config.algorithm])
-        assert config.user_claims not in pure_decoded
+        assert config.user_claims_key not in pure_decoded
         extension_decoded = decode_token(token)
-        assert config.user_claims in extension_decoded
+        assert config.user_claims_key in extension_decoded
 
 
 @pytest.mark.parametrize("missing_claim", ['jti', 'type', 'identity', 'fresh', 'csrf'])
@@ -61,7 +61,7 @@ def test_missing_jti_claim(app, default_access_token, missing_claim):
 
     with pytest.raises(JWTDecodeError):
         with app.test_request_context():
-            decode_token(missing_jwt_token)
+            decode_token(missing_jwt_token, csrf_value='abcd')
 
 
 def test_bad_token_type(app, default_access_token):

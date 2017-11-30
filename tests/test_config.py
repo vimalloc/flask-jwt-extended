@@ -52,8 +52,8 @@ def test_default_configs(app):
 
         assert config.cookie_max_age is None
 
-        assert config.identity_claim == 'identity'
-        assert config.user_claims == 'user_claims'
+        assert config.identity_claim_key == 'identity'
+        assert config.user_claims_key == 'user_claims'
 
 
 def test_override_configs(app):
@@ -125,8 +125,8 @@ def test_override_configs(app):
 
         assert config.cookie_max_age == 2147483647
 
-        assert config.identity_claim == 'foo'
-        assert config.user_claims == 'bar'
+        assert config.identity_claim_key == 'foo'
+        assert config.user_claims_key == 'bar'
 
 
 # noinspection PyStatementEffect

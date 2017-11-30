@@ -23,7 +23,8 @@ class _Config(object):
     should be done with flasks ```app.config```.
 
     Default values for the configuration options are set in the jwt_manager
-    object. All of these values are read only.
+    object. All of these values are read only. This is simply a loose wrapper
+    with some helper functionality for flasks `app.config`.
     """
 
     @property
@@ -224,11 +225,11 @@ class _Config(object):
         return None if self.session_cookie else 2147483647  # 2^31
 
     @property
-    def identity_claim(self):
+    def identity_claim_key(self):
         return current_app.config['JWT_IDENTITY_CLAIM']
 
     @property
-    def user_claims(self):
+    def user_claims_key(self):
         return current_app.config['JWT_USER_CLAIMS']
 
 config = _Config()

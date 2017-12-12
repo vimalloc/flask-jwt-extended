@@ -22,7 +22,8 @@ General Options:
 ``JWT_ACCESS_TOKEN_EXPIRES``      How long an access token should live before it expires. This
                                   takes a ``datetime.timedelta``, and defaults to 15 minutes
 ``JWT_REFRESH_TOKEN_EXPIRES``     How long a refresh token should live before it expires. This
-                                  takes a ``datetime.timedelta``, and defaults to 30 days
+                                  takes a ``datetime.timedelta``, and defaults to 30 days.
+                                  Can be set to ``datetime.timedelta(0)`` to disable expiration.
 ``JWT_ALGORITHM``                 Which algorithm to sign the JWT with. `See here <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
                                   for the options. Defaults to ``'HS256'``.
 ``JWT_SECRET_KEY``                The secret key needed for symmetric based signing algorithms,

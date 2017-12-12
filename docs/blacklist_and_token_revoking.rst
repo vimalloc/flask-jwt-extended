@@ -1,3 +1,5 @@
+.. _Blacklist and Token Revoking:
+
 Blacklist and Token Revoking
 ============================
 

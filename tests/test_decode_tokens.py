@@ -86,9 +86,8 @@ def test_expired_token(app):
 
 def test_never_expire_token(app):
     with app.test_request_context():
-        delta = timedelta(0)
-        access_token = create_access_token('username', expires_delta=delta)
-        refresh_token = create_refresh_token('username', expires_delta=delta)
+        access_token = create_access_token('username', expires_delta=False)
+        refresh_token = create_refresh_token('username', expires_delta=False)
         for token in (access_token, refresh_token):
             decoded = decode_token(token)
             assert 'exp' not in decoded

@@ -19,11 +19,9 @@ def _encode_jwt(additional_token_data, expires_delta, secret, algorithm):
         'nbf': now,
         'jti': uid,
     }
-    # If expires_delta is timedelta(0), the JWT should never expire
+    # If expires_delta is False, the JWT should never expire
     # and the 'exp' claim is not set.
     if expires_delta:
-        # A timedelta object is considered to be true if and only if
-        # it isn't equal to timedelta(0)
         token_data['exp'] = now + expires_delta
     token_data.update(additional_token_data)
     encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
@@ -40,8 +38,8 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
     :param secret: Secret key to encode the JWT with
     :param algorithm: Which algorithm to encode this JWT with
     :param expires_delta: How far in the future this token should expire
-                          (set to timedelta(0) to disable expiration)
-    :type expires_delta: datetime.timedelta
+                          (set to False to disable expiration)
+    :type expires_delta: datetime.timedelta or False
     :param fresh: If this should be a 'fresh' token or not
     :param user_claims: Custom claims to include in this token. This data must
                         be json serializable
@@ -75,8 +73,8 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf,
     :param secret: Secret key to encode the JWT with
     :param algorithm: Which algorithm to use for the toek
     :param expires_delta: How far in the future this token should expire
-                          (set to timedelta(0) to disable expiration)
-    :type expires_delta: datetime.timedelta
+                          (set to False to disable expiration)
+    :type expires_delta: datetime.timedelta or False
     :param csrf: Whether to include a csrf double submit claim in this token
                  (boolean)
     :param identity_claim_key: Which key should be used to store the identity

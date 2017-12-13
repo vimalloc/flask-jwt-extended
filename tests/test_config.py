@@ -129,6 +129,14 @@ def test_override_configs(app):
         assert config.user_claims_key == 'bar'
 
 
+def test_tokens_never_expire(app):
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
+    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = False
+    with app.test_request_context():
+        assert config.access_expires is False
+        assert config.refresh_expires is False
+
+
 # noinspection PyStatementEffect
 def test_symmetric_secret_key(app):
     with app.test_request_context():
@@ -205,6 +213,14 @@ def test_invalid_config_options(app):
             config.access_expires
 
         app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 'banana'
+        with pytest.raises(RuntimeError):
+            config.refresh_expires
+
+        app.config['JWT_ACCESS_TOKEN_EXPIRES'] = True
+        with pytest.raises(RuntimeError):
+            config.access_expires
+
+        app.config['JWT_REFRESH_TOKEN_EXPIRES'] = True
         with pytest.raises(RuntimeError):
             config.refresh_expires
 

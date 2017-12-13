@@ -100,7 +100,7 @@ def create_access_token(identity, fresh=False, expires_delta=None):
                   :func:`~flask_jwt_extended.fresh_jwt_required` endpoints.
                   Defaults to `False`.
     :param expires_delta: A `datetime.timedelta` for how long this token should
-                          last before it expires. Set to timedelta(0) to disable
+                          last before it expires. Set to False to disable
                           expiration. If this is None, it will use the
                           'JWT_ACCESS_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
@@ -121,7 +121,7 @@ def create_refresh_token(identity, expires_delta=None):
                      to define a callback function that will be used to pull a
                      json serializable identity out of the object.
     :param expires_delta: A `datetime.timedelta` for how long this token should
-                          last before it expires. Set to timedelta(0) to disable
+                          last before it expires. Set to False to disable
                           expiration. If this is None, it will use the
                           'JWT_REFRESH_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)

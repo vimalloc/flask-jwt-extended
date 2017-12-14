@@ -68,3 +68,16 @@ You could accomplish this like such:
       expires = datetime.timedelta(days=365)
       token = create_access_token(username, expires_delta=expires)
       return jsonify({'token': token}), 201
+
+You can even disable expiration by setting `expires_delta` to `False`:
+
+.. code-block:: python
+
+  @app.route('/create-api-token', methods=['POST'])
+  @jwt_required
+  def create_api_token():
+      username = get_jwt_identity()
+      token = create_access_token(username, expires_delta=False)
+      return jsonify({'token': token}), 201
+
+Note that in this case, you should enable token revoking (see :ref:`Blacklist and Token Revoking`).

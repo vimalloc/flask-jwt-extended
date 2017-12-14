@@ -84,6 +84,15 @@ def test_expired_token(app):
             decode_token(refresh_token)
 
 
+def test_never_expire_token(app):
+    with app.test_request_context():
+        access_token = create_access_token('username', expires_delta=False)
+        refresh_token = create_refresh_token('username', expires_delta=False)
+        for token in (access_token, refresh_token):
+            decoded = decode_token(token)
+            assert 'exp' not in decoded
+
+
 def test_alternate_identity_claim(app, default_access_token):
     app.config['JWT_IDENTITY_CLAIM'] = 'sub'
 

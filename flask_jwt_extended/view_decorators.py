@@ -1,4 +1,6 @@
 from functools import wraps
+from datetime import datetime
+from calendar import timegm
 
 from flask import request
 try:
@@ -81,8 +83,14 @@ def fresh_jwt_required(fn):
     def wrapper(*args, **kwargs):
         jwt_data = _decode_jwt_from_request(request_type='access')
         ctx_stack.top.jwt = jwt_data
-        if not jwt_data['fresh']:
-            raise FreshTokenRequired('Fresh token required')
+        fresh = jwt_data['fresh']
+        if isinstance(fresh, bool):
+            if not fresh:
+                raise FreshTokenRequired('Fresh token required')
+        else:
+            now = timegm(datetime.utcnow().utctimetuple())
+            if fresh < now:
+                raise FreshTokenRequired('Fresh token required')
         if not verify_token_claims(jwt_data[config.user_claims_key]):
             raise UserClaimsVerificationError('User claims verification failed')
         _load_user(jwt_data[config.identity_claim_key])

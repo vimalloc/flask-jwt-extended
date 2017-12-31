@@ -1,6 +1,8 @@
 import datetime
 import uuid
 
+from calendar import timegm
+
 import jwt
 from werkzeug.security import safe_str_cmp
 
@@ -40,7 +42,9 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
     :param expires_delta: How far in the future this token should expire
                           (set to False to disable expiration)
     :type expires_delta: datetime.timedelta or False
-    :param fresh: If this should be a 'fresh' token or not
+    :param fresh: If this should be a 'fresh' token or not. If a
+                  datetime.timedelta is given this will indicate how long this
+                  token will remain fresh.
     :param user_claims: Custom claims to include in this token. This data must
                         be json serializable
     :param csrf: Whether to include a csrf double submit claim in this token
@@ -49,6 +53,11 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
     :param user_claims_key: Which key should be used to store the user claims
     :return: Encoded access token
     """
+
+    if isinstance(fresh, datetime.timedelta):
+        now = datetime.datetime.utcnow()
+        fresh = timegm((now + fresh).utctimetuple())
+
     token_data = {
         identity_claim_key: identity,
         'fresh': fresh,

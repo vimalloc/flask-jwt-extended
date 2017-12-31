@@ -98,7 +98,9 @@ def create_access_token(identity, fresh=False, expires_delta=None):
                      json serializable identity out of the object.
     :param fresh: If this token should be marked as fresh, and can thus access
                   :func:`~flask_jwt_extended.fresh_jwt_required` endpoints.
-                  Defaults to `False`.
+                  Defaults to `False`. This value can also be a
+                  `datetime.timedelta` in which case it will indicate how long
+                  this token will be considered fresh.
     :param expires_delta: A `datetime.timedelta` for how long this token should
                           last before it expires. Set to False to disable
                           expiration. If this is None, it will use the

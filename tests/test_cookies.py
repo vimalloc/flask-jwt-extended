@@ -1,6 +1,9 @@
 import pytest
 from flask import Flask, jsonify, json
-from werkzeug.http import parse_cookie
+try:
+    from http.cookies import SimpleCookie
+except ImportError:
+    from Cookie import SimpleCookie
 
 from flask_jwt_extended import (
     jwt_required, JWTManager, jwt_refresh_token_required, create_access_token,
@@ -10,11 +13,12 @@ from flask_jwt_extended import (
 
 
 def _get_cookie_from_response(response, cookie_name):
-    cookies = response.headers.getlist('Set-Cookie')
-    for cookie in cookies:
-        parsed_cookie = parse_cookie(cookie)
-        if cookie_name in parsed_cookie:
-            return parsed_cookie
+    cookie_headers = response.headers.getlist('Set-Cookie')
+    for header in cookie_headers:
+        cookie = SimpleCookie()
+        cookie.load(header)
+        if cookie_name in cookie:
+            return cookie[cookie_name]
     return None
 
 
@@ -107,8 +111,7 @@ def test_default_access_csrf_protection(app, options):
 
     # Get the jwt cookies and csrf double submit tokens
     response = test_client.get(auth_url)
-    csrf_cookie = _get_cookie_from_response(response, csrf_cookie_name)
-    csrf_token = csrf_cookie[csrf_cookie_name]
+    csrf_token = _get_cookie_from_response(response, csrf_cookie_name).value
 
     # Test you cannot post without the additional csrf protection
     response = test_client.post(post_url)
@@ -170,8 +173,7 @@ def test_csrf_with_custom_header_names(app, options):
 
     # Get the jwt cookies and csrf double submit tokens
     response = test_client.get(auth_url)
-    csrf_cookie = _get_cookie_from_response(response, csrf_cookie_name)
-    csrf_token = csrf_cookie[csrf_cookie_name]
+    csrf_token = _get_cookie_from_response(response, csrf_cookie_name).value
 
     # Test that you can post with the csrf double submit value
     csrf_headers = {'FOO': csrf_token}
@@ -192,8 +194,7 @@ def test_custom_csrf_methods(app, options):
 
     # Get the jwt cookies and csrf double submit tokens
     response = test_client.get(auth_url)
-    csrf_cookie = _get_cookie_from_response(response, csrf_cookie_name)
-    csrf_token = csrf_cookie[csrf_cookie_name]
+    csrf_token = _get_cookie_from_response(response, csrf_cookie_name).value
 
     # Insure we can now do posts without csrf
     response = test_client.post(post_url)
@@ -234,22 +235,31 @@ def test_default_cookie_options(app):
     response = test_client.get('/access_token')
     cookies = response.headers.getlist('Set-Cookie')
     assert len(cookies) == 2  # JWT and CSRF value
+
     access_cookie = _get_cookie_from_response(response, 'access_token_cookie')
+    assert access_cookie is not None
+    assert access_cookie['path'] == '/'
+    assert access_cookie['httponly'] is True
+
     access_csrf_cookie = _get_cookie_from_response(response, 'csrf_access_token')
-    assert 'access_token_cookie' in access_cookie
-    assert access_cookie['HttpOnly; Path'] == '/'
-    assert 'csrf_access_token' in access_csrf_cookie
+    assert access_csrf_cookie is not None
+    assert access_csrf_cookie['path'] == '/'
+    assert access_csrf_cookie['httponly'] == ''
 
     # Test the default refresh cookies
     response = test_client.get('/refresh_token')
     cookies = response.headers.getlist('Set-Cookie')
     assert len(cookies) == 2  # JWT and CSRF value
+
     refresh_cookie = _get_cookie_from_response(response, 'refresh_token_cookie')
+    assert refresh_cookie is not None
+    assert refresh_cookie['path'] == '/'
+    assert refresh_cookie['httponly'] is True
+
     refresh_csrf_cookie = _get_cookie_from_response(response, 'csrf_refresh_token')
-    assert 'refresh_token_cookie' in refresh_cookie
-    assert 'HttpOnly; Path' in refresh_cookie
-    assert refresh_cookie['HttpOnly; Path'] == '/'
-    assert 'csrf_refresh_token' in refresh_csrf_cookie
+    assert refresh_csrf_cookie is not None
+    assert refresh_csrf_cookie['path'] == '/'
+    assert refresh_csrf_cookie['httponly'] == ''
 
 
 def test_custom_cookie_options(app):
@@ -265,20 +275,19 @@ def test_custom_cookie_options(app):
     assert len(cookies) == 2  # JWT and CSRF value
 
     access_cookie = _get_cookie_from_response(response, 'access_token_cookie')
-    assert 'access_token_cookie' in access_cookie
-    assert 'Domain' in access_cookie
-    assert 'Expires=' in str(cookies[0])  # Ignored by parse_cookie :(
-    assert 'Secure; HttpOnly; Path' in access_cookie
-    assert access_cookie['Domain'] == 'test.com'
-    assert access_cookie['Secure; HttpOnly; Path'] == '/'
+    assert access_cookie is not None
+    assert access_cookie['domain'] == 'test.com'
+    assert access_cookie['path'] == '/'
+    assert access_cookie['expires'] != ''
+    assert access_cookie['httponly'] is True
+    assert access_cookie['secure'] is True
 
     access_csrf_cookie = _get_cookie_from_response(response, 'csrf_access_token')
-    assert 'csrf_access_token' in access_csrf_cookie
-    assert 'Domain' in access_csrf_cookie
-    assert 'Expires=' in str(cookies[1])  # Ignored by parse_cookie :(
-    assert 'Secure; Path' in access_csrf_cookie
-    assert access_csrf_cookie['Domain'] == 'test.com'
-    assert access_csrf_cookie['Secure; Path'] == '/'
+    assert access_csrf_cookie is not None
+    assert access_csrf_cookie['path'] == '/'
+    assert access_csrf_cookie['secure'] is True
+    assert access_csrf_cookie['domain'] == 'test.com'
+    assert access_csrf_cookie['expires'] != ''
 
     # Test refresh cookies with changed options
     response = test_client.get('/refresh_token')
@@ -286,20 +295,19 @@ def test_custom_cookie_options(app):
     assert len(cookies) == 2  # JWT and CSRF value
 
     refresh_cookie = _get_cookie_from_response(response, 'refresh_token_cookie')
-    assert 'refresh_token_cookie' in refresh_cookie
-    assert 'Domain' in refresh_cookie
-    assert 'Expires=' in str(cookies[0])  # Ignored by parse_cookie :(
-    assert 'Secure; HttpOnly; Path' in refresh_cookie
-    assert refresh_cookie['Domain'] == 'test.com'
-    assert refresh_cookie['Secure; HttpOnly; Path'] == '/'
+    assert refresh_cookie is not None
+    assert refresh_cookie['domain'] == 'test.com'
+    assert refresh_cookie['path'] == '/'
+    assert refresh_cookie['httponly'] is True
+    assert refresh_cookie['secure'] is True
+    assert refresh_cookie['expires'] != ''
 
     refresh_csrf_cookie = _get_cookie_from_response(response, 'csrf_refresh_token')
-    assert 'csrf_refresh_token' in refresh_csrf_cookie
-    assert 'Domain' in refresh_csrf_cookie
-    assert 'Expires=' in str(cookies[1])  # Ignored by parse_cookie :(
-    assert 'Secure; Path' in refresh_csrf_cookie
-    assert refresh_csrf_cookie['Domain'] == 'test.com'
-    assert refresh_csrf_cookie['Secure; Path'] == '/'
+    assert refresh_csrf_cookie is not None
+    assert refresh_csrf_cookie['path'] == '/'
+    assert refresh_csrf_cookie['secure'] is True
+    assert refresh_csrf_cookie['domain'] == 'test.com'
+    assert refresh_csrf_cookie['expires'] != ''
 
 
 def test_custom_cookie_names_and_paths(app):
@@ -321,14 +329,10 @@ def test_custom_cookie_names_and_paths(app):
 
     access_cookie = _get_cookie_from_response(response, 'access_foo')
     access_csrf_cookie = _get_cookie_from_response(response, 'access_foo_csrf')
-    assert 'access_foo' in access_cookie
-    assert 'access_foo_csrf' in access_csrf_cookie
-
-    # The parse cookie library ignores 'Path' cookies, and we don't know which
-    # cookie in the list is the csrf cookie and which is the jwt cookie. So
-    # we have to resort to doing string comparisons on both of them.
-    assert 'Path=/protected' in cookies[0]
-    assert 'Path=/protected' in cookies[1]
+    assert access_cookie is not None
+    assert access_csrf_cookie is not None
+    assert access_cookie['path'] == '/protected'
+    assert access_csrf_cookie['path'] == '/protected'
 
     # Test the default refresh cookies
     response = test_client.get('/refresh_token')
@@ -337,14 +341,10 @@ def test_custom_cookie_names_and_paths(app):
 
     refresh_cookie = _get_cookie_from_response(response, 'refresh_foo')
     refresh_csrf_cookie = _get_cookie_from_response(response, 'refresh_foo_csrf')
-    assert 'refresh_foo' in refresh_cookie
-    assert 'refresh_foo_csrf' in refresh_csrf_cookie
-
-    # The parse cookie library ignores 'Path' cookies, and we don't know which
-    # cookie in the list is the csrf cookie and which is the jwt cookie. So
-    # we have to resort to doing string comparisons on both of them.
-    assert 'Path=/refresh_protected' in cookies[0]
-    assert 'Path=/refresh_protected' in cookies[1]
+    assert refresh_cookie is not None
+    assert refresh_csrf_cookie is not None
+    assert refresh_cookie['path'] == '/refresh_protected'
+    assert refresh_csrf_cookie['path'] == '/refresh_protected'
 
 
 def test_csrf_token_not_in_cookie(app):
@@ -357,14 +357,14 @@ def test_csrf_token_not_in_cookie(app):
     cookies = response.headers.getlist('Set-Cookie')
     assert len(cookies) == 1
     access_cookie = _get_cookie_from_response(response, 'access_token_cookie')
-    assert 'access_token_cookie' in access_cookie
+    assert access_cookie is not None
 
     # Test the default refresh cookies
     response = test_client.get('/refresh_token')
     cookies = response.headers.getlist('Set-Cookie')
     assert len(cookies) == 1
     refresh_cookie = _get_cookie_from_response(response, 'refresh_token_cookie')
-    assert 'refresh_token_cookie' in refresh_cookie
+    assert refresh_cookie is not None
 
 
 def test_cookies_without_csrf(app):
@@ -377,11 +377,11 @@ def test_cookies_without_csrf(app):
     cookies = response.headers.getlist('Set-Cookie')
     assert len(cookies) == 1
     access_cookie = _get_cookie_from_response(response, 'access_token_cookie')
-    assert 'access_token_cookie' in access_cookie
+    assert access_cookie is not None
 
     # Test the default refresh cookies
     response = test_client.get('/refresh_token')
     cookies = response.headers.getlist('Set-Cookie')
     assert len(cookies) == 1
     refresh_cookie = _get_cookie_from_response(response, 'refresh_token_cookie')
-    assert 'refresh_token_cookie' in refresh_cookie
+    assert refresh_cookie is not None

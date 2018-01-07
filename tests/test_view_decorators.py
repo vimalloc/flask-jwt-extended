@@ -78,7 +78,8 @@ def test_fresh_jwt_required(app):
     with app.test_request_context():
         access_token = create_access_token('username')
         fresh_access_token = create_access_token('username', fresh=True)
-        fresh_timed_access_token = create_access_token('username', fresh=timedelta(minutes=-1))
+        fresh_timed_access_token = create_access_token('username', fresh=timedelta(minutes=5))
+        stale_timed_access_token = create_access_token('username', fresh=timedelta(minutes=-1))
         refresh_token = create_refresh_token('username')
 
     response = test_client.get(url, headers=make_headers(fresh_access_token))
@@ -92,6 +93,11 @@ def test_fresh_jwt_required(app):
     assert json_data == {'msg': 'Fresh token required'}
 
     response = test_client.get(url, headers=make_headers(fresh_timed_access_token))
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 200
+    assert json_data == {'foo': 'bar'}
+
+    response = test_client.get(url, headers=make_headers(stale_timed_access_token))
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
     assert json_data == {'msg': 'Fresh token required'}

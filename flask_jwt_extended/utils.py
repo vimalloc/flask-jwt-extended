@@ -159,6 +159,12 @@ def verify_token_claims(*args, **kwargs):
 
 
 def get_csrf_token(encoded_token):
+    """
+    Returns the CSRF double submit token from an encoded JWT.
+
+    :param encoded_token: The encoded JWT
+    :return: The CSRF double submit token
+    """
     token = decode_token(encoded_token)
     return token['csrf']
 

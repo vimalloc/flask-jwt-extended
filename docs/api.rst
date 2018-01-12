@@ -46,6 +46,7 @@ Utilities
 
 .. autofunction:: decode_token
 .. autofunction:: get_current_user
+.. autofunction:: get_csrf_token
 .. autofunction:: get_jti
 .. autofunction:: get_jwt_claims
 .. autofunction:: get_jwt_identity

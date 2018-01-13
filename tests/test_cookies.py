@@ -1,9 +1,5 @@
 import pytest
 from flask import Flask, jsonify, json
-try:
-    from http.cookies import SimpleCookie
-except ImportError:
-    from Cookie import SimpleCookie
 
 from flask_jwt_extended import (
     jwt_required, JWTManager, jwt_refresh_token_required, create_access_token,
@@ -11,16 +7,17 @@ from flask_jwt_extended import (
     unset_jwt_cookies
 )
 
-
 def _get_cookie_from_response(response, cookie_name):
     cookie_headers = response.headers.getlist('Set-Cookie')
     for header in cookie_headers:
-        cookie = SimpleCookie()
-        cookie.load(header)
-        if cookie_name in cookie:
-            return cookie[cookie_name]
+        attributes = header.split(';')
+        if cookie_name in attributes[0]:
+            cookie = {}
+            for attr in attributes:
+                split = attr.split('=')
+                cookie[split[0].strip().lower()] = split[1] if len(split) > 1 else True
+            return cookie
     return None
-
 
 @pytest.fixture(scope='function')
 def app():
@@ -111,7 +108,7 @@ def test_default_access_csrf_protection(app, options):
 
     # Get the jwt cookies and csrf double submit tokens
     response = test_client.get(auth_url)
-    csrf_token = _get_cookie_from_response(response, csrf_cookie_name).value
+    csrf_token = _get_cookie_from_response(response, csrf_cookie_name)[csrf_cookie_name]
 
     # Test you cannot post without the additional csrf protection
     response = test_client.post(post_url)
@@ -173,7 +170,7 @@ def test_csrf_with_custom_header_names(app, options):
 
     # Get the jwt cookies and csrf double submit tokens
     response = test_client.get(auth_url)
-    csrf_token = _get_cookie_from_response(response, csrf_cookie_name).value
+    csrf_token = _get_cookie_from_response(response, csrf_cookie_name)[csrf_cookie_name]
 
     # Test that you can post with the csrf double submit value
     csrf_headers = {'FOO': csrf_token}
@@ -194,7 +191,7 @@ def test_custom_csrf_methods(app, options):
 
     # Get the jwt cookies and csrf double submit tokens
     response = test_client.get(auth_url)
-    csrf_token = _get_cookie_from_response(response, csrf_cookie_name).value
+    csrf_token = _get_cookie_from_response(response, csrf_cookie_name)[csrf_cookie_name]
 
     # Insure we can now do posts without csrf
     response = test_client.post(post_url)
@@ -240,11 +237,13 @@ def test_default_cookie_options(app):
     assert access_cookie is not None
     assert access_cookie['path'] == '/'
     assert access_cookie['httponly'] is True
+    assert 'samesite' not in access_cookie
 
     access_csrf_cookie = _get_cookie_from_response(response, 'csrf_access_token')
     assert access_csrf_cookie is not None
     assert access_csrf_cookie['path'] == '/'
-    assert access_csrf_cookie['httponly'] == ''
+    assert 'httponly' not in access_csrf_cookie
+    assert 'samesite' not in access_csrf_cookie
 
     # Test the default refresh cookies
     response = test_client.get('/refresh_token')
@@ -255,11 +254,13 @@ def test_default_cookie_options(app):
     assert refresh_cookie is not None
     assert refresh_cookie['path'] == '/'
     assert refresh_cookie['httponly'] is True
+    assert 'samesite' not in refresh_cookie
 
     refresh_csrf_cookie = _get_cookie_from_response(response, 'csrf_refresh_token')
     assert refresh_csrf_cookie is not None
     assert refresh_csrf_cookie['path'] == '/'
-    assert refresh_csrf_cookie['httponly'] == ''
+    assert 'httponly' not in refresh_csrf_cookie
+    assert 'samesite' not in refresh_csrf_cookie
 
 
 def test_custom_cookie_options(app):
@@ -268,6 +269,7 @@ def test_custom_cookie_options(app):
     app.config['JWT_COOKIE_SECURE'] = True
     app.config['JWT_COOKIE_DOMAIN'] = 'test.com'
     app.config['JWT_SESSION_COOKIE'] = False
+    app.config['JWT_COOKIE_SAMESITE'] = 'Strict'
 
     # Test access cookies with changed options
     response = test_client.get('/access_token')
@@ -281,6 +283,7 @@ def test_custom_cookie_options(app):
     assert access_cookie['expires'] != ''
     assert access_cookie['httponly'] is True
     assert access_cookie['secure'] is True
+    assert access_cookie['samesite'] == 'Strict'
 
     access_csrf_cookie = _get_cookie_from_response(response, 'csrf_access_token')
     assert access_csrf_cookie is not None
@@ -288,6 +291,7 @@ def test_custom_cookie_options(app):
     assert access_csrf_cookie['secure'] is True
     assert access_csrf_cookie['domain'] == 'test.com'
     assert access_csrf_cookie['expires'] != ''
+    assert access_csrf_cookie['samesite'] == 'Strict'
 
     # Test refresh cookies with changed options
     response = test_client.get('/refresh_token')
@@ -301,6 +305,7 @@ def test_custom_cookie_options(app):
     assert refresh_cookie['httponly'] is True
     assert refresh_cookie['secure'] is True
     assert refresh_cookie['expires'] != ''
+    assert refresh_cookie['samesite'] == 'Strict'
 
     refresh_csrf_cookie = _get_cookie_from_response(response, 'csrf_refresh_token')
     assert refresh_csrf_cookie is not None
@@ -308,6 +313,7 @@ def test_custom_cookie_options(app):
     assert refresh_csrf_cookie['secure'] is True
     assert refresh_csrf_cookie['domain'] == 'test.com'
     assert refresh_csrf_cookie['expires'] != ''
+    assert refresh_csrf_cookie['samesite'] == 'Strict'
 
 
 def test_custom_cookie_names_and_paths(app):

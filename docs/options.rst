@@ -80,6 +80,8 @@ These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use cookies.
 ``JWT_SESSION_COOKIE``            If the cookies should be session cookies (deleted when the
                                   browser is closed) or persistent cookies (never expire).
                                   Defaults to ``True`` (session cookies).
+``JWT_COOKIE_SAMESITE``           If the cookies should be sent in a cross-site browsing context.
+                                  Defaults to ``None``, which means cookies are always sent.
 ``JWT_COOKIE_CSRF_PROTECT``       Enable/disable CSRF protection when using cookies. Defaults to ``True``.
 ================================= =========================================
 

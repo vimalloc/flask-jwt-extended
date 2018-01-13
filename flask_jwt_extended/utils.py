@@ -194,7 +194,8 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
                         secure=config.cookie_secure,
                         httponly=True,
                         domain=config.cookie_domain,
-                        path=config.access_cookie_path)
+                        path=config.access_cookie_path,
+                        samesite=config.cookie_samesite)
 
     # If enabled, set the csrf double submit access cookie
     if config.csrf_protect and config.csrf_in_cookies:
@@ -204,7 +205,8 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
                             secure=config.cookie_secure,
                             httponly=False,
                             domain=config.cookie_domain,
-                            path=config.access_csrf_cookie_path)
+                            path=config.access_csrf_cookie_path,
+                            samesite=config.cookie_samesite)
 
 
 def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
@@ -232,7 +234,8 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
                         secure=config.cookie_secure,
                         httponly=True,
                         domain=config.cookie_domain,
-                        path=config.refresh_cookie_path)
+                        path=config.refresh_cookie_path,
+                        samesite=config.cookie_samesite)
 
     # If enabled, set the csrf double submit refresh cookie
     if config.csrf_protect and config.csrf_in_cookies:
@@ -242,7 +245,8 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
                             secure=config.cookie_secure,
                             httponly=False,
                             domain=config.cookie_domain,
-                            path=config.refresh_csrf_cookie_path)
+                            path=config.refresh_csrf_cookie_path,
+                            samesite=config.cookie_samesite)
 
 
 def unset_jwt_cookies(response):
@@ -262,14 +266,16 @@ def unset_jwt_cookies(response):
                         secure=config.cookie_secure,
                         httponly=True,
                         domain=config.cookie_domain,
-                        path=config.refresh_cookie_path)
+                        path=config.refresh_cookie_path,
+                        samesite=config.cookie_samesite)
     response.set_cookie(config.access_cookie_name,
                         value='',
                         expires=0,
                         secure=config.cookie_secure,
                         httponly=True,
                         domain=config.cookie_domain,
-                        path=config.access_cookie_path)
+                        path=config.access_cookie_path,
+                        samesite=config.cookie_samesite)
 
     if config.csrf_protect and config.csrf_in_cookies:
         response.set_cookie(config.refresh_csrf_cookie_name,
@@ -278,11 +284,13 @@ def unset_jwt_cookies(response):
                             secure=config.cookie_secure,
                             httponly=False,
                             domain=config.cookie_domain,
-                            path=config.refresh_csrf_cookie_path)
+                            path=config.refresh_csrf_cookie_path,
+                            samesite=config.cookie_samesite)
         response.set_cookie(config.access_csrf_cookie_name,
                             value='',
                             expires=0,
                             secure=config.cookie_secure,
                             httponly=False,
                             domain=config.cookie_domain,
-                            path=config.access_csrf_cookie_path)
+                            path=config.access_csrf_cookie_path,
+                            samesite=config.cookie_samesite)

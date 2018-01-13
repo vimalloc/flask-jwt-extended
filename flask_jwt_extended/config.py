@@ -98,6 +98,10 @@ class _Config(object):
         return current_app.config['JWT_SESSION_COOKIE']
 
     @property
+    def cookie_samesite(self):
+        return current_app.config['JWT_COOKIE_SAMESITE']
+
+    @property
     def csrf_protect(self):
         return self.jwt_in_cookies and current_app.config['JWT_COOKIE_CSRF_PROTECT']
 

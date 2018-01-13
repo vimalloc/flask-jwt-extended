@@ -150,6 +150,7 @@ class JWTManager(object):
         app.config.setdefault('JWT_COOKIE_SECURE', False)
         app.config.setdefault('JWT_COOKIE_DOMAIN', None)
         app.config.setdefault('JWT_SESSION_COOKIE', True)
+        app.config.setdefault('JWT_COOKIE_SAMESITE', None)
 
         # Options for using double submit csrf protection
         app.config.setdefault('JWT_COOKIE_CSRF_PROTECT', True)

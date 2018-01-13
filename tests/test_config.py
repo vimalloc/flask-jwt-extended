@@ -30,6 +30,7 @@ def test_default_configs(app):
         assert config.cookie_secure is False
         assert config.cookie_domain is None
         assert config.session_cookie is True
+        assert config.cookie_samesite is None
 
         assert config.csrf_protect is False
         assert config.csrf_request_methods == ['POST', 'PUT', 'PATCH', 'DELETE']
@@ -68,6 +69,7 @@ def test_override_configs(app):
     app.config['JWT_COOKIE_SECURE'] = True
     app.config['JWT_COOKIE_DOMAIN'] = ".example.com"
     app.config['JWT_SESSION_COOKIE'] = False
+    app.config['JWT_COOKIE_SAMESITE'] = "Strict"
 
     app.config['JWT_COOKIE_CSRF_PROTECT'] = True
     app.config['JWT_CSRF_METHODS'] = ['GET']
@@ -103,6 +105,7 @@ def test_override_configs(app):
         assert config.cookie_secure is True
         assert config.cookie_domain == ".example.com"
         assert config.session_cookie is False
+        assert config.cookie_samesite == "Strict"
 
         assert config.csrf_protect is True
         assert config.csrf_request_methods == ['GET']

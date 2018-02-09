@@ -238,6 +238,6 @@ class _Config(object):
 
     @property
     def exempt_methods(self):
-        return set(["OPTIONS"])
+        return {"OPTIONS"}
 
 config = _Config()

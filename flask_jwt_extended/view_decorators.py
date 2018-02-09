@@ -38,7 +38,7 @@ def jwt_required(fn):
             if not verify_token_claims(jwt_data[config.user_claims_key]):
                 raise UserClaimsVerificationError('User claims verification failed')
             _load_user(jwt_data[config.identity_claim_key])
-            return fn(*args, **kwargs)
+        return fn(*args, **kwargs)
     return wrapper
 
 
@@ -82,19 +82,20 @@ def fresh_jwt_required(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        jwt_data = _decode_jwt_from_request(request_type='access')
-        ctx_stack.top.jwt = jwt_data
-        fresh = jwt_data['fresh']
-        if isinstance(fresh, bool):
-            if not fresh:
-                raise FreshTokenRequired('Fresh token required')
-        else:
-            now = timegm(datetime.utcnow().utctimetuple())
-            if fresh < now:
-                raise FreshTokenRequired('Fresh token required')
-        if not verify_token_claims(jwt_data[config.user_claims_key]):
-            raise UserClaimsVerificationError('User claims verification failed')
-        _load_user(jwt_data[config.identity_claim_key])
+        if request.method not in config.exempt_methods:
+            jwt_data = _decode_jwt_from_request(request_type='access')
+            ctx_stack.top.jwt = jwt_data
+            fresh = jwt_data['fresh']
+            if isinstance(fresh, bool):
+                if not fresh:
+                    raise FreshTokenRequired('Fresh token required')
+            else:
+                now = timegm(datetime.utcnow().utctimetuple())
+                if fresh < now:
+                    raise FreshTokenRequired('Fresh token required')
+            if not verify_token_claims(jwt_data[config.user_claims_key]):
+                raise UserClaimsVerificationError('User claims verification failed')
+            _load_user(jwt_data[config.identity_claim_key])
         return fn(*args, **kwargs)
     return wrapper
 
@@ -108,9 +109,10 @@ def jwt_refresh_token_required(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        jwt_data = _decode_jwt_from_request(request_type='refresh')
-        ctx_stack.top.jwt = jwt_data
-        _load_user(jwt_data[config.identity_claim_key])
+        if request.method not in config.exempt_methods:
+            jwt_data = _decode_jwt_from_request(request_type='refresh')
+            ctx_stack.top.jwt = jwt_data
+            _load_user(jwt_data[config.identity_claim_key])
         return fn(*args, **kwargs)
     return wrapper
 

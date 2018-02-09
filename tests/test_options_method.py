@@ -1,5 +1,7 @@
 from flask import Flask, Blueprint
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token
+from flask_jwt_extended import (
+    JWTManager, jwt_required, fresh_jwt_required, jwt_refresh_token_required
+    )
 import pytest
 
 @pytest.fixture(scope='function')
@@ -8,27 +10,42 @@ def app():
     app.config['JWT_SECRET_KEY'] = 'secret'
     JWTManager(app)
 
-    protected_bp = Blueprint('protected', __name__)
-
-    # This protects the entire blueprint,
-    # Also the OPTIONS method
-    @protected_bp.before_request
+    @app.route('/jwt_required', methods=["GET", "OPTIONS"])
     @jwt_required
-    def protect():
-        pass
+    def jwt_required_endpoint():
+        return b'ok'
 
-    @protected_bp.route('/protected', methods=["GET"])
-    @jwt_required
-    def protected():
-        return 'ok'
+    @app.route('/fresh_jwt_required', methods=["GET", "OPTIONS"])
+    @fresh_jwt_required
+    def fresh_jwt_required_endpoint():
+        return b'ok'
 
-    app.register_blueprint(protected_bp)
+    @app.route('/jwt_refresh_token_required', methods=["GET", "OPTIONS"])
+    @jwt_refresh_token_required
+    def jwt_refresh_token_required_endpoint():
+        return b'ok'
+
+
+
     return app
 
-def test_access_protected_enpoint(app):
-    client = app.test_client()
-    assert client.get('/protected').status_code == 401 # ok
+def test_access_jwt_required_enpoint(app):
+    # Test the options method shoud not be
+    # affected by jwt required
+    res = app.test_client().options('/jwt_required')
+    assert res.status_code == 200
+    assert res.data == b'ok'
 
-def test_access_protected_enpoint_options(app):
-    client = app.test_client()
-    assert client.options('/protected').status_code == 200 # test fails
+def test_access_jwt_refresh_token_required_enpoint(app):
+    # Test the options method shoud not be
+    # affected by jwt required
+    res = app.test_client().options('/jwt_refresh_token_required')
+    assert res.status_code == 200
+    assert res.data == b'ok'
+
+def test_access_fresh_jwt_required_enpoint(app):
+    # Test the options method shoud not be
+    # affected by jwt required
+    res = app.test_client().options('/fresh_jwt_required')
+    assert res.status_code == 200
+    assert res.data == b'ok'

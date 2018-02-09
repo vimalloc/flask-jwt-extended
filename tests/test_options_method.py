@@ -25,7 +25,6 @@ def app():
     app.register_blueprint(protected_bp)
     return app
 
-
 def test_access_protected_enpoint(app):
     client = app.test_client()
     assert client.get('/protected').status_code == 401 # ok

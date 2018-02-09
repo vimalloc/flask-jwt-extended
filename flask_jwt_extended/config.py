@@ -236,6 +236,8 @@ class _Config(object):
     def user_claims_key(self):
         return current_app.config['JWT_USER_CLAIMS']
 
+    @property
+    def exempt_methods(self):
+        return set(["OPTIONS"])
+
 config = _Config()
-
-

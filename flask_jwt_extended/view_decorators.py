@@ -32,12 +32,13 @@ def jwt_required(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        jwt_data = _decode_jwt_from_request(request_type='access')
-        ctx_stack.top.jwt = jwt_data
-        if not verify_token_claims(jwt_data[config.user_claims_key]):
-            raise UserClaimsVerificationError('User claims verification failed')
-        _load_user(jwt_data[config.identity_claim_key])
-        return fn(*args, **kwargs)
+        if request.method not in config.exempt_methods:
+            jwt_data = _decode_jwt_from_request(request_type='access')
+            ctx_stack.top.jwt = jwt_data
+            if not verify_token_claims(jwt_data[config.user_claims_key]):
+                raise UserClaimsVerificationError('User claims verification failed')
+            _load_user(jwt_data[config.identity_claim_key])
+            return fn(*args, **kwargs)
     return wrapper
 
 

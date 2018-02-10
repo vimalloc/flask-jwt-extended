@@ -17,7 +17,11 @@ setup(name='Flask-JWT-Extended',
       packages=['flask_jwt_extended'],
       zip_safe=False,
       platforms='any',
-      install_requires=['Flask', 'PyJWT'],
+      install_requires=[
+          'Werkzeug>=0.14',  # needed for samestie cookie functionality
+          'Flask',
+          'PyJWT',
+      ],
       extras_require={
         'asymmetric_crypto':  ["cryptography"]
       },

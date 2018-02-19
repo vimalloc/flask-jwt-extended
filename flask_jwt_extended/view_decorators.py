@@ -208,7 +208,7 @@ def _decode_jwt_from_request(request_type):
 
     # Make sure the type of token we received matches the request type we expect
     if decoded_token['type'] != request_type:
-        raise WrongTokenError('Only {} tokens can access this endpoint'.format(request_type))
+        raise WrongTokenError('Only {} tokens are allowed'.format(request_type))
 
     # If blacklisting is enabled, see if this token has been revoked
     if _token_blacklisted(decoded_token, request_type):

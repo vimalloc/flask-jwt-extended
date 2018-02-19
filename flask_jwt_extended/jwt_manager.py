@@ -74,10 +74,6 @@ class JWTManager(object):
         self._set_default_configuration_options(app)
         self._set_error_handler_callbacks(app)
 
-        # Set propagate exceptions, so all of our error handlers properly
-        # work in production
-        app.config['PROPAGATE_EXCEPTIONS'] = True
-
     def _set_error_handler_callbacks(self, app):
         """
         Sets the error handler callbacks used by this extension

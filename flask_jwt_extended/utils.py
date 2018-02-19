@@ -7,6 +7,9 @@ except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as ctx_stack
 
 from flask_jwt_extended.config import config
+from flask_jwt_extended.exceptions import (
+    RevokedTokenError, UserClaimsVerificationError, WrongTokenError
+)
 from flask_jwt_extended.tokens import decode_jwt
 
 
@@ -153,9 +156,31 @@ def token_in_blacklist(*args, **kwargs):
     return jwt_manager._token_in_blacklist_callback(*args, **kwargs)
 
 
-def verify_token_claims(*args, **kwargs):
+def verify_token_type(decoded_token, expected_type):
+    if decoded_token['type'] != expected_type:
+        raise WrongTokenError('Only {} tokens are allowed'.format(expected_type))
+
+
+def verify_token_not_blacklisted(decoded_token, request_type):
+    if not config.blacklist_enabled:
+        return
+    if not has_token_in_blacklist_callback():
+        raise RuntimeError("A token_in_blacklist_callback must be provided via "
+                           "the '@token_in_blacklist_loader' if "
+                           "JWT_BLACKLIST_ENABLED is True")
+    if config.blacklist_access_tokens and request_type == 'access':
+        if token_in_blacklist(decoded_token):
+            raise RevokedTokenError('Token has been revoked')
+    if config.blacklist_refresh_tokens and request_type == 'refresh':
+        if token_in_blacklist(decoded_token):
+            raise RevokedTokenError('Token has been revoked')
+
+
+def verify_token_claims(jwt_data):
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._claims_verification_callback(*args, **kwargs)
+    user_claims = jwt_data[config.user_claims_key]
+    if not jwt_manager._claims_verification_callback(user_claims):
+        raise UserClaimsVerificationError('User claims verification failed')
 
 
 def get_csrf_token(encoded_token):

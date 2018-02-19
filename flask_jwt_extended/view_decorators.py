@@ -33,7 +33,28 @@ def jwt_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if request.method not in config.exempt_methods:
-            jwt_data = _decode_jwt_from_request(request_type='access')
+            jwt_data = _decode_jwt_from_request(request_types=['access'])
+            ctx_stack.top.jwt = jwt_data
+            if not verify_token_claims(jwt_data[config.user_claims_key]):
+                raise UserClaimsVerificationError('User claims verification failed')
+            _load_user(jwt_data[config.identity_claim_key])
+        return fn(*args, **kwargs)
+    return wrapper
+
+def jwt_access_or_refresh_required(fn):
+    """
+    A decorator to protect a Flask endpoint.
+
+    If you decorate an endpoint with this, it will ensure that the requester
+    has a valid access or refresh token before allowing the endpoint to be called.
+    This does not check the freshness of the access token.
+
+    See also: :func:`~flask_jwt_extended.fresh_jwt_required` and :func:`~flask_jwt_extended.jwt_required`
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if request.method not in config.exempt_methods:
+            jwt_data = _decode_jwt_from_request(request_types=['access','refresh'])
             ctx_stack.top.jwt = jwt_data
             if not verify_token_claims(jwt_data[config.user_claims_key]):
                 raise UserClaimsVerificationError('User claims verification failed')
@@ -59,7 +80,7 @@ def jwt_optional(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         try:
-            jwt_data = _decode_jwt_from_request(request_type='access')
+            jwt_data = _decode_jwt_from_request(request_types=['access'])
             ctx_stack.top.jwt = jwt_data
             if not verify_token_claims(jwt_data[config.user_claims_key]):
                 raise UserClaimsVerificationError('User claims verification failed')
@@ -83,7 +104,7 @@ def fresh_jwt_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if request.method not in config.exempt_methods:
-            jwt_data = _decode_jwt_from_request(request_type='access')
+            jwt_data = _decode_jwt_from_request(request_types=['access'])
             ctx_stack.top.jwt = jwt_data
             fresh = jwt_data['fresh']
             if isinstance(fresh, bool):
@@ -110,7 +131,7 @@ def jwt_refresh_token_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if request.method not in config.exempt_methods:
-            jwt_data = _decode_jwt_from_request(request_type='refresh')
+            jwt_data = _decode_jwt_from_request(request_types=['refresh'])
             ctx_stack.top.jwt = jwt_data
             _load_user(jwt_data[config.identity_claim_key])
         return fn(*args, **kwargs)
@@ -189,29 +210,39 @@ def _decode_jwt_from_cookies(request_type):
     return decode_token(encoded_token, csrf_value=csrf_value)
 
 
-def _decode_jwt_from_request(request_type):
+def _decode_jwt_from_request(request_types):
     # We have three cases here, having jwts in both cookies and headers is
     # valid, or the jwt can only be saved in one of cookies or headers. Check
     # all cases here.
     if config.jwt_in_cookies and config.jwt_in_headers:
-        try:
-            decoded_token = _decode_jwt_from_cookies(request_type)
-        except NoAuthorizationError:
-            try:
-                decoded_token = _decode_jwt_from_headers()
-            except NoAuthorizationError:
+            decoded_token = None
+            for request_type in request_types:
+                try:
+                    decoded_token = _decode_jwt_from_cookies(request_type)
+                except NoAuthorizationError:
+                    try:
+                        decoded_token = _decode_jwt_from_headers()
+                    except NoAuthorizationError:
+                        continue
+            if decoded_token == None:
                 raise NoAuthorizationError("Missing JWT in headers and cookies")
+
+
     elif config.jwt_in_headers:
         decoded_token = _decode_jwt_from_headers()
     else:
-        decoded_token = _decode_jwt_from_cookies(request_type)
+        for request_type in request_types:
+            decoded_token = _decode_jwt_from_cookies(request_type)
 
     # Make sure the type of token we received matches the request type we expect
-    if decoded_token['type'] != request_type:
-        raise WrongTokenError('Only {} tokens can access this endpoint'.format(request_type))
+    if decoded_token['type'] not in request_types:
+        raise WrongTokenError('Only {} tokens can access this endpoint'.format(request_types.join(" and ")))
 
     # If blacklisting is enabled, see if this token has been revoked
-    if _token_blacklisted(decoded_token, request_type):
-        raise RevokedTokenError('Token has been revoked')
+    for request_type in request_types:
+        _token_blacklisted(decoded_token, request_type):
+            raise RevokedTokenError('Token has been revoked')
 
     return decoded_token
+
+

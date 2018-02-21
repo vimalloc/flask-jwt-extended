@@ -8,3 +8,5 @@ from .utils import (
     unset_jwt_cookies, get_raw_jwt, get_current_user, current_user,
     get_jti, decode_token, get_csrf_token
 )
+
+__version__ = '3.7.0'

@@ -10,13 +10,12 @@ except ImportError:  # pragma: no cover
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
-    InvalidHeaderError, NoAuthorizationError, WrongTokenError,
-    FreshTokenRequired, CSRFError, UserLoadError, RevokedTokenError,
-    UserClaimsVerificationError
+    CSRFError, FreshTokenRequired, InvalidHeaderError, NoAuthorizationError,
+    UserLoadError
 )
 from flask_jwt_extended.utils import (
-    has_user_loader, user_loader, token_in_blacklist, decode_token,
-    has_token_in_blacklist_callback, verify_token_claims
+    decode_token, has_user_loader, user_loader, verify_token_claims,
+    verify_token_not_blacklisted, verify_token_type
 )
 
 
@@ -35,8 +34,7 @@ def jwt_required(fn):
         if request.method not in config.exempt_methods:
             jwt_data = _decode_jwt_from_request(request_type='access')
             ctx_stack.top.jwt = jwt_data
-            if not verify_token_claims(jwt_data[config.user_claims_key]):
-                raise UserClaimsVerificationError('User claims verification failed')
+            verify_token_claims(jwt_data)
             _load_user(jwt_data[config.identity_claim_key])
         return fn(*args, **kwargs)
     return wrapper
@@ -61,8 +59,7 @@ def jwt_optional(fn):
         try:
             jwt_data = _decode_jwt_from_request(request_type='access')
             ctx_stack.top.jwt = jwt_data
-            if not verify_token_claims(jwt_data[config.user_claims_key]):
-                raise UserClaimsVerificationError('User claims verification failed')
+            verify_token_claims(jwt_data)
             _load_user(jwt_data[config.identity_claim_key])
         except (NoAuthorizationError, InvalidHeaderError):
             pass
@@ -93,8 +90,7 @@ def fresh_jwt_required(fn):
                 now = timegm(datetime.utcnow().utctimetuple())
                 if fresh < now:
                     raise FreshTokenRequired('Fresh token required')
-            if not verify_token_claims(jwt_data[config.user_claims_key]):
-                raise UserClaimsVerificationError('User claims verification failed')
+            verify_token_claims(jwt_data)
             _load_user(jwt_data[config.identity_claim_key])
         return fn(*args, **kwargs)
     return wrapper
@@ -124,21 +120,6 @@ def _load_user(identity):
             raise UserLoadError("user_loader returned None for {}".format(identity))
         else:
             ctx_stack.top.jwt_user = user
-
-
-def _token_blacklisted(decoded_token, request_type):
-    if not config.blacklist_enabled:
-        return False
-    if not has_token_in_blacklist_callback():
-        raise RuntimeError("A token_in_blacklist_callback must be provided via "
-                           "the '@token_in_blacklist_loader' if "
-                           "JWT_BLACKLIST_ENABLED is True")
-
-    if config.blacklist_access_tokens and request_type == 'access':
-        return token_in_blacklist(decoded_token)
-    if config.blacklist_refresh_tokens and request_type == 'refresh':
-        return token_in_blacklist(decoded_token)
-    return False
 
 
 def _decode_jwt_from_headers():
@@ -207,11 +188,9 @@ def _decode_jwt_from_request(request_type):
         decoded_token = _decode_jwt_from_cookies(request_type)
 
     # Make sure the type of token we received matches the request type we expect
-    if decoded_token['type'] != request_type:
-        raise WrongTokenError('Only {} tokens can access this endpoint'.format(request_type))
+    verify_token_type(decoded_token, expected_type=request_type)
 
     # If blacklisting is enabled, see if this token has been revoked
-    if _token_blacklisted(decoded_token, request_type):
-        raise RevokedTokenError('Token has been revoked')
+    verify_token_not_blacklisted(decoded_token, request_type)
 
     return decoded_token

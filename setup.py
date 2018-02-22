@@ -1,12 +1,17 @@
 """
 Flask-JWT-Extended
--------------------
+------------------
 Flask-Login provides jwt endpoint protection for Flask.
 """
+import io
+import re
 from setuptools import setup
 
+with io.open('flask_jwt_extended/__init__.py', encoding='utf-8') as f:
+    version = re.search(r"__version__ = '(.+)'", f.read()).group(1)
+
 setup(name='Flask-JWT-Extended',
-      version='3.7.0',
+      version=version,
       url='https://github.com/vimalloc/flask-jwt-extended',
       license='MIT',
       author='Landon Gilbert-Bland',
@@ -18,7 +23,7 @@ setup(name='Flask-JWT-Extended',
       zip_safe=False,
       platforms='any',
       install_requires=[
-          'Werkzeug>=0.14',  # needed for samestie cookie functionality
+          'Werkzeug>=0.14',  # Needed for SameSite cookie functionality
           'Flask',
           'PyJWT',
       ],

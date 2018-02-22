@@ -67,7 +67,7 @@ def test_jwt_required(app):
     response = test_client.get(url, headers=make_headers(refresh_token))
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Only access tokens can access this endpoint'}
+    assert json_data == {'msg': 'Only access tokens are allowed'}
 
 
 def test_fresh_jwt_required(app):
@@ -110,7 +110,7 @@ def test_fresh_jwt_required(app):
     response = test_client.get(url, headers=make_headers(refresh_token))
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Only access tokens can access this endpoint'}
+    assert json_data == {'msg': 'Only access tokens are allowed'}
 
     # Test with custom response
     @jwtM.needs_fresh_token_loader
@@ -135,12 +135,12 @@ def test_refresh_jwt_required(app):
     response = test_client.get(url, headers=make_headers(fresh_access_token))
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Only refresh tokens can access this endpoint'}
+    assert json_data == {'msg': 'Only refresh tokens are allowed'}
 
     response = test_client.get(url, headers=make_headers(access_token))
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Only refresh tokens can access this endpoint'}
+    assert json_data == {'msg': 'Only refresh tokens are allowed'}
 
     response = test_client.get(url, headers=None)
     json_data = json.loads(response.get_data(as_text=True))
@@ -176,7 +176,7 @@ def test_jwt_optional(app):
     response = test_client.get(url, headers=make_headers(refresh_token))
     json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Only access tokens can access this endpoint'}
+    assert json_data == {'msg': 'Only access tokens are allowed'}
 
     response = test_client.get(url, headers=None)
     json_data = json.loads(response.get_data(as_text=True))

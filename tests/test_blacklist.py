@@ -111,9 +111,9 @@ def test_no_blacklist_callback_method_provided(app):
     with app.test_request_context():
         access_token = create_access_token('username')
 
-    with pytest.raises(RuntimeError):
-        test_client = app.test_client()
-        test_client.get('/protected', headers=make_headers(access_token))
+    test_client = app.test_client()
+    response = test_client.get('/protected', headers=make_headers(access_token))
+    assert response.status_code == 500
 
 
 def test_revoked_token_of_different_type(app):

@@ -217,12 +217,12 @@ def test_setting_cookies_wihout_cookies_enabled(app):
     app.config['JWT_TOKEN_LOCATION'] = ['headers']
     test_client = app.test_client()
 
-    with pytest.raises(RuntimeWarning):
-        test_client.get('/access_token')
-    with pytest.raises(RuntimeWarning):
-        test_client.get('/refresh_token')
-    with pytest.raises(RuntimeWarning):
-        test_client.get('/delete_tokens')
+    response = test_client.get('/access_token')
+    assert response.status_code == 500
+    response = test_client.get('/refresh_token')
+    assert response.status_code == 500
+    response = test_client.get('/delete_tokens')
+    assert response.status_code == 500
 
 
 def test_default_cookie_options(app):

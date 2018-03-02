@@ -37,7 +37,7 @@ and what the return values of your callback functions need to be.
       - Function to call to load a user object when token accesses a protected endpoint
     * - :meth:`~flask_jwt_extended.JWTManager.user_loader_error_loader`
       - Function that is called when the user_loader callback function returns `None`
-    * - :meth:`~flask_jwt_extended.JWTManager.user_loader_error_loader`
+    * - :meth:`~flask_jwt_extended.JWTManager.token_in_blacklist_loader`
       - Function that is called to check if a token has been revoked
     * - :meth:`~flask_jwt_extended.JWTManager.claims_verification_loader`
       - Function that is called to verify the user_claims data. Must return True or False

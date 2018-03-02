@@ -313,7 +313,7 @@ class JWTManager(object):
         is returned from the
         :meth:`~flask_jwt_extended.JWTManager.user_loader_callback_loader`
         callback function. The default implementation will return
-        a 400 status code with the JSON:
+        a 401 status code with the JSON:
 
         {"msg": "Error loading the user <identity>"}
 

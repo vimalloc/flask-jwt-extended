@@ -4,7 +4,7 @@ from flask import Flask, jsonify, json
 from flask_jwt_extended import (
     jwt_required, JWTManager, jwt_refresh_token_required, create_access_token,
     create_refresh_token, set_access_cookies, set_refresh_cookies,
-    unset_jwt_cookies
+    unset_jwt_cookies, jwt_optional
 )
 
 def _get_cookie_from_response(response, cookie_name):
@@ -64,6 +64,11 @@ def app():
     @app.route('/post_refresh_protected', methods=['POST'])
     @jwt_refresh_token_required
     def post_refresh_protected():
+        return jsonify(foo='bar')
+
+    @app.route('/optional_post_protected', methods=['POST'])
+    @jwt_optional
+    def optional_post_protected():
         return jsonify(foo='bar')
 
     return app
@@ -391,3 +396,21 @@ def test_cookies_without_csrf(app):
     assert len(cookies) == 1
     refresh_cookie = _get_cookie_from_response(response, 'refresh_token_cookie')
     assert refresh_cookie is not None
+
+def test_jwt_optional_with_csrf_enabled(app):
+    test_client = app.test_client()
+
+    # User without a token should be able to reach the endpoint without
+    # getting a CSRF error
+    response = test_client.post('/optional_post_protected')
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 200
+    assert json_data == {'foo': 'bar'}
+
+    # User with a token should still get a CSRF error if csrf not present
+    response = test_client.get('/access_token')
+    csrf_token = _get_cookie_from_response(response, 'csrf_access_token')['csrf_access_token']
+    response = test_client.post('/optional_post_protected')
+    json_data = json.loads(response.get_data(as_text=True))
+    assert response.status_code == 401
+    assert json_data == {'msg': 'Missing CSRF token in headers'}

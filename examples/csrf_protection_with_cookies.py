@@ -82,7 +82,6 @@ def refresh():
 # in order to logout. unset_jwt_cookies is a helper function to
 # do just that.
 @app.route('/token/remove', methods=['POST'])
-@jwt_required
 def logout():
     resp = jsonify({'logout': True})
     unset_jwt_cookies(resp)

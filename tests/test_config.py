@@ -3,6 +3,7 @@ import warnings
 import pytest
 from datetime import timedelta
 from flask import Flask
+from flask.json import JSONEncoder
 
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended.config import config
@@ -56,6 +57,8 @@ def test_default_configs(app):
         assert config.identity_claim_key == 'identity'
         assert config.user_claims_key == 'user_claims'
 
+        assert config.json_encoder is app.json_encoder
+
 
 def test_override_configs(app):
     app.config['JWT_TOKEN_LOCATION'] = ['cookies']
@@ -90,6 +93,11 @@ def test_override_configs(app):
 
     app.config['JWT_IDENTITY_CLAIM'] = 'foo'
     app.config['JWT_USER_CLAIMS'] = 'bar'
+
+    class CustomJSONEncoder(JSONEncoder):
+        pass
+
+    app.json_encoder = CustomJSONEncoder
 
     with app.test_request_context():
         assert config.token_location == ['cookies']
@@ -130,6 +138,8 @@ def test_override_configs(app):
 
         assert config.identity_claim_key == 'foo'
         assert config.user_claims_key == 'bar'
+
+        assert config.json_encoder is CustomJSONEncoder
 
 
 def test_tokens_never_expire(app):

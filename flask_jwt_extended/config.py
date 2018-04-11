@@ -240,4 +240,8 @@ class _Config(object):
     def exempt_methods(self):
         return {"OPTIONS"}
 
+    @property
+    def json_encoder(self):
+        return current_app.json_encoder
+
 config = _Config()

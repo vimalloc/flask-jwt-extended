@@ -13,7 +13,8 @@ def _create_csrf_token():
     return str(uuid.uuid4())
 
 
-def _encode_jwt(additional_token_data, expires_delta, secret, algorithm):
+def _encode_jwt(additional_token_data, expires_delta, secret, algorithm,
+                json_encoder=None):
     uid = str(uuid.uuid4())
     now = datetime.datetime.utcnow()
     token_data = {
@@ -31,7 +32,8 @@ def _encode_jwt(additional_token_data, expires_delta, secret, algorithm):
 
 
 def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
-                        user_claims, csrf, identity_claim_key, user_claims_key):
+                        user_claims, csrf, identity_claim_key, user_claims_key,
+                        json_encoder=None):
     """
     Creates a new encoded (utf-8) access token.
 
@@ -70,11 +72,12 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
 
     if csrf:
         token_data['csrf'] = _create_csrf_token()
-    return _encode_jwt(token_data, expires_delta, secret, algorithm)
+    return _encode_jwt(token_data, expires_delta, secret, algorithm,
+                       json_encoder=json_encoder)
 
 
 def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf,
-                         identity_claim_key):
+                         identity_claim_key, json_encoder=None):
     """
     Creates a new encoded (utf-8) refresh token.
 
@@ -95,7 +98,8 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf,
     }
     if csrf:
         token_data['csrf'] = _create_csrf_token()
-    return _encode_jwt(token_data, expires_delta, secret, algorithm)
+    return _encode_jwt(token_data, expires_delta, secret, algorithm,
+                       json_encoder=json_encoder)
 
 
 def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,

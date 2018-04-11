@@ -8,7 +8,8 @@ def encode_token(app, token_data):
         token = jwt.encode(
             token_data,
             config.decode_key,
-            algorithm=config.algorithm
+            algorithm=config.algorithm,
+            json_encoder=config.json_encoder
         )
         return token.decode('utf-8')
 

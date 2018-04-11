@@ -27,7 +27,8 @@ def _encode_jwt(additional_token_data, expires_delta, secret, algorithm,
     if expires_delta:
         token_data['exp'] = now + expires_delta
     token_data.update(additional_token_data)
-    encoded_token = jwt.encode(token_data, secret, algorithm).decode('utf-8')
+    encoded_token = jwt.encode(token_data, secret, algorithm,
+                               json_encoder=json_encoder).decode('utf-8')
     return encoded_token
 
 

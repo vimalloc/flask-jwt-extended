@@ -9,4 +9,4 @@ from .utils import (
     get_jti, decode_token, get_csrf_token
 )
 
-__version__ = '3.7.2'
+__version__ = '3.8.0'

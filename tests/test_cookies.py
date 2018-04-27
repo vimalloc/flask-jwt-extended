@@ -1,5 +1,5 @@
 import pytest
-from flask import Flask, jsonify, json
+from flask import Flask, jsonify
 
 from flask_jwt_extended import (
     jwt_required, JWTManager, jwt_refresh_token_required, create_access_token,
@@ -84,23 +84,20 @@ def test_jwt_refresh_required_with_cookies(app, options):
 
     # Test without cookies
     response = test_client.get(protected_url)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing cookie "{}"'.format(cookie_name)}
+    assert response.get_json() == {'msg': 'Missing cookie "{}"'.format(cookie_name)}
 
     # Test after receiving cookies
     test_client.get(auth_url)
     response = test_client.get(protected_url)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
     # Test after issuing a 'logout' to delete the cookies
     test_client.get('/delete_tokens')
     response = test_client.get(protected_url)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing cookie "{}"'.format(cookie_name)}
+    assert response.get_json() == {'msg': 'Missing cookie "{}"'.format(cookie_name)}
 
 
 @pytest.mark.parametrize("options", [
@@ -117,16 +114,14 @@ def test_default_access_csrf_protection(app, options):
 
     # Test you cannot post without the additional csrf protection
     response = test_client.post(post_url)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing CSRF token in headers'}
+    assert response.get_json() == {'msg': 'Missing CSRF token in headers'}
 
     # Test that you can post with the csrf double submit value
     csrf_headers = {'X-CSRF-TOKEN': csrf_token}
     response = test_client.post(post_url, headers=csrf_headers)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
 
 @pytest.mark.parametrize("options", [
@@ -141,9 +136,8 @@ def test_non_matching_csrf_token(app, options):
     test_client.get(auth_url)
     csrf_headers = {'X-CSRF-TOKEN': 'totally_wrong_token'}
     response = test_client.post(post_url, headers=csrf_headers)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'CSRF double submit tokens do not match'}
+    assert response.get_json() == {'msg': 'CSRF double submit tokens do not match'}
 
 
 @pytest.mark.parametrize("options", [
@@ -158,9 +152,8 @@ def test_csrf_disabled(app, options):
     # Get the jwt cookies and csrf double submit tokens
     test_client.get(auth_url)
     response = test_client.post(post_url)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
 
 @pytest.mark.parametrize("options", [
@@ -180,9 +173,8 @@ def test_csrf_with_custom_header_names(app, options):
     # Test that you can post with the csrf double submit value
     csrf_headers = {'FOO': csrf_token}
     response = test_client.post(post_url, headers=csrf_headers)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
 
 @pytest.mark.parametrize("options", [
@@ -200,22 +192,19 @@ def test_custom_csrf_methods(app, options):
 
     # Insure we can now do posts without csrf
     response = test_client.post(post_url)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
     # Insure GET requests now fail without csrf
     response = test_client.get(get_url)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing CSRF token in headers'}
+    assert response.get_json() == {'msg': 'Missing CSRF token in headers'}
 
     # Insure GET requests now succeed with csrf
     csrf_headers = {'X-CSRF-TOKEN': csrf_token}
     response = test_client.get(get_url, headers=csrf_headers)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
 
 def test_setting_cookies_wihout_cookies_enabled(app):
@@ -403,14 +392,12 @@ def test_jwt_optional_with_csrf_enabled(app):
     # User without a token should be able to reach the endpoint without
     # getting a CSRF error
     response = test_client.post('/optional_post_protected')
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
     # User with a token should still get a CSRF error if csrf not present
     response = test_client.get('/access_token')
     csrf_token = _get_cookie_from_response(response, 'csrf_access_token')['csrf_access_token']
     response = test_client.post('/optional_post_protected')
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing CSRF token in headers'}
+    assert response.get_json() == {'msg': 'Missing CSRF token in headers'}

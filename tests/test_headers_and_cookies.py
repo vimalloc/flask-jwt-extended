@@ -1,5 +1,5 @@
 import pytest
-from flask import Flask, jsonify, json
+from flask import Flask, jsonify
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, set_access_cookies
@@ -35,23 +35,20 @@ def test_header_access(app):
 
     access_headers = {'Authorization': 'Bearer {}'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
 
 def test_cookie_access(app):
     test_client = app.test_client()
     test_client.get('/cookie_login')
     response = test_client.get('/protected')
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
 
 def test_no_jwt_in_request(app):
     test_client = app.test_client()
     response = test_client.get('/protected')
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing JWT in headers and cookies'}
+    assert response.get_json() == {'msg': 'Missing JWT in headers and cookies'}

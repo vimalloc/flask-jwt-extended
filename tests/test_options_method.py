@@ -1,7 +1,7 @@
-from flask import Flask, Blueprint
+from flask import Flask
 from flask_jwt_extended import (
     JWTManager, jwt_required, fresh_jwt_required, jwt_refresh_token_required
-    )
+)
 import pytest
 
 @pytest.fixture(scope='function')
@@ -24,8 +24,6 @@ def app():
     @jwt_refresh_token_required
     def jwt_refresh_token_required_endpoint():
         return b'ok'
-
-
 
     return app
 

@@ -1,5 +1,5 @@
 import pytest
-from flask import Flask, jsonify, json
+from flask import Flask, jsonify
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, get_jwt_identity,
@@ -49,8 +49,7 @@ def test_successful_claims_validation(app, url):
         access_token = create_access_token('username', fresh=True)
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200
 
 
@@ -67,8 +66,7 @@ def test_unsuccessful_claims_validation(app, url):
         access_token = create_access_token('username', fresh=True)
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'msg': 'User claims verification failed'}
+    assert response.get_json() == {'msg': 'User claims verification failed'}
     assert response.status_code == 400
 
 
@@ -91,8 +89,7 @@ def test_claims_validation_custom_error(app, url):
         access_token = create_access_token('username', fresh=True)
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'msg': 'claims failed for username'}
+    assert response.get_json() == {'msg': 'claims failed for username'}
     assert response.status_code == 404
 
 
@@ -111,6 +108,5 @@ def test_get_jwt_identity_in_verification_method(app, url):
         access_token = create_access_token('username', fresh=True)
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200

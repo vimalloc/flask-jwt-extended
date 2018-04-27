@@ -1,5 +1,5 @@
 import pytest
-from flask import Flask, json, jsonify
+from flask import Flask, jsonify
 
 from flask_jwt_extended import (
     JWTManager, create_access_token, jwt_required, get_jwt_claims,
@@ -34,8 +34,7 @@ def test_user_claim_in_access_token(app):
 
     test_client = app.test_client()
     response = test_client.get('/protected', headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200
 
 
@@ -76,8 +75,7 @@ def test_token_from_complex_object(app):
 
     test_client = app.test_client()
     response = test_client.get('/protected', headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'username': 'username'}
+    assert response.get_json() == {'username': 'username'}
     assert response.status_code == 200
 
 
@@ -99,6 +97,5 @@ def test_user_claims_with_different_name(app):
     # Make sure the correct data is returned to us from the full call
     test_client = app.test_client()
     response = test_client.get('/protected', headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200

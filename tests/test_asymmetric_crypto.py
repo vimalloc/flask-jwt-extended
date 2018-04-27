@@ -1,5 +1,5 @@
 import pytest
-from flask import Flask, jsonify, json
+from flask import Flask, jsonify
 
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 
@@ -57,13 +57,11 @@ def test_asymmetric_cropto(app):
     # Insure the symmetric token does not work now
     access_headers = {'Authorization': 'Bearer {}'.format(hs256_token)}
     response = test_client.get('/protected', headers=access_headers)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'The specified alg value is not allowed'}
+    assert response.get_json() == {'msg': 'The specified alg value is not allowed'}
 
     # Insure the asymmetric token does work
     access_headers = {'Authorization': 'Bearer {}'.format(rs256_token)}
     response = test_client.get('/protected', headers=access_headers)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}

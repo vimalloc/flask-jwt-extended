@@ -1,6 +1,6 @@
 import pytest
 from datetime import timedelta
-from flask import Flask, jsonify, json
+from flask import Flask, jsonify
 
 from flask_jwt_extended import (
     jwt_required, fresh_jwt_required, JWTManager, jwt_refresh_token_required,
@@ -53,21 +53,18 @@ def test_jwt_required(app):
     # Access and fresh access should be able to access this
     for token in (access_token, fresh_access_token):
         response = test_client.get(url, headers=make_headers(token))
-        json_data = json.loads(response.get_data(as_text=True))
         assert response.status_code == 200
-        assert json_data == {'foo': 'bar'}
+        assert response.get_json() == {'foo': 'bar'}
 
     # Test accessing jwt_required with no jwt in the request
     response = test_client.get(url, headers=None)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing Authorization Header'}
+    assert response.get_json() == {'msg': 'Missing Authorization Header'}
 
     # Test refresh token access to jwt_required
     response = test_client.get(url, headers=make_headers(refresh_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Only access tokens are allowed'}
+    assert response.get_json() == {'msg': 'Only access tokens are allowed'}
 
 
 def test_fresh_jwt_required(app):
@@ -83,34 +80,28 @@ def test_fresh_jwt_required(app):
         refresh_token = create_refresh_token('username')
 
     response = test_client.get(url, headers=make_headers(fresh_access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Fresh token required'}
+    assert response.get_json() == {'msg': 'Fresh token required'}
 
     response = test_client.get(url, headers=make_headers(fresh_timed_access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
     response = test_client.get(url, headers=make_headers(stale_timed_access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Fresh token required'}
+    assert response.get_json() == {'msg': 'Fresh token required'}
 
     response = test_client.get(url, headers=None)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing Authorization Header'}
+    assert response.get_json() == {'msg': 'Missing Authorization Header'}
 
     response = test_client.get(url, headers=make_headers(refresh_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Only access tokens are allowed'}
+    assert response.get_json() == {'msg': 'Only access tokens are allowed'}
 
     # Test with custom response
     @jwtM.needs_fresh_token_loader
@@ -118,9 +109,8 @@ def test_fresh_jwt_required(app):
         return jsonify(msg='foobar'), 201
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 201
-    assert json_data == {'msg': 'foobar'}
+    assert response.get_json() == {'msg': 'foobar'}
 
 
 def test_refresh_jwt_required(app):
@@ -133,24 +123,20 @@ def test_refresh_jwt_required(app):
         refresh_token = create_refresh_token('username')
 
     response = test_client.get(url, headers=make_headers(fresh_access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Only refresh tokens are allowed'}
+    assert response.get_json() == {'msg': 'Only refresh tokens are allowed'}
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Only refresh tokens are allowed'}
+    assert response.get_json() == {'msg': 'Only refresh tokens are allowed'}
 
     response = test_client.get(url, headers=None)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing Authorization Header'}
+    assert response.get_json() == {'msg': 'Missing Authorization Header'}
 
     response = test_client.get(url, headers=make_headers(refresh_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
 
 def test_jwt_optional(app):
@@ -164,29 +150,24 @@ def test_jwt_optional(app):
         refresh_token = create_refresh_token('username')
 
     response = test_client.get(url, headers=make_headers(fresh_access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'baz'}
+    assert response.get_json() == {'foo': 'baz'}
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'baz'}
+    assert response.get_json() == {'foo': 'baz'}
 
     response = test_client.get(url, headers=make_headers(refresh_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Only access tokens are allowed'}
+    assert response.get_json() == {'msg': 'Only access tokens are allowed'}
 
     response = test_client.get(url, headers=None)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
 
     response = test_client.get(url, headers=make_headers(expired_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Token has expired'}
+    assert response.get_json() == {'msg': 'Token has expired'}
 
 
 def test_invalid_jwt(app):
@@ -197,9 +178,8 @@ def test_invalid_jwt(app):
 
     # Test default response
     response = test_client.get(url, headers=make_headers(invalid_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Invalid header padding'}
+    assert response.get_json() == {'msg': 'Invalid header padding'}
 
     # Test custom response
     @jwtM.invalid_token_loader
@@ -207,9 +187,8 @@ def test_invalid_jwt(app):
         return jsonify(msg='foobar'), 201
 
     response = test_client.get(url, headers=make_headers(invalid_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 201
-    assert json_data == {'msg': 'foobar'}
+    assert response.get_json() == {'msg': 'foobar'}
 
 
 def test_jwt_missing_claims(app):
@@ -218,9 +197,8 @@ def test_jwt_missing_claims(app):
     token = encode_token(app, {'foo': 'bar'})
 
     response = test_client.get(url, headers=make_headers(token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'Missing claim: jti'}
+    assert response.get_json() == {'msg': 'Missing claim: jti'}
 
 
 def test_expired_token(app):
@@ -232,9 +210,8 @@ def test_expired_token(app):
 
     # Test default response
     response = test_client.get(url, headers=make_headers(token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Token has expired'}
+    assert response.get_json() == {'msg': 'Token has expired'}
 
     # Test custom response
     @jwtM.expired_token_loader
@@ -242,9 +219,8 @@ def test_expired_token(app):
         return jsonify(msg='foobar'), 201
 
     response = test_client.get(url, headers=make_headers(token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 201
-    assert json_data == {'msg': 'foobar'}
+    assert response.get_json() == {'msg': 'foobar'}
 
 
 def test_no_token(app):
@@ -254,9 +230,8 @@ def test_no_token(app):
 
     # Test default response
     response = test_client.get(url, headers=None)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': 'Missing Authorization Header'}
+    assert response.get_json() == {'msg': 'Missing Authorization Header'}
 
     # Test custom response
     @jwtM.unauthorized_loader
@@ -264,9 +239,8 @@ def test_no_token(app):
         return jsonify(msg='foobar'), 201
 
     response = test_client.get(url, headers=None)
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 201
-    assert json_data == {'msg': 'foobar'}
+    assert response.get_json() == {'msg': 'foobar'}
 
 
 def test_different_token_algorightm(app):
@@ -278,6 +252,5 @@ def test_different_token_algorightm(app):
     app.config['JWT_ALGORITHM'] = 'HS512'
 
     response = test_client.get(url, headers=make_headers(token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 422
-    assert json_data == {'msg': 'The specified alg value is not allowed'}
+    assert response.get_json() == {'msg': 'The specified alg value is not allowed'}

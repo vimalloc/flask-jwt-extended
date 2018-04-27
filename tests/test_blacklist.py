@@ -1,5 +1,5 @@
 import pytest
-from flask import Flask, jsonify, json
+from flask import Flask, jsonify
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
@@ -43,8 +43,7 @@ def test_non_blacklisted_access_token(app, blacklist_type):
 
     test_client = app.test_client()
     response = test_client.get('/protected', headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200
 
 
@@ -62,8 +61,7 @@ def test_blacklisted_access_token(app, blacklist_type):
 
     test_client = app.test_client()
     response = test_client.get('/protected', headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'msg': 'Token has been revoked'}
+    assert response.get_json() == {'msg': 'Token has been revoked'}
     assert response.status_code == 401
 
 
@@ -81,8 +79,7 @@ def test_non_blacklisted_refresh_token(app, blacklist_type):
 
     test_client = app.test_client()
     response = test_client.get('/refresh_protected', headers=make_headers(refresh_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200
 
 
@@ -100,8 +97,7 @@ def test_blacklisted_refresh_token(app, blacklist_type):
 
     test_client = app.test_client()
     response = test_client.get('/refresh_protected', headers=make_headers(refresh_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'msg': 'Token has been revoked'}
+    assert response.get_json() == {'msg': 'Token has been revoked'}
     assert response.status_code == 401
 
 
@@ -130,14 +126,12 @@ def test_revoked_token_of_different_type(app):
 
     app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access']
     response = test_client.get('/refresh_protected', headers=make_headers(refresh_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200
 
     app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['refresh']
     response = test_client.get('/protected', headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'foo': 'bar'}
+    assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200
 
 
@@ -157,6 +151,5 @@ def test_custom_blacklisted_message(app):
 
     test_client = app.test_client()
     response = test_client.get('/protected', headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
-    assert json_data == {'baz': 'foo'}
+    assert response.get_json() == {'baz': 'foo'}
     assert response.status_code == 404

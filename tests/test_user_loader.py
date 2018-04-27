@@ -1,5 +1,5 @@
 import pytest
-from flask import Flask, jsonify, json
+from flask import Flask, jsonify
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, current_user, get_current_user,
@@ -40,9 +40,8 @@ def test_load_valid_user(app, url):
         access_token = create_access_token('username')
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert json_data == {'foo': 'username'}
+    assert response.get_json() == {'foo': 'username'}
 
 
 @pytest.mark.parametrize("url", ['/get_user1', '/get_user2'])
@@ -58,9 +57,8 @@ def test_load_invalid_user(app, url):
         access_token = create_access_token('username')
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 401
-    assert json_data == {'msg': "Error loading the user username"}
+    assert response.get_json() == {'msg': "Error loading the user username"}
 
 
 @pytest.mark.parametrize("url", ['/get_user1', '/get_user2'])
@@ -80,6 +78,5 @@ def test_custom_user_loader_errors(app, url):
         access_token = create_access_token('username')
 
     response = test_client.get(url, headers=make_headers(access_token))
-    json_data = json.loads(response.get_data(as_text=True))
     assert response.status_code == 201
-    assert json_data == {'foo': "bar"}
+    assert response.get_json() == {'foo': "bar"}

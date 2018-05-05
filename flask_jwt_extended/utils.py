@@ -281,6 +281,52 @@ def unset_jwt_cookies(response):
 
     :param response: The Flask response object to delete the JWT cookies in.
     """
+    unset_access_cookies(response)
+    unset_refresh_cookies(response)
+
+
+def unset_access_cookies(response):
+    """
+    takes a flask response object, and configures it to unset (delete) the
+    access token from the response cookies. if `jwt_csrf_in_cookies`
+    (see :ref:`configuration options`) is `true`, this will also remove the
+    access csrf double submit value from the response cookies as well.
+
+    :param response: the flask response object to delete the jwt cookies in.
+    """
+    if not config.jwt_in_cookies:
+        raise RuntimeWarning("unset_refresh_cookies() called without "
+                             "'JWT_TOKEN_LOCATION' configured to use cookies")
+
+    response.set_cookie(config.access_cookie_name,
+                        value='',
+                        expires=0,
+                        secure=config.cookie_secure,
+                        httponly=True,
+                        domain=config.cookie_domain,
+                        path=config.access_cookie_path,
+                        samesite=config.cookie_samesite)
+
+    if config.csrf_protect and config.csrf_in_cookies:
+        response.set_cookie(config.access_csrf_cookie_name,
+                            value='',
+                            expires=0,
+                            secure=config.cookie_secure,
+                            httponly=False,
+                            domain=config.cookie_domain,
+                            path=config.access_csrf_cookie_path,
+                            samesite=config.cookie_samesite)
+
+
+def unset_refresh_cookies(response):
+    """
+    takes a flask response object, and configures it to unset (delete) the
+    refresh token from the response cookies. if `jwt_csrf_in_cookies`
+    (see :ref:`configuration options`) is `true`, this will also remove the
+    refresh csrf double submit value from the response cookies as well.
+
+    :param response: the flask response object to delete the jwt cookies in.
+    """
     if not config.jwt_in_cookies:
         raise RuntimeWarning("unset_refresh_cookies() called without "
                              "'JWT_TOKEN_LOCATION' configured to use cookies")
@@ -293,14 +339,6 @@ def unset_jwt_cookies(response):
                         domain=config.cookie_domain,
                         path=config.refresh_cookie_path,
                         samesite=config.cookie_samesite)
-    response.set_cookie(config.access_cookie_name,
-                        value='',
-                        expires=0,
-                        secure=config.cookie_secure,
-                        httponly=True,
-                        domain=config.cookie_domain,
-                        path=config.access_cookie_path,
-                        samesite=config.cookie_samesite)
 
     if config.csrf_protect and config.csrf_in_cookies:
         response.set_cookie(config.refresh_csrf_cookie_name,
@@ -310,12 +348,4 @@ def unset_jwt_cookies(response):
                             httponly=False,
                             domain=config.cookie_domain,
                             path=config.refresh_csrf_cookie_path,
-                            samesite=config.cookie_samesite)
-        response.set_cookie(config.access_csrf_cookie_name,
-                            value='',
-                            expires=0,
-                            secure=config.cookie_secure,
-                            httponly=False,
-                            domain=config.cookie_domain,
-                            path=config.access_csrf_cookie_path,
                             samesite=config.cookie_samesite)

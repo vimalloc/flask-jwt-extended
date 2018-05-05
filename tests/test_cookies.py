@@ -4,7 +4,7 @@ from flask import Flask, jsonify
 from flask_jwt_extended import (
     jwt_required, JWTManager, jwt_refresh_token_required, create_access_token,
     create_refresh_token, set_access_cookies, set_refresh_cookies,
-    unset_jwt_cookies, jwt_optional
+    unset_jwt_cookies, unset_access_cookies, unset_refresh_cookies, jwt_optional
 )
 
 def _get_cookie_from_response(response, cookie_name):
@@ -46,6 +46,18 @@ def app():
         unset_jwt_cookies(resp)
         return resp
 
+    @app.route('/delete_access_tokens', methods=['GET'])
+    def delete_access_tokens():
+        resp = jsonify(access_revoked=True)
+        unset_access_cookies(resp)
+        return resp
+
+    @app.route('/delete_refresh_tokens', methods=['GET'])
+    def delete_refresh_tokens():
+        resp = jsonify(refresh_revoked=True)
+        unset_refresh_cookies(resp)
+        return resp
+
     @app.route('/protected', methods=['GET'])
     @jwt_required
     def protected():
@@ -75,12 +87,12 @@ def app():
 
 
 @pytest.mark.parametrize("options", [
-    ('/refresh_token', 'refresh_token_cookie', '/refresh_protected'),
-    ('/access_token', 'access_token_cookie', '/protected')
+    ('/refresh_token', 'refresh_token_cookie', '/refresh_protected', '/delete_refresh_tokens'),
+    ('/access_token', 'access_token_cookie', '/protected', '/delete_access_tokens')
 ])
 def test_jwt_refresh_required_with_cookies(app, options):
     test_client = app.test_client()
-    auth_url, cookie_name, protected_url = options
+    auth_url, cookie_name, protected_url, delete_url = options
 
     # Test without cookies
     response = test_client.get(protected_url)
@@ -94,7 +106,17 @@ def test_jwt_refresh_required_with_cookies(app, options):
     assert response.get_json() == {'foo': 'bar'}
 
     # Test after issuing a 'logout' to delete the cookies
-    test_client.get('/delete_tokens')
+    test_client.get(delete_url)
+    response = test_client.get(protected_url)
+    assert response.status_code == 401
+    assert response.get_json() == {'msg': 'Missing cookie "{}"'.format(cookie_name)}
+
+    # log back in once more to test that clearing all tokens works
+    test_client.get(auth_url)
+    response = test_client.get(protected_url)
+    assert response.status_code == 200
+
+    test_client.get("/delete_tokens")
     response = test_client.get(protected_url)
     assert response.status_code == 401
     assert response.get_json() == {'msg': 'Missing cookie "{}"'.format(cookie_name)}
@@ -216,6 +238,10 @@ def test_setting_cookies_wihout_cookies_enabled(app):
     response = test_client.get('/refresh_token')
     assert response.status_code == 500
     response = test_client.get('/delete_tokens')
+    assert response.status_code == 500
+    response = test_client.get('/delete_access_tokens')
+    assert response.status_code == 500
+    response = test_client.get('/delete_refresh_tokens')
     assert response.status_code == 500
 
 

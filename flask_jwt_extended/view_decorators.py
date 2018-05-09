@@ -151,19 +151,19 @@ def _decode_jwt_from_headers():
 def _decode_jwt_from_cookies(request_type):
     if request_type == 'access':
         cookie_key = config.access_cookie_name
-        csrf_header_key = config.access_csrf_header_name
+        csrf_header_key = config.access_csrf_cookie_name
     else:
         cookie_key = config.refresh_cookie_name
-        csrf_header_key = config.refresh_csrf_header_name
+        csrf_header_key = config.refresh_csrf_cookie_name
 
     encoded_token = request.cookies.get(cookie_key)
     if not encoded_token:
         raise NoAuthorizationError('Missing cookie "{}"'.format(cookie_key))
 
     if config.csrf_protect and request.method in config.csrf_request_methods:
-        csrf_value = request.headers.get(csrf_header_key, None)
+        csrf_value = request.cookies.get(csrf_header_key, None)
         if not csrf_value:
-            raise CSRFError("Missing CSRF token in headers")
+            raise CSRFError("Missing CSRF token in cookies")
     else:
         csrf_value = None
 

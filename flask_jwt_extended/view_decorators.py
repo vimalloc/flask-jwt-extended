@@ -151,10 +151,10 @@ def _decode_jwt_from_headers():
 def _decode_jwt_from_cookies(request_type):
     if request_type == 'access':
         cookie_key = config.access_cookie_name
-        csrf_header_key = config.access_csrf_header_name
+        csrf_header_key = config.access_csrf_cookie_name
     else:
         cookie_key = config.refresh_cookie_name
-        csrf_header_key = config.refresh_csrf_header_name
+        csrf_header_key = config.refresh_csrf_cookie_name
 
     encoded_token = request.cookies.get(cookie_key)
     if not encoded_token:

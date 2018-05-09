@@ -161,9 +161,9 @@ def _decode_jwt_from_cookies(request_type):
         raise NoAuthorizationError('Missing cookie "{}"'.format(cookie_key))
 
     if config.csrf_protect and request.method in config.csrf_request_methods:
-        csrf_value = request.headers.get(csrf_header_key, None)
+        csrf_value = request.cookies.get(csrf_header_key, None)
         if not csrf_value:
-            raise CSRFError("Missing CSRF token in headers")
+            raise CSRFError("Missing CSRF token in cookies")
     else:
         csrf_value = None
 

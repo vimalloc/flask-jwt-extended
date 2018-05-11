@@ -34,6 +34,22 @@ Protected endpoint decorators
 .. autofunction:: jwt_optional
 
 
+.. _Verify Tokens in Request:
+
+Verify Tokens in Request
+~~~~~~~~~~~~~~~~~~~~~~~~
+These perform the same actions as the protected endpoint decorators, without
+actually decorating a function. These are very useful if you want to create
+your own decorators on top of flask jwt extended (such as role_required), or
+if you want to hook some of this extensions functionality into a flask
+before_request handler.
+
+.. autofunction:: verify_jwt_in_request
+.. autofunction:: verify_jwt_in_request_optional
+.. autofunction:: verify_fresh_jwt_in_request
+.. autofunction:: verify_jwt_refresh_token_in_request
+
+
 Utilities
 ~~~~~~~~~
 .. autofunction:: create_access_token

@@ -16,6 +16,7 @@ Flask-JWT-Extended's Documentation
    add_custom_data_claims
    tokens_from_complex_object
    complex_objects_from_token
+   custom_decorators
    refresh_tokens
    token_freshness
    changing_default_behavior

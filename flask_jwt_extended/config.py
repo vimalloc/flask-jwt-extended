@@ -44,10 +44,13 @@ class _Config(object):
         locations = current_app.config['JWT_TOKEN_LOCATION']
         if not isinstance(locations, list):
             locations = [locations]
+        if not locations:
+            raise RuntimeError('JWT_TOKEN_LOCATION must contain at least one '
+                               'of "headers", "cookies", or "query_string"')
         for location in locations:
-            if location not in ('headers', 'cookies'):
+            if location not in ('headers', 'cookies', 'query_string'):
                 raise RuntimeError('JWT_TOKEN_LOCATION can only contain '
-                                   '"headers" and/or "cookies"')
+                                   '"headers", "cookies", or "query_string"')
         return locations
 
     @property
@@ -59,6 +62,10 @@ class _Config(object):
         return 'headers' in self.token_location
 
     @property
+    def jwt_in_query_string(self):
+        return 'query_string' in self.token_location
+
+    @property
     def header_name(self):
         name = current_app.config['JWT_HEADER_NAME']
         if not name:
@@ -68,6 +75,10 @@ class _Config(object):
     @property
     def header_type(self):
         return current_app.config['JWT_HEADER_TYPE']
+
+    @property
+    def query_string_name(self):
+        return current_app.config['JWT_QUERY_STRING_NAME']
 
     @property
     def access_cookie_name(self):

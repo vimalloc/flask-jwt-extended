@@ -170,27 +170,52 @@ def _decode_jwt_from_cookies(request_type):
     return decode_token(encoded_token, csrf_value=csrf_value)
 
 
+def _decode_jwt_from_query_string():
+    query_param = config.query_string_name
+    encoded_token = request.args.get(query_param)
+    if not encoded_token:
+        raise NoAuthorizationError('Missing "{}" query paramater'.format(query_param))
+
+    return decode_token(encoded_token)
+
+
 def _decode_jwt_from_request(request_type):
-    # We have three cases here, having jwts in both cookies and headers is
-    # valid, or the jwt can only be saved in one of cookies or headers. Check
-    # all cases here.
-    if config.jwt_in_cookies and config.jwt_in_headers:
+    # All the places we can get a JWT from in this request
+    decode_functions = []
+    if config.jwt_in_cookies:
+        decode_functions.append(lambda: _decode_jwt_from_cookies(request_type))
+    if config.jwt_in_query_string:
+        decode_functions.append(_decode_jwt_from_query_string)
+    if config.jwt_in_headers:
+        decode_functions.append(_decode_jwt_from_headers)
+
+    # Try to find the token from one of these locations. It only needs to exist
+    # in one place to be valid (not every location).
+    errors = []
+    decoded_token = None
+    for decode_function in decode_functions:
         try:
-            decoded_token = _decode_jwt_from_cookies(request_type)
-        except NoAuthorizationError:
-            try:
-                decoded_token = _decode_jwt_from_headers()
-            except NoAuthorizationError:
-                raise NoAuthorizationError("Missing JWT in headers and cookies")
-    elif config.jwt_in_headers:
-        decoded_token = _decode_jwt_from_headers()
-    else:
-        decoded_token = _decode_jwt_from_cookies(request_type)
+            decoded_token = decode_function()
+            break
+        except NoAuthorizationError as e:
+            errors.append(str(e))
 
-    # Make sure the type of token we received matches the request type we expect
+    # Do some work to make a helpful and human readable error message if no
+    # token was found in any of the expected locations.
+    if not decoded_token:
+        token_locations = config.token_location
+        multiple_jwt_locations = len(token_locations) != 1
+
+        if multiple_jwt_locations:
+            err_msg = "Missing JWT in {start_locs} or {end_locs} ({details})".format(
+                start_locs=", ".join(token_locations[:-1]),
+                end_locs=token_locations[-1],
+                details= "; ".join(errors)
+            )
+            raise NoAuthorizationError(err_msg)
+        else:
+            raise NoAuthorizationError(errors[0])
+
     verify_token_type(decoded_token, expected_type=request_type)
-
-    # If blacklisting is enabled, see if this token has been revoked
     verify_token_not_blacklisted(decoded_token, request_type)
-
     return decoded_token

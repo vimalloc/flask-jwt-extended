@@ -19,10 +19,14 @@ def app():
 def test_default_configs(app):
     with app.test_request_context():
         assert config.token_location == ['headers']
+        assert config.jwt_in_query_string is False
         assert config.jwt_in_cookies is False
         assert config.jwt_in_headers is True
+
         assert config.header_name == 'Authorization'
         assert config.header_type == 'Bearer'
+
+        assert config.query_string_name == 'jwt'
 
         assert config.access_cookie_name == 'access_token_cookie'
         assert config.refresh_cookie_name == 'refresh_token_cookie'
@@ -61,9 +65,11 @@ def test_default_configs(app):
 
 
 def test_override_configs(app):
-    app.config['JWT_TOKEN_LOCATION'] = ['cookies']
+    app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'query_string']
     app.config['JWT_HEADER_NAME'] = 'TestHeader'
     app.config['JWT_HEADER_TYPE'] = 'TestType'
+
+    app.config['JWT_QUERY_STRING_NAME'] = 'banana'
 
     app.config['JWT_ACCESS_COOKIE_NAME'] = 'new_access_cookie'
     app.config['JWT_REFRESH_COOKIE_NAME'] = 'new_refresh_cookie'
@@ -100,11 +106,14 @@ def test_override_configs(app):
     app.json_encoder = CustomJSONEncoder
 
     with app.test_request_context():
-        assert config.token_location == ['cookies']
+        assert config.token_location == ['cookies', 'query_string']
+        assert config.jwt_in_query_string is True
         assert config.jwt_in_cookies is True
         assert config.jwt_in_headers is False
         assert config.header_name == 'TestHeader'
         assert config.header_type == 'TestType'
+
+        assert config.query_string_name == 'banana'
 
         assert config.access_cookie_name == 'new_access_cookie'
         assert config.refresh_cookie_name == 'new_refresh_cookie'
@@ -208,6 +217,10 @@ def test_default_with_asymmetric_secret_key(app):
 # noinspection PyStatementEffect
 def test_invalid_config_options(app):
     with app.test_request_context():
+        app.config['JWT_TOKEN_LOCATION'] = []
+        with pytest.raises(RuntimeError):
+            config.token_location
+
         app.config['JWT_TOKEN_LOCATION'] = 'banana'
         with pytest.raises(RuntimeError):
             config.token_location

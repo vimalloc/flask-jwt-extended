@@ -22,4 +22,5 @@ Flask-JWT-Extended's Documentation
    options
    blacklist_and_token_revoking
    tokens_in_cookies
+   tokens_in_query_string
    api

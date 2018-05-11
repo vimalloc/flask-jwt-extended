@@ -16,7 +16,7 @@ General Options:
 
 ================================= =========================================
 ``JWT_TOKEN_LOCATION``            Where to look for a JWT when processing a request. The
-                                  options are ``'headers'`` or ``'cookies'``. You can pass
+                                  options are ``'headers'``, ``'cookies'``, or ``'query_string'``. You can pass
                                   in a list to check more then one location, such as: ``['headers', 'cookies']``.
                                   Defaults to ``'headers'``
 ``JWT_ACCESS_TOKEN_EXPIRES``      How long an access token should live before it expires. This
@@ -53,6 +53,17 @@ These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use headers.
 ``JWT_HEADER_TYPE``               What type of header the JWT is in. Defaults to ``'Bearer'``. This can be
                                   an empty string, in which case the header contains only the JWT
                                   (insead of something like ``HeaderName: Bearer <JWT>``)
+================================= =========================================
+
+
+Query String Options:
+~~~~~~~~~~~~~~~~~~~~~
+These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use query strings.
+
+.. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
+
+================================= =========================================
+``JWT_QUERY_STRING_NAME``         What query paramater name to look for a JWT in a request. Defaults to ``'jwt'``
 ================================= =========================================
 
 

@@ -77,8 +77,9 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
                        json_encoder=json_encoder)
 
 
-def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf,
-                         identity_claim_key, json_encoder=None):
+def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims,
+                         csrf, identity_claim_key, user_claims_key,
+                         json_encoder=None):
     """
     Creates a new encoded (utf-8) refresh token.
 
@@ -88,15 +89,23 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, csrf,
     :param expires_delta: How far in the future this token should expire
                           (set to False to disable expiration)
     :type expires_delta: datetime.timedelta or False
+    :param user_claims: Custom claims to include in this token. This data must
+                        be json serializable
     :param csrf: Whether to include a csrf double submit claim in this token
                  (boolean)
     :param identity_claim_key: Which key should be used to store the identity
+    :param user_claims_key: Which key should be used to store the user claims
     :return: Encoded refresh token
     """
     token_data = {
         identity_claim_key: identity,
         'type': 'refresh',
     }
+
+    # Don't add extra data to the token if user_claims is empty.
+    if user_claims:
+        token_data[user_claims_key] = user_claims
+
     if csrf:
         token_data['csrf'] = _create_csrf_token()
     return _encode_jwt(token_data, expires_delta, secret, algorithm,
@@ -129,8 +138,8 @@ def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
     if data['type'] == 'access':
         if 'fresh' not in data:
             raise JWTDecodeError("Missing claim: fresh")
-        if user_claims_key not in data:
-            data[user_claims_key] = {}
+    if user_claims_key not in data:
+        data[user_claims_key] = {}
     if csrf_value:
         if 'csrf' not in data:
             raise JWTDecodeError("Missing claim: csrf")

@@ -187,6 +187,8 @@ class JWTManager(object):
         app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
         app.config.setdefault('JWT_USER_CLAIMS', 'user_claims')
 
+        app.config.setdefault('JWT_CLAIMS_IN_REFRESH_TOKEN', False)
+
     def user_claims_loader(self, callback):
         """
         This decorator sets the callback function for adding custom claims to an
@@ -375,13 +377,20 @@ class JWTManager(object):
         if expires_delta is None:
             expires_delta = config.refresh_expires
 
+        if config.user_claims_in_refresh_token:
+            user_claims = self._user_claims_callback(identity)
+        else:
+            user_claims = None
+
         refresh_token = encode_refresh_token(
             identity=self._user_identity_callback(identity),
             secret=config.encode_key,
             algorithm=config.algorithm,
             expires_delta=expires_delta,
+            user_claims=user_claims,
             csrf=config.csrf_protect,
             identity_claim_key=config.identity_claim_key,
+            user_claims_key=config.user_claims_key,
             json_encoder=config.json_encoder
         )
         return refresh_token

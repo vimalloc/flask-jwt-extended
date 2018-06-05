@@ -61,6 +61,8 @@ def test_default_configs(app):
         assert config.identity_claim_key == 'identity'
         assert config.user_claims_key == 'user_claims'
 
+        assert config.user_claims_in_refresh_token is False
+
         assert config.json_encoder is app.json_encoder
 
 
@@ -99,6 +101,8 @@ def test_override_configs(app):
 
     app.config['JWT_IDENTITY_CLAIM'] = 'foo'
     app.config['JWT_USER_CLAIMS'] = 'bar'
+
+    app.config['JWT_CLAIMS_IN_REFRESH_TOKEN'] = True
 
     class CustomJSONEncoder(JSONEncoder):
         pass
@@ -147,6 +151,8 @@ def test_override_configs(app):
 
         assert config.identity_claim_key == 'foo'
         assert config.user_claims_key == 'bar'
+
+        assert config.user_claims_in_refresh_token is True
 
         assert config.json_encoder is CustomJSONEncoder
 

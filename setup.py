@@ -10,6 +10,11 @@ from setuptools import setup
 with io.open('flask_jwt_extended/__init__.py', encoding='utf-8') as f:
     version = re.search(r"__version__ = '(.+)'", f.read()).group(1)
 
+
+with open("README.md", "r") as f:
+    long_description = f.read()
+
+
 setup(name='Flask-JWT-Extended',
       version=version,
       url='https://github.com/vimalloc/flask-jwt-extended',
@@ -17,7 +22,8 @@ setup(name='Flask-JWT-Extended',
       author='Landon Gilbert-Bland',
       author_email='landogbland@gmail.com',
       description='Extended JWT integration with Flask',
-      long_description='Extended JWT integration with Flask',
+      long_description=long_description,
+      long_description_content_type="text/markdown",
       keywords=['flask', 'jwt', 'json web token'],
       packages=['flask_jwt_extended'],
       zip_safe=False,

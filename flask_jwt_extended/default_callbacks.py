@@ -8,6 +8,8 @@ http://flask-jwt-extended.readthedocs.io/en/latest/tokens_from_complex_object.ht
 """
 from flask import jsonify
 
+from flask_jwt_extended.config import config
+
 
 def default_user_claims_callback(userdata):
     """
@@ -37,7 +39,7 @@ def default_expired_token_callback():
     By default, if an expired token attempts to access a protected endpoint,
     we return a generic error message with a 401 status
     """
-    return jsonify({'msg': 'Token has expired'}), 401
+    return jsonify({config.error_msg_key: 'Token has expired'}), 401
 
 
 def default_invalid_token_callback(error_string):
@@ -47,7 +49,7 @@ def default_invalid_token_callback(error_string):
 
     :param error_string: String indicating why the token is invalid
     """
-    return jsonify({'msg': error_string}), 422
+    return jsonify({config.error_msg_key: error_string}), 422
 
 
 def default_unauthorized_callback(error_string):
@@ -57,7 +59,7 @@ def default_unauthorized_callback(error_string):
 
     :param error_string: String indicating why this request is unauthorized
     """
-    return jsonify({'msg': error_string}), 401
+    return jsonify({config.error_msg_key: error_string}), 401
 
 
 def default_needs_fresh_token_callback():
@@ -65,7 +67,7 @@ def default_needs_fresh_token_callback():
     By default, if a non-fresh jwt is used to access a ```fresh_jwt_required```
     endpoint, we return a general error message with a 401 status code
     """
-    return jsonify({'msg': 'Fresh token required'}), 401
+    return jsonify({config.error_msg_key: 'Fresh token required'}), 401
 
 
 def default_revoked_token_callback():
@@ -73,7 +75,7 @@ def default_revoked_token_callback():
     By default, if a revoked token is used to access a protected endpoint, we
     return a general error message with a 401 status code
     """
-    return jsonify({'msg': 'Token has been revoked'}), 401
+    return jsonify({config.error_msg_key: 'Token has been revoked'}), 401
 
 
 def default_user_loader_error_callback(identity):
@@ -82,7 +84,7 @@ def default_user_loader_error_callback(identity):
     function returns None, we return a general error message with a 401
     status code
     """
-    return jsonify({'msg': "Error loading the user {}".format(identity)}), 401
+    return jsonify({config.error_msg_key: "Error loading the user {}".format(identity)}), 401
 
 
 def default_claims_verification_callback(user_claims):
@@ -97,4 +99,4 @@ def default_claims_verification_failed_callback():
     By default, if the user claims verification failed, we return a generic
     error message with a 400 status code
     """
-    return jsonify({'msg': 'User claims verification failed'}), 400
+    return jsonify({config.error_msg_key: 'User claims verification failed'}), 400

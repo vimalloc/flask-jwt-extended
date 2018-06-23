@@ -256,6 +256,10 @@ class _Config(object):
         return {"OPTIONS"}
 
     @property
+    def error_msg_key(self):
+        return current_app.config['JWT_ERROR_MESSAGE_KEY']
+
+    @property
     def json_encoder(self):
         return current_app.json_encoder
 

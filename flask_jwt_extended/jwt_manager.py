@@ -189,6 +189,8 @@ class JWTManager(object):
 
         app.config.setdefault('JWT_CLAIMS_IN_REFRESH_TOKEN', False)
 
+        app.config.setdefault('JWT_ERROR_MESSAGE_KEY', 'msg')
+
     def user_claims_loader(self, callback):
         """
         This decorator sets the callback function for adding custom claims to an

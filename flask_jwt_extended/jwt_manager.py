@@ -299,7 +299,7 @@ class JWTManager(object):
         """
         This decorator sets the callback function that will be called to
         automatically load an object when a protected endpoint is accessed.
-        By default this is not is not used.
+        By default this is not used.
 
         The callback must take one argument which is the identity JWT accessing
         the protected endpoint, and it must return any object (which can then

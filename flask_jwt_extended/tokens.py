@@ -6,15 +6,19 @@ from calendar import timegm
 import jwt
 from werkzeug.security import safe_str_cmp
 
-from flask_jwt_extended.exceptions import JWTDecodeError, CSRFError
-
+from flask_jwt_extended.exceptions import JWTDecodeError, JWTEncodeError, CSRFError
+from flask_jwt_extended.config import config
 
 def _create_csrf_token():
     return str(uuid.uuid4())
 
+def _check_claims(default_claims, additional_claims):
+    for claim in default_claims:
+        if claim in additional_claims:
+            raise JWTEncodeError("Claim %s in conflict with default claims" % str(claim))
 
 def _encode_jwt(additional_token_data, expires_delta, secret, algorithm,
-                json_encoder=None):
+                claim_key, json_encoder=None):
     uid = str(uuid.uuid4())
     now = datetime.datetime.utcnow()
     token_data = {
@@ -26,15 +30,19 @@ def _encode_jwt(additional_token_data, expires_delta, secret, algorithm,
     # and the 'exp' claim is not set.
     if expires_delta:
         token_data['exp'] = now + expires_delta
+
+    # Make sure additional_token_data is in conflict with default claims
+    _check_claims(['iat', 'nbf', 'jti', 'exp'], additional_token_data)
     token_data.update(additional_token_data)
+
     encoded_token = jwt.encode(token_data, secret, algorithm,
                                json_encoder=json_encoder).decode('utf-8')
     return encoded_token
 
 
 def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
-                        user_claims, csrf, identity_claim_key, user_claims_key,
-                        json_encoder=None):
+                        user_claims, additional_claims, csrf, identity_claim_key, 
+                        user_claims_key, json_encoder=None):
     """
     Creates a new encoded (utf-8) access token.
 
@@ -50,6 +58,8 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
                   token will remain fresh.
     :param user_claims: Custom claims to include in this token. This data must
                         be json serializable
+    :param additional_claims: Custom claims to include in this token. Object
+                        must be json serializable
     :param csrf: Whether to include a csrf double submit claim in this token
                  (boolean)
     :param identity_claim_key: Which key should be used to store the identity
@@ -67,18 +77,25 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
         'type': 'access',
     }
 
+    # Make sure additional_token_data is in conflict with default claims
+    _check_claims(['fresh', 'type', identity_claim_key], additional_claims)
+
     # Don't add extra data to the token if user_claims is empty.
     if user_claims:
         token_data[user_claims_key] = user_claims
 
+    # Make sure additional claims is a dict before merge
+    if additional_claims and isinstance(additional_claims, dict):
+        token_data.update(additional_claims)
+
     if csrf:
         token_data['csrf'] = _create_csrf_token()
     return _encode_jwt(token_data, expires_delta, secret, algorithm,
-                       json_encoder=json_encoder)
+                       claim_key=identity_claim_key, json_encoder=json_encoder)
 
 
 def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims,
-                         csrf, identity_claim_key, user_claims_key,
+                         additional_claims, csrf, identity_claim_key, user_claims_key,
                          json_encoder=None):
     """
     Creates a new encoded (utf-8) refresh token.
@@ -91,6 +108,8 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
     :type expires_delta: datetime.timedelta or False
     :param user_claims: Custom claims to include in this token. This data must
                         be json serializable
+    :param additional_claims: Custom claims to include in this token. Object
+                        must be json serializable
     :param csrf: Whether to include a csrf double submit claim in this token
                  (boolean)
     :param identity_claim_key: Which key should be used to store the identity
@@ -102,6 +121,11 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
         'type': 'refresh',
     }
 
+    # Make sure additional_token_data is in conflict with default claims
+    if additional_claims and isinstance(additional_claims, dict):
+        _check_claims(['type', identity_claim_key], additional_claims)
+        token_data.update(additional_claims)
+
     # Don't add extra data to the token if user_claims is empty.
     if user_claims:
         token_data[user_claims_key] = user_claims
@@ -109,11 +133,11 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
     if csrf:
         token_data['csrf'] = _create_csrf_token()
     return _encode_jwt(token_data, expires_delta, secret, algorithm,
-                       json_encoder=json_encoder)
+                       claim_key=identity_claim_key, json_encoder=json_encoder)
 
 
 def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
-               user_claims_key, csrf_value=None):
+               user_claims_key, additional_claim_keys, csrf_value=None):
     """
     Decodes an encoded JWT
 
@@ -138,8 +162,15 @@ def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
     if data['type'] == 'access':
         if 'fresh' not in data:
             raise JWTDecodeError("Missing claim: fresh")
+    
     if user_claims_key not in data:
         data[user_claims_key] = {}
+    
+    if data['type'] != 'refresh' or config.user_claims_in_refresh_token:
+        for claim in additional_claim_keys:
+            if claim not in data:
+                raise JWTDecodeError("Missing claim %s" % str(claim))
+
     if csrf_value:
         if 'csrf' not in data:
             raise JWTDecodeError("Missing claim: csrf")

@@ -101,6 +101,7 @@ def test_override_configs(app):
 
     app.config['JWT_IDENTITY_CLAIM'] = 'foo'
     app.config['JWT_USER_CLAIMS'] = 'bar'
+    app.config['JWT_ADDITIONAL_CLAIMS'] = []
 
     app.config['JWT_CLAIMS_IN_REFRESH_TOKEN'] = True
 

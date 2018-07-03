@@ -11,6 +11,11 @@ class JWTDecodeError(JWTExtendedException):
     """
     pass
 
+class JWTEncodeError(JWTExtendedException):
+    """
+    An error encoding a JWT
+    """
+    pass
 
 class InvalidHeaderError(JWTExtendedException):
     """
@@ -67,6 +72,13 @@ class UserLoadError(JWTExtendedException):
 class UserClaimsVerificationError(JWTExtendedException):
     """
     Error raised when the claims_verification_callback function returns False,
+    indicating that the expected user claims are invalid
+    """
+    pass
+
+class AdditionalClaimsVerificationError(JWTExtendedException):
+    """
+    Error raised when the additional_claims_verification_callback function returns False,
     indicating that the expected user claims are invalid
     """
     pass

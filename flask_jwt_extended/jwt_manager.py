@@ -4,9 +4,9 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
-    JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
+    JWTDecodeError, JWTEncodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
     RevokedTokenError, FreshTokenRequired, CSRFError, UserLoadError,
-    UserClaimsVerificationError
+    UserClaimsVerificationError, AdditionalClaimsVerificationError
 )
 from flask_jwt_extended.default_callbacks import (
     default_expired_token_callback, default_user_claims_callback,
@@ -14,7 +14,10 @@ from flask_jwt_extended.default_callbacks import (
     default_unauthorized_callback, default_needs_fresh_token_callback,
     default_revoked_token_callback, default_user_loader_error_callback,
     default_claims_verification_callback,
-    default_claims_verification_failed_callback
+    default_claims_verification_failed_callback,
+    default_additional_claims_callback,
+    default_additional_claims_verification_callback,
+    default_additional_claims_verification_failed_callback
 )
 from flask_jwt_extended.tokens import (
     encode_refresh_token, encode_access_token
@@ -43,6 +46,7 @@ class JWTManager(object):
         # Register the default error handler callback methods. These can be
         # overridden with the appropriate loader decorators
         self._user_claims_callback = default_user_claims_callback
+        self._additonal_claims_callback = default_additional_claims_callback
         self._user_identity_callback = default_user_identity_callback
         self._expired_token_callback = default_expired_token_callback
         self._invalid_token_callback = default_invalid_token_callback
@@ -54,6 +58,8 @@ class JWTManager(object):
         self._token_in_blacklist_callback = None
         self._claims_verification_callback = default_claims_verification_callback
         self._claims_verification_failed_callback = default_claims_verification_failed_callback
+        self._additonal_claims_verification_callback = default_additional_claims_verification_callback
+        self._additonal_claims_verification_failed_callback = default_additional_claims_verification_failed_callback
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
@@ -101,7 +107,7 @@ class JWTManager(object):
         @app.errorhandler(JWTDecodeError)
         def handle_jwt_decode_error(e):
             return self._invalid_token_callback(str(e))
-
+            
         @app.errorhandler(WrongTokenError)
         def handle_wrong_token_error(e):
             return self._invalid_token_callback(str(e))
@@ -125,6 +131,10 @@ class JWTManager(object):
         @app.errorhandler(UserClaimsVerificationError)
         def handle_failed_user_claims_verification(e):
             return self._claims_verification_failed_callback()
+
+        @app.errorhandler(AdditionalClaimsVerificationError)
+        def handle_failed_additional_claims_verification(e):
+            return self._additonal_claims_verification_failed_callback()
 
     @staticmethod
     def _set_default_configuration_options(app):
@@ -186,6 +196,7 @@ class JWTManager(object):
 
         app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
         app.config.setdefault('JWT_USER_CLAIMS', 'user_claims')
+        app.config.setdefault('JWT_ADDITIONAL_CLAIMS', [])
 
         app.config.setdefault('JWT_CLAIMS_IN_REFRESH_TOKEN', False)
 
@@ -202,6 +213,21 @@ class JWTManager(object):
         must be JSON serializable.
         """
         self._user_claims_callback = callback
+        return callback
+
+    def additional_claims_loader(self, callback):
+        """
+        This decorator sets the callback function for adding additional claims
+        the access token when :func:`~flask_jwt_extended.create_access_token` is
+        called. By defailt, no additional claims will be added.
+
+        The callback function must be a function that takes only one argument,
+        which is the object passed into
+        :func:`~flask_jwt_extended.create_access_token`, and returns the custom
+        claims you want included in the access tokens. This returned claims
+        must be JSON serializable.
+        """
+        self._additonal_claims_callback = callback
         return callback
 
     def user_identity_loader(self, callback):
@@ -373,14 +399,49 @@ class JWTManager(object):
         self._claims_verification_failed_callback = callback
         return callback
 
+    def additonal_claims_verification_loader(self, callback):
+        """
+        This decorator sets the callback function that will be called when
+        a protected endpoint is accessed, and will check if the custom claims
+        in the JWT are valid. By default, this callback is not used. The
+        error returned if the claims are invalid can be controlled via the
+        :meth:`~flask_jwt_extended.JWTManager.additonal_claims_verification_loader`
+        decorator.
+
+        This callback must be a function that takes one argument, which is the
+        custom claims (python dict) present in the JWT, and returns `True` if the
+        claims are valid, or `False` otherwise.
+        """
+
+        self._additonal_claims_verification_callback = callback
+        return callback
+
+    def additonal_claims_verification_failed_loader(self, callback):
+        """
+        This decorator sets the callback function that will be called if
+        the :meth:`~flask_jwt_extended.JWTManager.additonal_claims_verification_loader`
+        callback returns False, indicating that the user claims are not valid.
+        The default implementation will return a 400 status code with the JSON:
+
+        {"msg": "Additional claims verification failed"}
+
+        This callback must be a function that takes no arguments, and returns
+        a Flask response.
+        """
+        self._additonal_claims_verification_failed_callback = callback
+        return callback
+
+
     def _create_refresh_token(self, identity, expires_delta=None):
         if expires_delta is None:
             expires_delta = config.refresh_expires
 
         if config.user_claims_in_refresh_token:
             user_claims = self._user_claims_callback(identity)
+            additional_claims = self._additonal_claims_callback(identity)
         else:
             user_claims = None
+            additional_claims = None
 
         refresh_token = encode_refresh_token(
             identity=self._user_identity_callback(identity),
@@ -388,6 +449,7 @@ class JWTManager(object):
             algorithm=config.algorithm,
             expires_delta=expires_delta,
             user_claims=user_claims,
+            additional_claims=additional_claims,
             csrf=config.csrf_protect,
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
@@ -406,10 +468,10 @@ class JWTManager(object):
             expires_delta=expires_delta,
             fresh=fresh,
             user_claims=self._user_claims_callback(identity),
+            additional_claims=self._additonal_claims_callback(identity),
             csrf=config.csrf_protect,
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
             json_encoder=config.json_encoder
         )
         return access_token
-

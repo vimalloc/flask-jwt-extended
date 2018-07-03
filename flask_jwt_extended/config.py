@@ -248,6 +248,10 @@ class _Config(object):
         return current_app.config['JWT_USER_CLAIMS']
 
     @property
+    def additional_claim_keys(self):
+        return current_app.config['JWT_ADDITIONAL_CLAIMS']
+
+    @property
     def user_claims_in_refresh_token(self):
         return current_app.config['JWT_CLAIMS_IN_REFRESH_TOKEN']
 

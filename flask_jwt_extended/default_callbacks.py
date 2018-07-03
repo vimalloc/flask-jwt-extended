@@ -20,6 +20,16 @@ def default_user_claims_callback(userdata):
     return {}
 
 
+def default_additional_claims_callback(userdata):
+    """
+    By default, we add no additional claims to the access token
+
+    :param userdata: data passed in as the ```identity``` argument to the
+                     ```create_access_token``` and ```create_refresh_token```
+                     functions
+    """
+    return {}
+
 def default_user_identity_callback(userdata):
     """
     By default, we use the passed in object directly as the jwt identity.
@@ -91,6 +101,11 @@ def default_claims_verification_callback(user_claims):
     """
     return True
 
+def default_additional_claims_verification_callback(additional_claims):
+    """
+    By default, we do not do any verification of the additional claims.
+    """
+    return True
 
 def default_claims_verification_failed_callback():
     """
@@ -98,3 +113,10 @@ def default_claims_verification_failed_callback():
     error message with a 400 status code
     """
     return jsonify({'msg': 'User claims verification failed'}), 400
+
+def default_additional_claims_verification_failed_callback():
+    """
+    By default, if the additional claims verification failed, we return a generic
+    error message with a 400 status code
+    """
+    return jsonify({'msg': 'Additional claims verification failed'}), 400

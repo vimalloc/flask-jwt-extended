@@ -8,7 +8,7 @@ except ImportError:  # pragma: no cover
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
-    RevokedTokenError, UserClaimsVerificationError, WrongTokenError
+    RevokedTokenError, UserClaimsVerificationError, WrongTokenError, AdditionalClaimsVerificationError
 )
 from flask_jwt_extended.tokens import decode_jwt
 
@@ -41,6 +41,15 @@ def get_jwt_claims():
     present, an empty dict is returned instead.
     """
     return get_raw_jwt().get(config.user_claims_key, {})
+
+def get_jwt_additional_claims():
+    """
+    In a protected endpoint, this will return the dictionary of custom claims
+    in the JWT that is accessing the endpoint. If no custom user claims are
+    present, an empty dict is returned instead.
+    """
+    claims = get_raw_jwt()
+    return dict((k, claims.get(k)) for k in config.additional_claim_keys if k in claims)
 
 
 def get_current_user():
@@ -77,6 +86,7 @@ def decode_token(encoded_token, csrf_value=None):
         algorithm=config.algorithm,
         identity_claim_key=config.identity_claim_key,
         user_claims_key=config.user_claims_key,
+        additional_claim_keys=config.additional_claim_keys,
         csrf_value=csrf_value
     )
 
@@ -182,6 +192,9 @@ def verify_token_claims(jwt_data):
     if not jwt_manager._claims_verification_callback(user_claims):
         raise UserClaimsVerificationError('User claims verification failed')
 
+    additional_claims = dict((k, jwt_data[k]) for k in config.additional_claim_keys if k in jwt_data)
+    if not jwt_manager._additonal_claims_verification_callback(additional_claims):
+        raise AdditionalClaimsVerificationError('Additional claims verification failed')
 
 def get_csrf_token(encoded_token):
     """

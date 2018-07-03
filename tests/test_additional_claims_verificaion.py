@@ -6,7 +6,7 @@ from flask_jwt_extended import (
     fresh_jwt_required, jwt_optional
 )
 from tests.utils import get_jwt_manager, make_headers
-
+from flask_jwt_extended.utils import get_jwt_additional_claims
 
 @pytest.fixture(scope='function')
 def app():
@@ -34,6 +34,21 @@ def app():
     def protected3():
         return jsonify(foo='bar')
 
+    @app.route('/protected4', methods=['GET'])
+    @jwt_optional
+    def protected4():
+        return jsonify(get_jwt_additional_claims())
+
+    @app.route('/protected5', methods=['GET'])
+    @fresh_jwt_required
+    def protected5():
+        return jsonify(get_jwt_additional_claims())
+
+    @app.route('/protected6', methods=['GET'])
+    @jwt_required
+    def protected6():
+        return jsonify(get_jwt_additional_claims())
+
     return app
 @pytest.mark.parametrize("url", ['/protected1', '/protected2', '/protected3'])
 def test_successful_no_claims(app, url):
@@ -47,12 +62,11 @@ def test_successful_no_claims(app, url):
     assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200
 
-
-
 @pytest.mark.parametrize("url", ['/protected1', '/protected2', '/protected3'])
 def test_successful_claims_validation(app, url):
     jwt = get_jwt_manager(app)
     
+   
     @jwt.additonal_claims_verification_loader
     def user_load_callback(user_claims):
         return user_claims == {'foo': 'bar'}
@@ -65,6 +79,55 @@ def test_successful_claims_validation(app, url):
     assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200
 
+@pytest.mark.parametrize("url", ['/protected4','/protected5','/protected6'])
+def test_successful_claims_validation_with_aud_and_iss(app, url):
+    jwt = get_jwt_manager(app)
+    app.config['JWT_ADDITIONAL_CLAIMS'] = ['foo', 'aud', 'iss']
+    
+    @jwt.additional_claims_loader
+    def add_user_claims(identity):
+        return { 'foo': 'bar', 
+                 'aud': ['foobar'], 
+                 'iss': 'foobar' }
+
+    @jwt.additonal_claims_verification_loader
+    def user_load_callback(user_claims):
+        return user_claims == { 'foo': 'bar', 
+                                'aud': ['foobar'], 
+                                'iss': 'foobar' }
+
+    test_client = app.test_client()
+    with app.test_request_context():
+        access_token = create_access_token('username', fresh=True)
+
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.get_json() == {'foo': 'bar', 'aud': ['foobar'], 'iss': 'foobar'}
+    assert response.status_code == 200
+
+@pytest.mark.parametrize("url", ['/protected4', '/protected5', '/protected6'])
+def test_failed_claims_validation_with_aud_and_iss(app, url):
+    jwt = get_jwt_manager(app)
+    app.config['JWT_ADDITIONAL_CLAIMS'] = ['foo', 'aud', 'iss']
+    
+    @jwt.additional_claims_loader
+    def add_user_claims(identity):
+        return { 'foo': 'bar', 
+                 'aud': ['t'], 
+                 'iss': 'foobar' }
+
+    @jwt.additonal_claims_verification_loader
+    def user_load_callback(user_claims):
+        return user_claims == { 'foo': 'bar', 
+                                'aud': ['foobar'], 
+                                'iss': 'foobar' }
+
+    test_client = app.test_client()
+    with app.test_request_context():
+        access_token = create_access_token('username', fresh=True)
+
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.get_json() == {'msg': 'Additional claims verification failed'}
+    assert response.status_code == 400
 
 @pytest.mark.parametrize("url", ['/protected1', '/protected2', '/protected3'])
 def test_unsuccessful_claims_validation(app, url):

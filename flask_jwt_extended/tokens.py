@@ -149,8 +149,13 @@ def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
     :param csrf_value: Expected double submit csrf value
     :return: Dictionary containing contents of the JWT
     """
+    # The validation decorator for additional claims must evaluate these! 
+    options = {
+        'verify_aud': False,
+        'verify_iss': False,
+    }
     # This call verifies the ext, iat, and nbf claims
-    data = jwt.decode(encoded_token, secret, algorithms=[algorithm])
+    data = jwt.decode(encoded_token, secret, algorithms=[algorithm], options=options)
 
     # Make sure that any custom claims we expect in the token are present
     if 'jti' not in data:

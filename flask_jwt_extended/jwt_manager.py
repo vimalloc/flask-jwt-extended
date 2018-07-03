@@ -423,7 +423,7 @@ class JWTManager(object):
         callback returns False, indicating that the user claims are not valid.
         The default implementation will return a 400 status code with the JSON:
 
-        {"msg": "User claims verification failed"}
+        {"msg": "Additional claims verification failed"}
 
         This callback must be a function that takes no arguments, and returns
         a Flask response.
@@ -438,12 +438,9 @@ class JWTManager(object):
 
         if config.user_claims_in_refresh_token:
             user_claims = self._user_claims_callback(identity)
-        else:
-            user_claims = None
-
-        if config.user_claims_in_refresh_token:
             additional_claims = self._additonal_claims_callback(identity)
         else:
+            user_claims = None
             additional_claims = None
 
         refresh_token = encode_refresh_token(

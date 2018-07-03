@@ -35,6 +35,18 @@ def app():
         return jsonify(foo='bar')
 
     return app
+@pytest.mark.parametrize("url", ['/protected1', '/protected2', '/protected3'])
+def test_successful_no_claims(app, url):
+    jwt = get_jwt_manager(app)
+    
+    test_client = app.test_client()
+    with app.test_request_context():
+        access_token = create_access_token('username', fresh=True)
+
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.get_json() == {'foo': 'bar'}
+    assert response.status_code == 200
+
 
 
 @pytest.mark.parametrize("url", ['/protected1', '/protected2', '/protected3'])

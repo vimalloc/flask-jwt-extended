@@ -162,7 +162,7 @@ def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
     if data['type'] == 'access':
         if 'fresh' not in data:
             raise JWTDecodeError("Missing claim: fresh")
-    
+   
     if user_claims_key not in data:
         data[user_claims_key] = {}
     

@@ -18,7 +18,7 @@ def _check_claims(default_claims, additional_claims):
             raise JWTEncodeError("Claim %s in conflict with default claims" % str(claim))
 
 def _encode_jwt(additional_token_data, expires_delta, secret, algorithm,
-                claim_key, json_encoder=None):
+                json_encoder=None):
     uid = str(uuid.uuid4())
     now = datetime.datetime.utcnow()
     token_data = {
@@ -91,7 +91,7 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
     if csrf:
         token_data['csrf'] = _create_csrf_token()
     return _encode_jwt(token_data, expires_delta, secret, algorithm,
-                       claim_key=identity_claim_key, json_encoder=json_encoder)
+                       json_encoder=json_encoder)
 
 
 def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims,
@@ -133,7 +133,7 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
     if csrf:
         token_data['csrf'] = _create_csrf_token()
     return _encode_jwt(token_data, expires_delta, secret, algorithm,
-                       claim_key=identity_claim_key, json_encoder=json_encoder)
+                       json_encoder=json_encoder)
 
 
 def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,

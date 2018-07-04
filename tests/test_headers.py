@@ -90,3 +90,9 @@ def test_missing_headers(app):
     response = test_client.get('/protected', headers=None)
     assert response.status_code == 201
     assert response.get_json() == {'foo': "bar"}
+
+
+def test_custom_error_msg_key(app):
+    app.config['JWT_ERROR_MESSAGE_KEY'] = 'message'
+    response = app.test_client().get('/protected', headers=None)
+    assert response.get_json() == {'message': 'Missing Authorization Header'}

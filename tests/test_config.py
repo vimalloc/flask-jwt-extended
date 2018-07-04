@@ -65,6 +65,8 @@ def test_default_configs(app):
 
         assert config.json_encoder is app.json_encoder
 
+        assert config.error_msg_key == 'msg'
+
 
 def test_override_configs(app):
     app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'query_string']
@@ -103,6 +105,8 @@ def test_override_configs(app):
     app.config['JWT_USER_CLAIMS'] = 'bar'
 
     app.config['JWT_CLAIMS_IN_REFRESH_TOKEN'] = True
+
+    app.config['JWT_ERROR_MESSAGE_KEY'] = 'message'
 
     class CustomJSONEncoder(JSONEncoder):
         pass
@@ -155,6 +159,8 @@ def test_override_configs(app):
         assert config.user_claims_in_refresh_token is True
 
         assert config.json_encoder is CustomJSONEncoder
+
+        assert config.error_msg_key == 'message'
 
 
 def test_tokens_never_expire(app):

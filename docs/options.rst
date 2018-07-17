@@ -16,7 +16,7 @@ General Options:
 
 ================================= =========================================
 ``JWT_TOKEN_LOCATION``            Where to look for a JWT when processing a request. The
-                                  options are ``'headers'``, ``'cookies'``, or ``'query_string'``. You can pass
+                                  options are ``'headers'``, ``'cookies'``, ``'query_string'``, or ``'json'``. You can pass
                                   in a list to check more then one location, such as: ``['headers', 'cookies']``.
                                   Defaults to ``'headers'``
 ``JWT_ACCESS_TOKEN_EXPIRES``      How long an access token should live before it expires. This
@@ -100,6 +100,19 @@ These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use cookies.
                                   Defaults to ``None``, which means cookies are always sent.
 ``JWT_COOKIE_CSRF_PROTECT``       Enable/disable CSRF protection when using cookies. Defaults to ``True``.
 ================================= =========================================
+
+
+Json Body Options:
+~~~~~~~~~~~~~~~~~~~~~
+These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use json data.
+
+.. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
+
+================================= =========================================
+``JWT_JSON_KEY``                  Key to look for in the body of an `application/json` request. Defaults to ``'access_token'``
+``JWT_REFRESH_JSON_KEY``          Key to look for the refresh token in an `application/json` request. Defaults to ``'refresh_token'``
+================================= =========================================
+
 
 Cross Site Request Forgery Options:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

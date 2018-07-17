@@ -2,6 +2,8 @@ from functools import wraps
 from datetime import datetime
 from calendar import timegm
 
+from werkzeug.exceptions import BadRequest
+
 from flask import request
 try:
     from flask import _app_ctx_stack as ctx_stack
@@ -220,6 +222,24 @@ def _decode_jwt_from_query_string():
     return decode_token(encoded_token)
 
 
+def _decode_jwt_from_json(request_type):
+    if request.content_type != 'application/json':
+        raise NoAuthorizationError('Invalid content-type. Must be application/json.')
+
+    if request_type == 'access':
+        token_key = config.json_key
+    else:
+        token_key = config.refresh_json_key
+
+    try:
+        encoded_token = request.json.get(token_key, None)
+        assert encoded_token
+    except (BadRequest, AssertionError):
+        raise NoAuthorizationError('Missing "{}" key in json data.'.format(token_key))
+
+    return decode_token(encoded_token)
+
+
 def _decode_jwt_from_request(request_type):
     # All the places we can get a JWT from in this request
     decode_functions = []
@@ -229,6 +249,8 @@ def _decode_jwt_from_request(request_type):
         decode_functions.append(_decode_jwt_from_query_string)
     if config.jwt_in_headers:
         decode_functions.append(_decode_jwt_from_headers)
+    if config.jwt_in_json:
+        decode_functions.append(lambda: _decode_jwt_from_json(request_type))
 
     # Try to find the token from one of these locations. It only needs to exist
     # in one place to be valid (not every location).

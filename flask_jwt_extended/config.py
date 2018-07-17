@@ -46,11 +46,11 @@ class _Config(object):
             locations = [locations]
         if not locations:
             raise RuntimeError('JWT_TOKEN_LOCATION must contain at least one '
-                               'of "headers", "cookies", or "query_string"')
+                               'of "headers", "cookies", "query_string", or "json"')
         for location in locations:
-            if location not in ('headers', 'cookies', 'query_string'):
+            if location not in ('headers', 'cookies', 'query_string', 'json'):
                 raise RuntimeError('JWT_TOKEN_LOCATION can only contain '
-                                   '"headers", "cookies", or "query_string"')
+                                   '"headers", "cookies", "query_string", or "json"')
         return locations
 
     @property
@@ -64,6 +64,10 @@ class _Config(object):
     @property
     def jwt_in_query_string(self):
         return 'query_string' in self.token_location
+
+    @property
+    def jwt_in_json(self):
+        return 'json' in self.token_location
 
     @property
     def header_name(self):
@@ -111,6 +115,14 @@ class _Config(object):
     @property
     def cookie_samesite(self):
         return current_app.config['JWT_COOKIE_SAMESITE']
+
+    @property
+    def json_key(self):
+        return current_app.config['JWT_JSON_KEY']
+
+    @property
+    def refresh_json_key(self):
+        return current_app.config['JWT_REFRESH_JSON_KEY']
 
     @property
     def csrf_protect(self):

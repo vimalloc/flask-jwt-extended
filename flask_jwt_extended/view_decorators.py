@@ -233,8 +233,9 @@ def _decode_jwt_from_json(request_type):
 
     try:
         encoded_token = request.json.get(token_key, None)
-        assert encoded_token
-    except (BadRequest, AssertionError):
+        if not encoded_token:
+            raise BadRequest()
+    except BadRequest:
         raise NoAuthorizationError('Missing "{}" key in json data.'.format(token_key))
 
     return decode_token(encoded_token)

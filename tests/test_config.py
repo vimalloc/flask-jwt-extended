@@ -73,7 +73,7 @@ def test_default_configs(app):
 
 
 def test_override_configs(app):
-    app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'query_string']
+    app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'query_string', 'json']
     app.config['JWT_HEADER_NAME'] = 'TestHeader'
     app.config['JWT_HEADER_TYPE'] = 'TestType'
     app.config['JWT_JSON_KEY'] = 'TestKey'
@@ -120,11 +120,11 @@ def test_override_configs(app):
     app.json_encoder = CustomJSONEncoder
 
     with app.test_request_context():
-        assert config.token_location == ['cookies', 'query_string']
+        assert config.token_location == ['cookies', 'query_string', 'json']
         assert config.jwt_in_query_string is True
         assert config.jwt_in_cookies is True
         assert config.jwt_in_headers is False
-        assert config.jwt_in_json is False
+        assert config.jwt_in_json is True
         assert config.header_name == 'TestHeader'
         assert config.header_type == 'TestType'
         assert config.json_key == 'TestKey'

@@ -10,7 +10,7 @@ from flask_jwt_extended import (
 def app():
     app = Flask(__name__)
     app.config['JWT_SECRET_KEY'] = 'foobarbaz'
-    app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies', 'query_string']
+    app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies', 'query_string', 'json']
     JWTManager(app)
 
     @app.route('/cookie_login', methods=['GET'])
@@ -20,7 +20,7 @@ def app():
         set_access_cookies(resp, access_token)
         return resp
 
-    @app.route('/protected', methods=['GET'])
+    @app.route('/protected', methods=['GET', 'POST'])
     @jwt_required
     def access_protected():
         return jsonify(foo='bar')
@@ -54,6 +54,18 @@ def test_query_string_access(app):
 
     url = '/protected?jwt={}'.format(access_token)
     response = test_client.get(url)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+
+
+def test_json_access(app):
+    test_client = app.test_client()
+
+    with app.test_request_context():
+        access_token = create_access_token('username')
+
+    data = {'access_token': access_token}
+    response = test_client.post('/protected', json=data)
     assert response.status_code == 200
     assert response.get_json() == {'foo': 'bar'}
 

@@ -151,6 +151,10 @@ class JWTManager(object):
         app.config.setdefault('JWT_SESSION_COOKIE', True)
         app.config.setdefault('JWT_COOKIE_SAMESITE', None)
 
+        # Option for JWTs when the TOKEN_LOCATION is json
+        app.config.setdefault('JWT_JSON_KEY', 'access_token')
+        app.config.setdefault('JWT_REFRESH_JSON_KEY', 'refresh_token')
+
         # Options for using double submit csrf protection
         app.config.setdefault('JWT_COOKIE_CSRF_PROTECT', True)
         app.config.setdefault('JWT_CSRF_METHODS', ['POST', 'PUT', 'PATCH', 'DELETE'])

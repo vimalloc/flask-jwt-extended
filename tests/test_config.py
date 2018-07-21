@@ -21,6 +21,7 @@ def test_default_configs(app):
         assert config.token_location == ['headers']
         assert config.jwt_in_query_string is False
         assert config.jwt_in_cookies is False
+        assert config.jwt_in_json is False
         assert config.jwt_in_headers is True
 
         assert config.header_name == 'Authorization'
@@ -36,6 +37,9 @@ def test_default_configs(app):
         assert config.cookie_domain is None
         assert config.session_cookie is True
         assert config.cookie_samesite is None
+
+        assert config.json_key == 'access_token'
+        assert config.refresh_json_key == 'refresh_token'
 
         assert config.csrf_protect is False
         assert config.csrf_request_methods == ['POST', 'PUT', 'PATCH', 'DELETE']
@@ -69,9 +73,11 @@ def test_default_configs(app):
 
 
 def test_override_configs(app):
-    app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'query_string']
+    app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'query_string', 'json']
     app.config['JWT_HEADER_NAME'] = 'TestHeader'
     app.config['JWT_HEADER_TYPE'] = 'TestType'
+    app.config['JWT_JSON_KEY'] = 'TestKey'
+    app.config['JWT_REFRESH_JSON_KEY'] = 'TestRefreshKey'
 
     app.config['JWT_QUERY_STRING_NAME'] = 'banana'
 
@@ -114,12 +120,15 @@ def test_override_configs(app):
     app.json_encoder = CustomJSONEncoder
 
     with app.test_request_context():
-        assert config.token_location == ['cookies', 'query_string']
+        assert config.token_location == ['cookies', 'query_string', 'json']
         assert config.jwt_in_query_string is True
         assert config.jwt_in_cookies is True
         assert config.jwt_in_headers is False
+        assert config.jwt_in_json is True
         assert config.header_name == 'TestHeader'
         assert config.header_type == 'TestType'
+        assert config.json_key == 'TestKey'
+        assert config.refresh_json_key == 'TestRefreshKey'
 
         assert config.query_string_name == 'banana'
 

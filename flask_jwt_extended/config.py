@@ -179,14 +179,16 @@ class _Config(object):
     def access_expires(self):
         delta = current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
         if not isinstance(delta, datetime.timedelta) and delta is not False:
-            raise RuntimeError('JWT_ACCESS_TOKEN_EXPIRES must be a datetime.timedelta or False')
+            err = 'JWT_ACCESS_TOKEN_EXPIRES must be a datetime.timedelta or False'
+            raise RuntimeError(err)
         return delta
 
     @property
     def refresh_expires(self):
         delta = current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
         if not isinstance(delta, datetime.timedelta) and delta is not False:
-            raise RuntimeError('JWT_REFRESH_TOKEN_EXPIRES must be a datetime.timedelta or False')
+            err = 'JWT_REFRESH_TOKEN_EXPIRES must be a datetime.timedelta or False'
+            raise RuntimeError(err)
         return delta
 
     @property
@@ -204,7 +206,8 @@ class _Config(object):
             check_type = [check_type]
         for item in check_type:
             if item not in ('access', 'refresh'):
-                raise RuntimeError('JWT_BLACKLIST_TOKEN_CHECKS must be "access" or "refresh"')
+                err = 'JWT_BLACKLIST_TOKEN_CHECKS must be "access" or "refresh"'
+                raise RuntimeError(err)
         return check_type
 
     @property
@@ -274,5 +277,6 @@ class _Config(object):
     @property
     def json_encoder(self):
         return current_app.json_encoder
+
 
 config = _Config()

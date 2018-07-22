@@ -13,8 +13,7 @@ from flask_jwt_extended.default_callbacks import (
     default_user_identity_callback, default_invalid_token_callback,
     default_unauthorized_callback, default_needs_fresh_token_callback,
     default_revoked_token_callback, default_user_loader_error_callback,
-    default_claims_verification_callback,
-    default_claims_verification_failed_callback
+    default_claims_verification_callback, default_verify_claims_failed_callback
 )
 from flask_jwt_extended.tokens import (
     encode_refresh_token, encode_access_token
@@ -53,7 +52,7 @@ class JWTManager(object):
         self._user_loader_error_callback = default_user_loader_error_callback
         self._token_in_blacklist_callback = None
         self._claims_verification_callback = default_claims_verification_callback
-        self._claims_verification_failed_callback = default_claims_verification_failed_callback
+        self._verify_claims_failed_callback = default_verify_claims_failed_callback
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
@@ -83,7 +82,7 @@ class JWTManager(object):
             return self._unauthorized_callback(str(e))
 
         @app.errorhandler(CSRFError)
-        def handle_auth_error(e):
+        def handle_csrf_error(e):
             return self._unauthorized_callback(str(e))
 
         @app.errorhandler(ExpiredSignatureError)
@@ -124,7 +123,7 @@ class JWTManager(object):
 
         @app.errorhandler(UserClaimsVerificationError)
         def handle_failed_user_claims_verification(e):
-            return self._claims_verification_failed_callback()
+            return self._verify_claims_failed_callback()
 
     @staticmethod
     def _set_default_configuration_options(app):
@@ -376,7 +375,7 @@ class JWTManager(object):
         This callback must be a function that takes no arguments, and returns
         a Flask response.
         """
-        self._claims_verification_failed_callback = callback
+        self._verify_claims_failed_callback = callback
         return callback
 
     def _create_refresh_token(self, identity, expires_delta=None):
@@ -418,4 +417,3 @@ class JWTManager(object):
             json_encoder=config.json_encoder
         )
         return access_token
-

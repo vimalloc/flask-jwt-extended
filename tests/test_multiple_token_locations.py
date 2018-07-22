@@ -73,13 +73,9 @@ def test_json_access(app):
 @pytest.mark.parametrize("options", [
     (['cookies', 'headers'], ('Missing JWT in cookies or headers (Missing cookie '
                               '"access_token_cookie"; Missing Authorization Header)')),
-    (['cookies', 'query_string'], ('Missing JWT in cookies or query_string (Missing cookie '
-                                   '"access_token_cookie"; Missing "jwt" query paramater)')),
-    (['headers', 'query_string'], ('Missing JWT in headers or query_string (Missing "jwt" '
-                                   'query paramater; Missing Authorization Header)')),
-    (['cookies', 'headers', 'query_string'], ('Missing JWT in cookies, headers or '
-                                              'query_string (Missing cookie "access_token_cookie"; '
-                                              'Missing "jwt" query paramater; Missing Authorization Header)'))
+    (['json', 'query_string'], ('Missing JWT in json or query_string (Missing "jwt" '
+                                'query paramater; Invalid content-type. Must be '
+                                'application/json.)')),
 ])
 def test_no_jwt_in_request(app, options):
     token_locations, expected_err = options

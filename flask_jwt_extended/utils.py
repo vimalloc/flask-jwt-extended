@@ -205,8 +205,9 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
     :param encoded_access_token: The encoded access token to set in the cookies.
     :param max_age: The max age of the cookie. If this is None, it will use the
                     `JWT_SESSION_COOKIE` option (see :ref:`Configuration Options`).
-                    Otherwise, it will use this as the cookies `max-age` and the JWT_SESSION_COOKIE option will be ignored.
-                    Values should be the number of seconds (as an integer).
+                    Otherwise, it will use this as the cookies `max-age` and the
+                    JWT_SESSION_COOKIE option will be ignored.  Values should be
+                    the number of seconds (as an integer).
     """
     if not config.jwt_in_cookies:
         raise RuntimeWarning("set_access_cookies() called without "
@@ -245,8 +246,9 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
     :param encoded_refresh_token: The encoded refresh token to set in the cookies.
     :param max_age: The max age of the cookie. If this is None, it will use the
                     `JWT_SESSION_COOKIE` option (see :ref:`Configuration Options`).
-                    Otherwise, it will use this as the cookies `max-age` and the JWT_SESSION_COOKIE option will be ignored.
-                    Values should be the number of seconds (as an integer).
+                    Otherwise, it will use this as the cookies `max-age` and the
+                    JWT_SESSION_COOKIE option will be ignored.  Values should be
+                    the number of seconds (as an integer).
     """
     if not config.jwt_in_cookies:
         raise RuntimeWarning("set_refresh_cookies() called without "

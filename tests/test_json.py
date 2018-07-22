@@ -1,7 +1,10 @@
 import pytest
 from flask import Flask, jsonify
 
-from flask_jwt_extended import JWTManager, jwt_required, jwt_refresh_token_required, create_access_token, create_refresh_token
+from flask_jwt_extended import (
+    JWTManager, jwt_required, jwt_refresh_token_required, create_access_token,
+    create_refresh_token
+)
 from tests.utils import get_jwt_manager
 
 
@@ -34,15 +37,15 @@ def test_content_type(app):
 
     data = {'access_token': access_token}
     response = test_client.post('/protected', data=data)
-
+    expected_json = {'msg': 'Invalid content-type. Must be application/json.'}
     assert response.status_code == 401
-    assert response.get_json() == {'msg': 'Invalid content-type. Must be application/json.'}
+    assert response.get_json() == expected_json
 
     data = {'refresh_token': refresh_token}
     response = test_client.post('/refresh', data=data)
-
+    expected_json = {'msg': 'Invalid content-type. Must be application/json.'}
     assert response.status_code == 401
-    assert response.get_json() == {'msg': 'Invalid content-type. Must be application/json.'}
+    assert response.get_json() == expected_json
 
 
 def test_custom_body_key(app):
@@ -59,7 +62,6 @@ def test_custom_body_key(app):
     response = test_client.post('/protected', json=data)
     assert response.status_code == 401
     assert response.get_json() == {'msg': 'Missing "Foo" key in json data.'}
-
 
     data = {'refresh_token': refresh_token}
     response = test_client.post('/refresh', json=data)
@@ -96,6 +98,7 @@ def test_missing_keys(app):
     response = test_client.post('/protected', headers=headers)
     assert response.status_code == 201
     assert response.get_json() == {'foo': "bar"}
+
 
 def test_defaults(app):
     test_client = app.test_client()

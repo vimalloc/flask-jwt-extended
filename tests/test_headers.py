@@ -49,8 +49,9 @@ def test_custom_header_type(app):
     # Insure 'default' headers no longer work
     access_headers = {'Authorization': 'Bearer {}'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
+    expected_json = {'msg': "Bad Authorization header. Expected value 'JWT <JWT>'"}
     assert response.status_code == 422
-    assert response.get_json() == {'msg': "Bad Authorization header. Expected value 'JWT <JWT>'"}
+    assert response.get_json() == expected_json
 
     # Insure new headers do work
     access_headers = {'Authorization': 'JWT {}'.format(access_token)}
@@ -69,7 +70,8 @@ def test_custom_header_type(app):
     app.config['JWT_HEADER_TYPE'] = ''
     access_headers = {'Authorization': 'Bearer {}'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
-    assert response.get_json() == {'msg': "Bad Authorization header. Expected value '<JWT>'"}
+    expected_json = {'msg': "Bad Authorization header. Expected value '<JWT>'"}
+    assert response.get_json() == expected_json
     assert response.status_code == 422
 
 

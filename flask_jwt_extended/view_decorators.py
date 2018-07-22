@@ -184,7 +184,10 @@ def _decode_jwt_from_headers():
         encoded_token = parts[0]
     else:
         if parts[0] != header_type or len(parts) != 2:
-            msg = "Bad {} header. Expected value '{} <JWT>'".format(header_name, header_type)
+            msg = "Bad {} header. Expected value '{} <JWT>'".format(
+                header_name,
+                header_type
+            )
             raise InvalidHeaderError(msg)
         encoded_token = parts[1]
 
@@ -274,7 +277,7 @@ def _decode_jwt_from_request(request_type):
             err_msg = "Missing JWT in {start_locs} or {end_locs} ({details})".format(
                 start_locs=", ".join(token_locations[:-1]),
                 end_locs=token_locations[-1],
-                details= "; ".join(errors)
+                details="; ".join(errors)
             )
             raise NoAuthorizationError(err_msg)
         else:

@@ -75,9 +75,15 @@ def test_fresh_jwt_required(app):
     with app.test_request_context():
         access_token = create_access_token('username')
         fresh_access_token = create_access_token('username', fresh=True)
-        fresh_timed_access_token = create_access_token('username', fresh=timedelta(minutes=5))
-        stale_timed_access_token = create_access_token('username', fresh=timedelta(minutes=-1))
         refresh_token = create_refresh_token('username')
+        fresh_timed_access_token = create_access_token(
+            identity='username',
+            fresh=timedelta(minutes=5)
+        )
+        stale_timed_access_token = create_access_token(
+            identity='username',
+            fresh=timedelta(minutes=-1)
+        )
 
     response = test_client.get(url, headers=make_headers(fresh_access_token))
     assert response.status_code == 200
@@ -146,8 +152,11 @@ def test_jwt_optional(app):
     with app.test_request_context():
         access_token = create_access_token('username')
         fresh_access_token = create_access_token('username', fresh=True)
-        expired_token = create_access_token('username', expires_delta=timedelta(minutes=-1))
         refresh_token = create_refresh_token('username')
+        expired_token = create_access_token(
+            identity='username',
+            expires_delta=timedelta(minutes=-1)
+        )
 
     response = test_client.get(url, headers=make_headers(fresh_access_token))
     assert response.status_code == 200

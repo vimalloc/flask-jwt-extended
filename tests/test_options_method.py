@@ -4,6 +4,7 @@ from flask_jwt_extended import (
 )
 import pytest
 
+
 @pytest.fixture(scope='function')
 def app():
     app = Flask(__name__)
@@ -27,15 +28,18 @@ def app():
 
     return app
 
+
 def test_access_jwt_required_enpoint(app):
     res = app.test_client().options('/jwt_required')
     assert res.status_code == 200
     assert res.data == b'ok'
 
+
 def test_access_jwt_refresh_token_required_enpoint(app):
     res = app.test_client().options('/jwt_refresh_token_required')
     assert res.status_code == 200
     assert res.data == b'ok'
+
 
 def test_access_fresh_jwt_required_enpoint(app):
     res = app.test_client().options('/fresh_jwt_required')

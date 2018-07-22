@@ -84,7 +84,8 @@ def default_user_loader_error_callback(identity):
     function returns None, we return a general error message with a 401
     status code
     """
-    return jsonify({config.error_msg_key: "Error loading the user {}".format(identity)}), 401
+    result = {config.error_msg_key: "Error loading the user {}".format(identity)}
+    return jsonify(result), 401
 
 
 def default_claims_verification_callback(user_claims):
@@ -94,7 +95,7 @@ def default_claims_verification_callback(user_claims):
     return True
 
 
-def default_claims_verification_failed_callback():
+def default_verify_claims_failed_callback():
     """
     By default, if the user claims verification failed, we return a generic
     error message with a 400 status code

@@ -10,7 +10,8 @@ from flask_jwt_extended import (
 def app():
     app = Flask(__name__)
     app.config['JWT_SECRET_KEY'] = 'foobarbaz'
-    app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies', 'query_string', 'json']
+    app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies', 'query_string',
+                                        'json']
     JWTManager(app)
 
     @app.route('/cookie_login', methods=['GET'])

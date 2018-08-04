@@ -34,7 +34,7 @@ setup(name='Flask-JWT-Extended',
           'PyJWT',
       ],
       extras_require={
-        'asymmetric_crypto':  ["cryptography"]
+        'asymmetric_crypto':  ["cryptography >= 2.3"]
       },
       classifiers=[
         'Development Status :: 5 - Production/Stable',

@@ -1,5 +1,6 @@
 from flask_jwt_extended import decode_token
 
+
 # Endpoint for loggin in
 @app.route('/login', methods=['POST'])
 def login():
@@ -7,8 +8,8 @@ def login():
     password = request.json.get('password', None)
     if username != 'test' or password != 'test':
         return jsonify({"msg": "Bad username or password"}), 401
-    
-    user = { id: 1, username: 'test' }
+
+    user = {id: 1, username: 'test'}
     refresh_token = create_refresh_token(identity=user)
 
     # Embed the refresh token's jti in the access_token

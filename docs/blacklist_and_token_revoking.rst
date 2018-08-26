@@ -26,6 +26,16 @@ Here is a basic example of this in action.
 
 .. literalinclude:: ../examples/blacklist.py
 
+Sometimes there will be situations where we would want to backlist both the access token and the refresh token in the logout call. It could be done by
+embedding the reference to the refresh token in the access token. For that
+we could write the login, logout and refresh functions as:
+
+
+.. literalinclude:: ../examples/backlist_both_tokens.py
+
+
+Using databases for Blacklisting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 In production, you will likely want to use either a database or in memory store
 (such as redis) to store your tokens. In memory stores are great if you are wanting
 to revoke a token when the users logs out, as they are blazing fast. A downside

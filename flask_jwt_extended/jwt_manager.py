@@ -306,9 +306,9 @@ class JWTManager(object):
         automatically load an object when a protected endpoint is accessed.
         By default this is not used.
 
-        *HINT*: The callback must take **one** argument which is the identity JWT accessing
-        the protected endpoint, and it must return any object (which can then
-        be accessed via the :attr:`~flask_jwt_extended.current_user` LocalProxy
+        *HINT*: The callback must take **one** argument which is the identity JWT
+        accessing the protected endpoint, and it must return any object (which can
+        then be accessed via the :attr:`~flask_jwt_extended.current_user` LocalProxy
         in the protected endpoint), or `None` in the case of a user not being
         able to be loaded for any reason. If this callback function returns
         `None`, the :meth:`~flask_jwt_extended.JWTManager.user_loader_error_loader`

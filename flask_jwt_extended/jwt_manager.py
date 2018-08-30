@@ -200,11 +200,11 @@ class JWTManager(object):
         access token when :func:`~flask_jwt_extended.create_access_token` is
         called. By default, no extra user claims will be added to the JWT.
 
-        The callback function must be a function that takes only one argument,
+        *HINT*: The callback function must be a function that takes only **one** argument,
         which is the object passed into
         :func:`~flask_jwt_extended.create_access_token`, and returns the custom
         claims you want included in the access tokens. This returned claims
-        must be JSON serializable.
+        must be *JSON serializable*.
         """
         self._user_claims_callback = callback
         return callback
@@ -218,11 +218,11 @@ class JWTManager(object):
         return the unmodified object that is passed in as the `identity` kwarg
         to the above functions.
 
-        The callback function must be a function that takes only one argument,
+        *HINT*: The callback function must be a function that takes only **one** argument,
         which is the object passed into
         :func:`~flask_jwt_extended.create_access_token` or
         :func:`~flask_jwt_extended.create_refresh_token`, and returns the
-        JSON serializable identity of this token.
+        *JSON serializable* identity of this token.
         """
         self._user_identity_callback = callback
         return callback
@@ -235,8 +235,8 @@ class JWTManager(object):
 
         {"msg": "Token has expired"}
 
-        The callback must be a function that takes zero arguments, and returns
-        a Flask response.
+        *HINT*: The callback must be a function that takes **zero** arguments, and returns
+        a *Flask response*.
         """
         self._expired_token_callback = callback
         return callback
@@ -249,9 +249,9 @@ class JWTManager(object):
 
         {"msg": "<error description>"}
 
-        The callback must be a function that takes only one argument, which is
+        *HINT*: The callback must be a function that takes only **one** argument, which is
         a string which contains the reason why a token is invalid, and returns
-        a Flask response.
+        a *Flask response*.
         """
         self._invalid_token_callback = callback
         return callback
@@ -264,9 +264,9 @@ class JWTManager(object):
 
         {"msg": "<error description>"}
 
-        The callback must be a function that takes only one argument, which is
+        *HINT*: The callback must be a function that takes only **one** argument, which is
         a string which contains the reason why a JWT could not be found, and
-        returns a Flask response.
+        returns a *Flask response*.
         """
         self._unauthorized_callback = callback
         return callback
@@ -280,8 +280,8 @@ class JWTManager(object):
 
         {"msg": "Fresh token required"}
 
-        The callback must be a function that takes no arguments, and returns
-        a Flask response.
+        *HINT*: The callback must be a function that takes **no** arguments, and returns
+        a *Flask response*.
         """
         self._needs_fresh_token_callback = callback
         return callback
@@ -294,8 +294,8 @@ class JWTManager(object):
 
         {"msg": "Token has been revoked"}
 
-        The callback must be a function that takes no arguments, and returns
-        a Flask response.
+        *HINT*: The callback must be a function that takes **no** arguments, and returns
+        a *Flask response*.
         """
         self._revoked_token_callback = callback
         return callback
@@ -306,9 +306,9 @@ class JWTManager(object):
         automatically load an object when a protected endpoint is accessed.
         By default this is not used.
 
-        The callback must take one argument which is the identity JWT accessing
-        the protected endpoint, and it must return any object (which can then
-        be accessed via the :attr:`~flask_jwt_extended.current_user` LocalProxy
+        *HINT*: The callback must take **one** argument which is the identity JWT
+        accessing the protected endpoint, and it must return any object (which can
+        then be accessed via the :attr:`~flask_jwt_extended.current_user` LocalProxy
         in the protected endpoint), or `None` in the case of a user not being
         able to be loaded for any reason. If this callback function returns
         `None`, the :meth:`~flask_jwt_extended.JWTManager.user_loader_error_loader`
@@ -327,8 +327,8 @@ class JWTManager(object):
 
         {"msg": "Error loading the user <identity>"}
 
-        The callback must be a function that takes one argument, which is the
-        identity of the user who failed to load, and must return a Flask response.
+        *HINT*: The callback must be a function that takes **one** argument, which is the
+        identity of the user who failed to load, and must return a *Flask response*.
         """
         self._user_loader_error_callback = callback
         return callback
@@ -339,9 +339,9 @@ class JWTManager(object):
         a protected endpoint is accessed and will check if the JWT has been
         been revoked. By default, this callback is not used.
 
-        The callback must be a function that takes one argument, which is the
-        decoded JWT (python dictionary), and returns `True` if the token
-        has been blacklisted (or is otherwise considered revoked), or `False`
+        *HINT*: The callback must be a function that takes **one** argument, which is the
+        decoded JWT (python dictionary), and returns *`True`* if the token
+        has been blacklisted (or is otherwise considered revoked), or *`False`*
         otherwise.
         """
         self._token_in_blacklist_callback = callback
@@ -356,9 +356,9 @@ class JWTManager(object):
         :meth:`~flask_jwt_extended.JWTManager.claims_verification_failed_loader`
         decorator.
 
-        This callback must be a function that takes one argument, which is the
-        custom claims (python dict) present in the JWT, and returns `True` if the
-        claims are valid, or `False` otherwise.
+        *HINT*: This callback must be a function that takes **one** argument, which is the
+        custom claims (python dict) present in the JWT, and returns *`True`* if the
+        claims are valid, or *`False`* otherwise.
         """
         self._claims_verification_callback = callback
         return callback
@@ -372,8 +372,8 @@ class JWTManager(object):
 
         {"msg": "User claims verification failed"}
 
-        This callback must be a function that takes no arguments, and returns
-        a Flask response.
+        *HINT*: This callback must be a function that takes **no** arguments, and returns
+        a *Flask response*.
         """
         self._verify_claims_failed_callback = callback
         return callback

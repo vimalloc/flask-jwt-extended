@@ -24,6 +24,7 @@ Configuring Flask-JWT-Extended
   .. automethod:: user_loader_callback_loader
   .. automethod:: user_loader_error_loader
   .. automethod:: unauthorized_loader
+  .. automethod:: decode_key_loader
 
 
 Protected endpoint decorators

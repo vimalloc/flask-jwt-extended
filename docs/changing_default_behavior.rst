@@ -43,6 +43,8 @@ and what the return values of your callback functions need to be.
       - Function that is called to verify the user_claims data. Must return True or False
     * - :meth:`~flask_jwt_extended.JWTManager.claims_verification_failed_loader`
       - Function that is called when the user claims verification callback returns False
+    * - :meth:`~flask_jwt_extended.JWTManager.decode_key_loader`
+      - Function that is called to load the decode/secret key before verifying a token
 
 Dynamic token expires time
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

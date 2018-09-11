@@ -3,7 +3,7 @@ import pytest
 from datetime import timedelta
 
 from flask import Flask
-from jwt import ExpiredSignatureError
+from jwt import ExpiredSignatureError, InvalidSignatureError
 
 from flask_jwt_extended import (
     JWTManager, create_access_token, decode_token, create_refresh_token,
@@ -48,7 +48,9 @@ def test_no_user_claims(app, user_loader_return):
     # returned via the decode_token call
     with app.test_request_context():
         token = create_access_token('username')
-        pure_decoded = jwt.decode(token, config.decode_key, algorithms=[config.algorithm])
+        unverfied_claims = jwt.decode(token, verify=False, algorithms=[config.algorithm])
+        decode_key = jwtM._decode_key_callback(unverfied_claims)
+        pure_decoded = jwt.decode(token, decode_key, algorithms=[config.algorithm])
         assert config.user_claims_key not in pure_decoded
         extension_decoded = decode_token(token)
         assert config.user_claims_key in extension_decoded
@@ -117,3 +119,27 @@ def test_get_jti(app, default_access_token):
 
     with app.test_request_context():
         assert default_access_token['jti'] == get_jti(token)
+
+
+def test_decode_key_callback(app, default_access_token):
+    jwtM = get_jwt_manager(app)
+    app.config['JWT_SECRET_KEY'] = 'correct secret'
+
+    @jwtM.decode_key_loader
+    def get_decode_key_1(claims):
+        return 'different secret'
+
+    assert jwtM._decode_key_callback({}) == 'different secret'
+
+    with pytest.raises(InvalidSignatureError):
+        with app.test_request_context():
+            token = encode_token(app, default_access_token)
+            decode_token(token)
+
+    @jwtM.decode_key_loader
+    def get_decode_key_2(claims):
+        return 'correct secret'
+
+    with app.test_request_context():
+        token = encode_token(app, default_access_token)
+        decode_token(token)

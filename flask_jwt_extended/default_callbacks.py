@@ -101,3 +101,7 @@ def default_verify_claims_failed_callback():
     error message with a 400 status code
     """
     return jsonify({config.error_msg_key: 'User claims verification failed'}), 400
+
+
+def default_decode_key_callback(claims):
+    return config.decode_key

@@ -11,6 +11,7 @@ from flask_jwt_extended.exceptions import (
     RevokedTokenError, UserClaimsVerificationError, WrongTokenError
 )
 from flask_jwt_extended.tokens import decode_jwt
+import jwt
 
 
 # Proxy to access the current user
@@ -71,9 +72,14 @@ def decode_token(encoded_token, csrf_value=None):
     :param encoded_token: The encoded JWT to decode into a python dict.
     :param csrf_value: Expected CSRF double submit value (optional)
     """
+    jwt_manager = _get_jwt_manager()
+    unverified_claims = jwt.decode(
+        encoded_token, verify=False, algorithms=config.algorithm
+    )
+    secret = jwt_manager._decode_key_callback(unverified_claims)
     return decode_jwt(
         encoded_token=encoded_token,
-        secret=config.decode_key,
+        secret=secret,
         algorithm=config.algorithm,
         identity_claim_key=config.identity_claim_key,
         user_claims_key=config.user_claims_key,

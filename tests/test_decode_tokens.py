@@ -151,6 +151,10 @@ def test_custom_encode_decode_key_callbacks(app, default_access_token):
         with app.test_request_context():
             token = create_access_token('username')
             decode_token(token)
+    with pytest.raises(InvalidSignatureError):
+        with app.test_request_context():
+            token = create_refresh_token('username')
+            decode_token(token)
 
     @jwtM.decode_key_loader
     def get_decode_key_1(claims):
@@ -159,4 +163,6 @@ def test_custom_encode_decode_key_callbacks(app, default_access_token):
 
     with app.test_request_context():
         token = create_access_token('username')
+        decode_token(token)
+        token = create_refresh_token('username')
         decode_token(token)

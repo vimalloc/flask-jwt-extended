@@ -23,28 +23,30 @@ and what the return values of your callback functions need to be.
 
     * - Loader Decorator
       - Description
-    * - :meth:`~flask_jwt_extended.JWTManager.expired_token_loader`
-      - Function to call when an expired token accesses a protected endpoint
-    * - :meth:`~flask_jwt_extended.JWTManager.invalid_token_loader`
-      - Function to call when an invalid token accesses a protected endpoint
-    * - :meth:`~flask_jwt_extended.JWTManager.unauthorized_loader`
-      - Function to call when a request with no JWT accesses a protected endpoint
-    * - :meth:`~flask_jwt_extended.JWTManager.needs_fresh_token_loader`
-      - Function to call when a non-fresh token accesses a :func:`~flask_jwt_extended.fresh_jwt_required` endpoint
-    * - :meth:`~flask_jwt_extended.JWTManager.revoked_token_loader`
-      - Function to call when a revoked token accesses a protected endpoint
-    * - :meth:`~flask_jwt_extended.JWTManager.user_loader_callback_loader`
-      - Function to call to load a user object when token accesses a protected endpoint
-    * - :meth:`~flask_jwt_extended.JWTManager.user_loader_error_loader`
-      - Function that is called when the user_loader callback function returns `None`
-    * - :meth:`~flask_jwt_extended.JWTManager.token_in_blacklist_loader`
-      - Function that is called to check if a token has been revoked
     * - :meth:`~flask_jwt_extended.JWTManager.claims_verification_loader`
       - Function that is called to verify the user_claims data. Must return True or False
     * - :meth:`~flask_jwt_extended.JWTManager.claims_verification_failed_loader`
       - Function that is called when the user claims verification callback returns False
     * - :meth:`~flask_jwt_extended.JWTManager.decode_key_loader`
-      - Function that is called to load the decode/secret key before verifying a token
+      - Function that is called to get the decode key before verifying a token
+    * - :meth:`~flask_jwt_extended.JWTManager.encode_key_loader`
+      - Function that is called to get the encode key before creating a token
+    * - :meth:`~flask_jwt_extended.JWTManager.expired_token_loader`
+      - Function to call when an expired token accesses a protected endpoint
+    * - :meth:`~flask_jwt_extended.JWTManager.invalid_token_loader`
+      - Function to call when an invalid token accesses a protected endpoint
+    * - :meth:`~flask_jwt_extended.JWTManager.needs_fresh_token_loader`
+      - Function to call when a non-fresh token accesses a :func:`~flask_jwt_extended.fresh_jwt_required` endpoint
+    * - :meth:`~flask_jwt_extended.JWTManager.revoked_token_loader`
+      - Function to call when a revoked token accesses a protected endpoint
+    * - :meth:`~flask_jwt_extended.JWTManager.token_in_blacklist_loader`
+      - Function that is called to check if a token has been revoked
+    * - :meth:`~flask_jwt_extended.JWTManager.unauthorized_loader`
+      - Function to call when a request with no JWT accesses a protected endpoint
+    * - :meth:`~flask_jwt_extended.JWTManager.user_loader_callback_loader`
+      - Function to call to load a user object when token accesses a protected endpoint
+    * - :meth:`~flask_jwt_extended.JWTManager.user_loader_error_loader`
+      - Function that is called when the user_loader callback function returns `None`
 
 Dynamic token expires time
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

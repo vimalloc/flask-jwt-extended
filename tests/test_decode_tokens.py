@@ -48,9 +48,7 @@ def test_no_user_claims(app, user_loader_return):
     # returned via the decode_token call
     with app.test_request_context():
         token = create_access_token('username')
-        unverfied_claims = jwt.decode(token, verify=False, algorithms=[config.algorithm])
-        decode_key = jwtM._decode_key_callback(unverfied_claims)
-        pure_decoded = jwt.decode(token, decode_key, algorithms=[config.algorithm])
+        pure_decoded = jwt.decode(token, config.decode_key, algorithms=[config.algorithm])
         assert config.user_claims_key not in pure_decoded
         extension_decoded = decode_token(token)
         assert config.user_claims_key in extension_decoded
@@ -121,25 +119,44 @@ def test_get_jti(app, default_access_token):
         assert default_access_token['jti'] == get_jti(token)
 
 
-def test_decode_key_callback(app, default_access_token):
+def test_encode_decode_callback_values(app, default_access_token):
     jwtM = get_jwt_manager(app)
-    app.config['JWT_SECRET_KEY'] = 'correct secret'
+    app.config['JWT_SECRET_KEY'] = 'foobarbaz'
+    with app.test_request_context():
+        assert jwtM._decode_key_callback({}) == 'foobarbaz'
+        assert jwtM._encode_key_callback({}) == 'foobarbaz'
 
     @jwtM.decode_key_loader
     def get_decode_key_1(claims):
         return 'different secret'
 
+    @jwtM.encode_key_loader
+    def get_decode_key_2(identity):
+        return 'different secret'
+
     assert jwtM._decode_key_callback({}) == 'different secret'
+    assert jwtM._encode_key_callback('') == 'different secret'
+
+
+def test_custom_encode_decode_key_callbacks(app, default_access_token):
+    jwtM = get_jwt_manager(app)
+    app.config['JWT_SECRET_KEY'] = 'foobarbaz'
+
+    @jwtM.encode_key_loader
+    def get_encode_key_1(identity):
+        assert identity == 'username'
+        return 'different secret'
 
     with pytest.raises(InvalidSignatureError):
         with app.test_request_context():
-            token = encode_token(app, default_access_token)
+            token = create_access_token('username')
             decode_token(token)
 
     @jwtM.decode_key_loader
-    def get_decode_key_2(claims):
-        return 'correct secret'
+    def get_decode_key_1(claims):
+        assert claims['identity'] == 'username'
+        return 'different secret'
 
     with app.test_request_context():
-        token = encode_token(app, default_access_token)
+        token = create_access_token('username')
         decode_token(token)

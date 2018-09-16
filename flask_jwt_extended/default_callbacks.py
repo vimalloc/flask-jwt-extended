@@ -104,4 +104,16 @@ def default_verify_claims_failed_callback():
 
 
 def default_decode_key_callback(claims):
+    """
+    By default, the decode key specified via the JWT_SECRET_KEY or
+    JWT_PUBLIC_KEY settings will be used to decode all tokens
+    """
     return config.decode_key
+
+
+def default_encode_key_callback(identity):
+    """
+    By default, the encode key specified via the JWT_SECRET_KEY or
+    JWT_PRIVATE_KEY settings will be used to encode all tokens
+    """
+    return config.encode_key

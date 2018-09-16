@@ -14,7 +14,7 @@ from flask_jwt_extended.default_callbacks import (
     default_unauthorized_callback, default_needs_fresh_token_callback,
     default_revoked_token_callback, default_user_loader_error_callback,
     default_claims_verification_callback, default_verify_claims_failed_callback,
-    default_decode_key_callback
+    default_decode_key_callback, default_encode_key_callback
 )
 from flask_jwt_extended.tokens import (
     encode_refresh_token, encode_access_token
@@ -55,6 +55,7 @@ class JWTManager(object):
         self._claims_verification_callback = default_claims_verification_callback
         self._verify_claims_failed_callback = default_verify_claims_failed_callback
         self._decode_key_callback = default_decode_key_callback
+        self._encode_key_callback = default_encode_key_callback
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
@@ -385,14 +386,32 @@ class JWTManager(object):
         This decorator sets the callback function for getting the JWT decode key and
         can be used to dynamically choose the appropriate decode key based on token
         contents.
-        The default implementation returns the decode key from config (either
-        `JWT_SECRET_KEY` or `JWT_PUBLIC_KEY` depending on signing algorithm).
+
+        The default implementation returns the decode key specified by
+        `JWT_SECRET_KEY` or `JWT_PUBLIC_KEY`, depending on the signing algorithm.
 
         *HINT*: The callback function must be a function that takes only **one** argument,
-        which is a dictionary of the claims encoded in the JWT and must return a *string*
+        which is the unverified claims of the jwt (dictionary) and must return a *string*
         which is the decode key to verify the token.
         """
         self._decode_key_callback = callback
+        return callback
+
+    def encode_key_loader(self, callback):
+        """
+        This decorator sets the callback function for getting the JWT encode key and
+        can be used to dynamically choose the appropriate encode key based on the
+        token identity.
+
+        The default implementation returns the encode key specified by
+        `JWT_SECRET_KEY` or `JWT_PRIVATE_KEY`, depending on the signing algorithm.
+
+        *HINT*: The callback function must be a function that takes only **one**
+        argument, which is the identity as passed into the create_access_token
+        or create_refresh_token functions, and must return a *string* which is
+        the decode key to verify the token.
+        """
+        self._encode_key_callback = callback
         return callback
 
     def _create_refresh_token(self, identity, expires_delta=None):
@@ -406,7 +425,7 @@ class JWTManager(object):
 
         refresh_token = encode_refresh_token(
             identity=self._user_identity_callback(identity),
-            secret=config.encode_key,
+            secret=self._encode_key_callback(identity),
             algorithm=config.algorithm,
             expires_delta=expires_delta,
             user_claims=user_claims,
@@ -423,7 +442,7 @@ class JWTManager(object):
 
         access_token = encode_access_token(
             identity=self._user_identity_callback(identity),
-            secret=config.encode_key,
+            secret=self._encode_key_callback(identity),
             algorithm=config.algorithm,
             expires_delta=expires_delta,
             fresh=fresh,

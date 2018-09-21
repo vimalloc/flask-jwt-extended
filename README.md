@@ -3,6 +3,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/vimalloc/flask-jwt-extended/badge.svg?branch=master)](https://coveralls.io/github/vimalloc/flask-jwt-extended?branch=master)
 [![PyPI version](https://badge.fury.io/py/Flask-JWT-Extended.svg)](https://badge.fury.io/py/Flask-JWT-Extended)
 [![Documentation Status](https://readthedocs.org/projects/flask-jwt-extended/badge/)](http://flask-jwt-extended.readthedocs.io/en/latest/)
+[![Join the chat at https://gitter.im/flask-jwt-extended/Lobby](https://badges.gitter.im/flask-jwt-extended/Lobby.svg)](https://gitter.im/flask-jwt-extended/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ### When to use Flask-JWT-Extended?
 
@@ -42,7 +43,8 @@ help upgrading to the 3.x.x releases.
 
 
 ### Chatting
-We are on irc! You can come chat with us in the ```#flask-jwt-extended``` channel on ```freenode```.
+We have moved from irc to gitter. The official support channel can now be found
+at https://gitter.im/flask-jwt-extended/Lobby.
 
 
 ### Testing and Code Coverage

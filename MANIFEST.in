@@ -1,1 +1,2 @@
-include README.md LICENSE requirements.txt
+include LICENSE README.md requirements.txt tox.ini
+recursive-include tests *.py

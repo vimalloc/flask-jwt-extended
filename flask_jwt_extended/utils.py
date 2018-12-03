@@ -136,7 +136,7 @@ def create_refresh_token(identity, expires_delta=None):
                           expiration. If this is None, it will use the
                           'JWT_REFRESH_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
-    :return: An encoded access token
+    :return: An encoded refresh token
     """
     jwt_manager = _get_jwt_manager()
     return jwt_manager._create_refresh_token(identity, expires_delta)

@@ -282,4 +282,5 @@ class _Config(object):
     def audience(self):
         return current_app.config['JWT_DECODE_AUDIENCE']
 
+
 config = _Config()

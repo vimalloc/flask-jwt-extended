@@ -74,7 +74,7 @@ def test_default_decode_token_values(app, default_access_token):
         decoded = decode_token(token)
         assert decoded['type'] == 'access'
         assert 'jti' in decoded
-        assert decoded['fresh'] == False
+        assert decoded['fresh'] is False
 
 
 def test_bad_token_type(app, default_access_token):
@@ -148,7 +148,7 @@ def test_encode_decode_callback_values(app, default_access_token):
     @jwtM.decode_key_loader
     def get_decode_key_1(claims, headers):
         return 'different secret'
-    assert jwtM._decode_key_callback({},{}) == 'different secret'
+    assert jwtM._decode_key_callback({}, {}) == 'different secret'
 
     # test decode key callback with one argument (backwards compatibility)
     @jwtM.decode_key_loader
@@ -195,11 +195,9 @@ def test_valid_aud(app, default_access_token):
     with pytest.raises(InvalidAudienceError):
         with app.test_request_context():
             decode_token(invalid_token)
-    
+
     default_access_token['aud'] = 'foo'
     valid_token = encode_token(app, default_access_token)
     with app.test_request_context():
         decoded = decode_token(valid_token)
         assert decoded['aud'] == 'foo'
-
-

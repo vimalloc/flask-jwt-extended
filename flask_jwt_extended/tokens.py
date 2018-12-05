@@ -140,7 +140,7 @@ def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
         raise JWTDecodeError("Missing or invalid claim: type")
     if data['type'] == 'access':
         if 'fresh' not in data:
-            data['fresh'] = False            
+            data['fresh'] = False
     if user_claims_key not in data:
         data[user_claims_key] = {}
     if csrf_value:

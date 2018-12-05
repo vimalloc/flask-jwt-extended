@@ -1,9 +1,9 @@
 import jwt
 import pytest
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from flask import Flask
-from jwt import ExpiredSignatureError, InvalidSignatureError
+from jwt import ExpiredSignatureError, InvalidSignatureError, InvalidAudienceError
 
 from flask_jwt_extended import (
     JWTManager, create_access_token, decode_token, create_refresh_token,
@@ -54,14 +54,27 @@ def test_no_user_claims(app, user_loader_return):
         assert config.user_claims_key in extension_decoded
 
 
-@pytest.mark.parametrize("missing_claim", ['jti', 'type', 'identity', 'fresh', 'csrf'])
-def test_missing_jti_claim(app, default_access_token, missing_claim):
-    del default_access_token[missing_claim]
+@pytest.mark.parametrize("missing_claims", ['identity', 'csrf'])
+def test_missing_claims(app, default_access_token, missing_claims):
+    del default_access_token[missing_claims]
     missing_jwt_token = encode_token(app, default_access_token)
 
     with pytest.raises(JWTDecodeError):
         with app.test_request_context():
             decode_token(missing_jwt_token, csrf_value='abcd')
+
+
+def test_default_decode_token_values(app, default_access_token):
+    del default_access_token['type']
+    del default_access_token['jti']
+    del default_access_token['fresh']
+    token = encode_token(app, default_access_token)
+
+    with app.test_request_context():
+        decoded = decode_token(token)
+        assert decoded['type'] == 'access'
+        assert 'jti' in decoded
+        assert decoded['fresh'] == False
 
 
 def test_bad_token_type(app, default_access_token):
@@ -126,16 +139,22 @@ def test_encode_decode_callback_values(app, default_access_token):
         assert jwtM._decode_key_callback({}) == 'foobarbaz'
         assert jwtM._encode_key_callback({}) == 'foobarbaz'
 
-    @jwtM.decode_key_loader
-    def get_decode_key_1(claims):
-        return 'different secret'
-
     @jwtM.encode_key_loader
-    def get_decode_key_2(identity):
+    def get_encode_key_1(identity):
         return 'different secret'
-
-    assert jwtM._decode_key_callback({}) == 'different secret'
     assert jwtM._encode_key_callback('') == 'different secret'
+
+    # test decode key callback with two arguments (preferred)
+    @jwtM.decode_key_loader
+    def get_decode_key_1(claims, headers):
+        return 'different secret'
+    assert jwtM._decode_key_callback({},{}) == 'different secret'
+
+    # test decode key callback with one argument (backwards compatibility)
+    @jwtM.decode_key_loader
+    def get_decode_key_2(claims):
+        return 'different secret'
+    assert jwtM._decode_key_callback({}) == 'different secret'
 
 
 def test_custom_encode_decode_key_callbacks(app, default_access_token):
@@ -166,3 +185,21 @@ def test_custom_encode_decode_key_callbacks(app, default_access_token):
         decode_token(token)
         token = create_refresh_token('username')
         decode_token(token)
+
+
+def test_valid_aud(app, default_access_token):
+    app.config['JWT_DECODE_AUDIENCE'] = 'foo'
+
+    default_access_token['aud'] = 'bar'
+    invalid_token = encode_token(app, default_access_token)
+    with pytest.raises(InvalidAudienceError):
+        with app.test_request_context():
+            decode_token(invalid_token)
+    
+    default_access_token['aud'] = 'foo'
+    valid_token = encode_token(app, default_access_token)
+    with app.test_request_context():
+        decoded = decode_token(valid_token)
+        assert decoded['aud'] == 'foo'
+
+

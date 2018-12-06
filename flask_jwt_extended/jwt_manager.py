@@ -1,6 +1,6 @@
 import datetime
 
-from jwt import ExpiredSignatureError, InvalidTokenError
+from jwt import ExpiredSignatureError, InvalidTokenError, InvalidAudienceError
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
@@ -106,6 +106,10 @@ class JWTManager(object):
 
         @app.errorhandler(WrongTokenError)
         def handle_wrong_token_error(e):
+            return self._invalid_token_callback(str(e))
+
+        @app.errorhandler(InvalidAudienceError)
+        def handle_invalid_audience_error(e):
             return self._invalid_token_callback(str(e))
 
         @app.errorhandler(RevokedTokenError)

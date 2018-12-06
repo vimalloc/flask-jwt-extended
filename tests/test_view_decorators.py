@@ -210,6 +210,30 @@ def test_jwt_missing_claims(app):
     assert response.get_json() == {'msg': 'Missing claim: identity'}
 
 
+def test_jwt_invalid_audience(app):
+    url = '/protected'
+    jwtM = get_jwt_manager(app)
+    test_client = app.test_client()
+
+    # No audience claim expected or provided - OK
+    access_token = encode_token(app, {'identity': 'me'})
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.status_code == 200
+
+    # Audience claim expected and not provided - not OK
+    app.config['JWT_DECODE_AUDIENCE'] = 'my_audience'
+    access_token = encode_token(app, {'identity': 'me'})
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.status_code == 422
+    assert response.get_json() == {'msg': 'Token is missing the "aud" claim'}
+
+    # Audience claim still expected and wrong one provided - not OK
+    access_token = encode_token(app, {'aud': 'different_audience', 'identity': 'me'})
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.status_code == 422
+    assert response.get_json() == {'msg': 'Invalid audience'}
+
+
 def test_expired_token(app):
     url = '/protected'
     jwtM = get_jwt_manager(app)

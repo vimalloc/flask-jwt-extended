@@ -1,6 +1,7 @@
 import jwt
 import pytest
 from datetime import datetime, timedelta
+import warnings
 
 from flask import Flask
 from jwt import ExpiredSignatureError, InvalidSignatureError, InvalidAudienceError
@@ -136,7 +137,7 @@ def test_encode_decode_callback_values(app, default_access_token):
     jwtM = get_jwt_manager(app)
     app.config['JWT_SECRET_KEY'] = 'foobarbaz'
     with app.test_request_context():
-        assert jwtM._decode_key_callback({}) == 'foobarbaz'
+        assert jwtM._decode_key_callback({}, {}) == 'foobarbaz'
         assert jwtM._encode_key_callback({}) == 'foobarbaz'
 
     @jwtM.encode_key_loader
@@ -144,17 +145,28 @@ def test_encode_decode_callback_values(app, default_access_token):
         return 'different secret'
     assert jwtM._encode_key_callback('') == 'different secret'
 
-    # test decode key callback with two arguments (preferred)
     @jwtM.decode_key_loader
     def get_decode_key_1(claims, headers):
         return 'different secret'
     assert jwtM._decode_key_callback({}, {}) == 'different secret'
 
+
+def test_legacy_decode_key_callback(app, default_access_token):
+    jwtM = get_jwt_manager(app)
+    app.config['JWT_SECRET_KEY'] = 'foobarbaz'
+
     # test decode key callback with one argument (backwards compatibility)
-    @jwtM.decode_key_loader
-    def get_decode_key_2(claims):
-        return 'different secret'
-    assert jwtM._decode_key_callback({}) == 'different secret'
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        @jwtM.decode_key_loader
+        def get_decode_key_legacy(claims):
+            return 'foobarbaz'
+        with app.test_request_context():
+            token = encode_token(app, default_access_token)
+            decode_token(token)
+            assert len(w) == 1
+            assert issubclass(w[-1].category, DeprecationWarning)
 
 
 def test_custom_encode_decode_key_callbacks(app, default_access_token):
@@ -176,7 +188,7 @@ def test_custom_encode_decode_key_callbacks(app, default_access_token):
             decode_token(token)
 
     @jwtM.decode_key_loader
-    def get_decode_key_1(claims):
+    def get_decode_key_1(claims, headers):
         assert claims['identity'] == 'username'
         return 'different secret'
 

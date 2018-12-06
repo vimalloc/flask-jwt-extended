@@ -131,7 +131,7 @@ def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
 
     # Make sure that any custom claims we expect in the token are present
     if 'jti' not in data:
-        data['jti'] = _create_csrf_token()
+        data['jti'] = None
     if identity_claim_key not in data:
         raise JWTDecodeError("Missing claim: {}".format(identity_claim_key))
     if 'type' not in data:

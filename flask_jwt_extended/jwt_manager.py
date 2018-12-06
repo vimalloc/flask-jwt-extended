@@ -391,10 +391,9 @@ class JWTManager(object):
         The default implementation returns the decode key specified by
         `JWT_SECRET_KEY` or `JWT_PUBLIC_KEY`, depending on the signing algorithm.
 
-        *HINT*: The callback function should preferably be a function that takes
+        *HINT*: The callback function should be a function that takes
         **two** arguments, which are the unverified claims and headers of the jwt
-        (dictionaries), but may take one argument (just the claims) for backwards
-        compatability. The function must return a *string* which is the decode key
+        (dictionaries). The function must return a *string* which is the decode key
         in PEM format to verify the token.
         """
         self._decode_key_callback = callback

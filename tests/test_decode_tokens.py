@@ -73,7 +73,7 @@ def test_default_decode_token_values(app, default_access_token):
     with app.test_request_context():
         decoded = decode_token(token)
         assert decoded['type'] == 'access'
-        assert 'jti' in decoded
+        assert decoded['jti'] is None
         assert decoded['fresh'] is False
 
 

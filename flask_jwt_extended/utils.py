@@ -1,5 +1,6 @@
 from flask import current_app
 from werkzeug.local import LocalProxy
+from warnings import warn
 
 try:
     from flask import _app_ctx_stack as ctx_stack
@@ -76,14 +77,26 @@ def decode_token(encoded_token, csrf_value=None):
     unverified_claims = jwt.decode(
         encoded_token, verify=False, algorithms=config.algorithm
     )
-    secret = jwt_manager._decode_key_callback(unverified_claims)
+    unverified_headers = jwt.get_unverified_header(encoded_token)
+    # Attempt to call callback with both claims and headers, but fallback to just claims
+    # for backwards compatibility
+    try:
+        secret = jwt_manager._decode_key_callback(unverified_claims, unverified_headers)
+    except TypeError:
+        msg = (
+                "The single-argument (unverified_claims) form of decode_key_callback is deprecated. "
+                "Update your code to use the two-argument form (unverified_claims, unverified_headers)."
+        )
+        warn(msg, DeprecationWarning)
+        secret = jwt_manager._decode_key_callback(unverified_claims)
     return decode_jwt(
         encoded_token=encoded_token,
         secret=secret,
         algorithm=config.algorithm,
         identity_claim_key=config.identity_claim_key,
         user_claims_key=config.user_claims_key,
-        csrf_value=csrf_value
+        csrf_value=csrf_value,
+        audience=config.audience
     )
 
 

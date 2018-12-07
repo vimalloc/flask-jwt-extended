@@ -278,5 +278,9 @@ class _Config(object):
     def json_encoder(self):
         return current_app.json_encoder
 
+    @property
+    def audience(self):
+        return current_app.config['JWT_DECODE_AUDIENCE']
+
 
 config = _Config()

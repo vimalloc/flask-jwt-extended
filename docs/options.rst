@@ -44,6 +44,9 @@ General Options:
 ``JWT_ERROR_MESSAGE_KEY``         The key of the error message in a JSON error response when using
                                   the default error handlers.
                                   Defaults to ``'msg'``.
+``JWT_DECODE_AUDIENCE``           The audience you expect in a JWT when decoding it.
+                                  If this option differs from the 'aud' claim in a JWT, the ``'invalid_token_callback'`` is invoked.
+                                  Defaults to ``'None'``.
 ================================= =========================================
 
 

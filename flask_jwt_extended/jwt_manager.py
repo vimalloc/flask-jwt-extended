@@ -1,6 +1,6 @@
 import datetime
 
-from jwt import ExpiredSignatureError, InvalidTokenError
+from jwt import ExpiredSignatureError, InvalidTokenError, InvalidAudienceError
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
@@ -108,6 +108,10 @@ class JWTManager(object):
         def handle_wrong_token_error(e):
             return self._invalid_token_callback(str(e))
 
+        @app.errorhandler(InvalidAudienceError)
+        def handle_invalid_audience_error(e):
+            return self._invalid_token_callback(str(e))
+
         @app.errorhandler(RevokedTokenError)
         def handle_revoked_token_error(e):
             return self._revoked_token_callback()
@@ -192,6 +196,7 @@ class JWTManager(object):
 
         app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
         app.config.setdefault('JWT_USER_CLAIMS', 'user_claims')
+        app.config.setdefault('JWT_DECODE_AUDIENCE', None)
 
         app.config.setdefault('JWT_CLAIMS_IN_REFRESH_TOKEN', False)
 
@@ -390,9 +395,10 @@ class JWTManager(object):
         The default implementation returns the decode key specified by
         `JWT_SECRET_KEY` or `JWT_PUBLIC_KEY`, depending on the signing algorithm.
 
-        *HINT*: The callback function must be a function that takes only **one** argument,
-        which is the unverified claims of the jwt (dictionary) and must return a *string*
-        which is the decode key to verify the token.
+        *HINT*: The callback function should be a function that takes
+        **two** arguments, which are the unverified claims and headers of the jwt
+        (dictionaries). The function must return a *string* which is the decode key
+        in PEM format to verify the token.
         """
         self._decode_key_callback = callback
         return callback

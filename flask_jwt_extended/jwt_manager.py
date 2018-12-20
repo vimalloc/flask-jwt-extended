@@ -138,7 +138,7 @@ class JWTManager(object):
         Sets the default configuration options used by this extension
         """
         # Where to look for the JWT. Available options are cookies or headers
-        app.config.setdefault('JWT_TOKEN_LOCATION', ['headers'])
+        app.config.setdefault('JWT_TOKEN_LOCATION', ('headers',))
 
         # Options for JWTs when the TOKEN_LOCATION is headers
         app.config.setdefault('JWT_HEADER_NAME', 'Authorization')
@@ -192,7 +192,7 @@ class JWTManager(object):
 
         # Options for blacklisting/revoking tokens
         app.config.setdefault('JWT_BLACKLIST_ENABLED', False)
-        app.config.setdefault('JWT_BLACKLIST_TOKEN_CHECKS', ['access', 'refresh'])
+        app.config.setdefault('JWT_BLACKLIST_TOKEN_CHECKS', ('access', 'refresh'))
 
         app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
         app.config.setdefault('JWT_USER_CLAIMS', 'user_claims')

@@ -18,7 +18,7 @@ def app():
 
 def test_default_configs(app):
     with app.test_request_context():
-        assert config.token_location == ['headers']
+        assert config.token_location == ('headers',)
         assert config.jwt_in_query_string is False
         assert config.jwt_in_cookies is False
         assert config.jwt_in_json is False
@@ -56,7 +56,7 @@ def test_default_configs(app):
         assert config.algorithm == 'HS256'
         assert config.is_asymmetric is False
         assert config.blacklist_enabled is False
-        assert config.blacklist_checks == ['access', 'refresh']
+        assert config.blacklist_checks == ('access', 'refresh')
         assert config.blacklist_access_tokens is True
         assert config.blacklist_refresh_tokens is True
 
@@ -105,7 +105,7 @@ def test_override_configs(app):
     app.config['JWT_ALGORITHM'] = 'HS512'
 
     app.config['JWT_BLACKLIST_ENABLED'] = True
-    app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
+    app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ('refresh',)
 
     app.config['JWT_IDENTITY_CLAIM'] = 'foo'
     app.config['JWT_USER_CLAIMS'] = 'bar'
@@ -156,7 +156,7 @@ def test_override_configs(app):
         assert config.algorithm == 'HS512'
 
         assert config.blacklist_enabled is True
-        assert config.blacklist_checks == ['refresh']
+        assert config.blacklist_checks == ('refresh',)
         assert config.blacklist_access_tokens is False
         assert config.blacklist_refresh_tokens is True
 
@@ -246,6 +246,14 @@ def test_invalid_config_options(app):
         with pytest.raises(RuntimeError):
             config.token_location
 
+        app.config['JWT_TOKEN_LOCATION'] = 1
+        with pytest.raises(RuntimeError):
+            config.token_location
+
+        app.config['JWT_TOKEN_LOCATION'] = {'location': 'headers'}
+        with pytest.raises(RuntimeError):
+            config.token_location
+
         app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies', 'banana']
         with pytest.raises(RuntimeError):
             config.token_location
@@ -275,6 +283,14 @@ def test_invalid_config_options(app):
         with pytest.raises(RuntimeError):
             config.blacklist_checks
 
+        app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 1
+        with pytest.raises(RuntimeError):
+            config.blacklist_checks
+
+        app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = {'token_type': 'access'}
+        with pytest.raises(RuntimeError):
+            config.blacklist_checks
+
         app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'banana']
         with pytest.raises(RuntimeError):
             config.blacklist_checks
@@ -282,30 +298,54 @@ def test_invalid_config_options(app):
 
 def test_jwt_token_locations_config(app):
     with app.test_request_context():
-        app.config['JWT_TOKEN_LOCATION'] = 'headers'
-        assert config.token_location == ['headers']
-        app.config['JWT_TOKEN_LOCATION'] = ['headers']
-        assert config.token_location == ['headers']
-        app.config['JWT_TOKEN_LOCATION'] = 'cookies'
-        assert config.token_location == ['cookies']
-        app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-        assert config.token_location == ['cookies']
-        app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'headers']
-        assert config.token_location == ['cookies', 'headers']
+        allowed_locations = ('headers', 'cookies', 'query_string', 'json')
+        allowed_data_structures = (tuple, list, frozenset, set)
+
+        for location in allowed_locations:
+            app.config['JWT_TOKEN_LOCATION'] = location
+            assert config.token_location == (location,)
+
+        for locations in (
+            data_structure((location,))
+            for data_structure in allowed_data_structures
+            for location in allowed_locations
+        ):
+            app.config['JWT_TOKEN_LOCATION'] = locations
+            assert config.token_location == locations
+
+        for locations in (
+            data_structure(allowed_locations[:i])
+            for data_structure in allowed_data_structures
+            for i in range(1, len(allowed_locations))
+        ):
+            app.config['JWT_TOKEN_LOCATION'] = locations
+            assert config.token_location == locations
 
 
 def test_jwt_blacklist_token_checks_config(app):
     with app.test_request_context():
-        app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'access'
-        assert config.blacklist_checks == ['access']
-        app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access']
-        assert config.blacklist_checks == ['access']
-        app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = 'refresh'
-        assert config.blacklist_checks == ['refresh']
-        app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['refresh']
-        assert config.blacklist_checks == ['refresh']
-        app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
-        assert config.blacklist_checks == ['access', 'refresh']
+        allowed_token_types = ('access', 'refresh')
+        allowed_data_structures = (tuple, list, frozenset, set)
+
+        for token_type in allowed_token_types:
+            app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = token_type
+            assert config.blacklist_checks == (token_type,)
+
+        for token_types in (
+            data_structure((token_type,))
+            for data_structure in allowed_data_structures
+            for token_type in allowed_token_types
+        ):
+            app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = token_types
+            assert config.blacklist_checks == token_types
+
+        for token_types in (
+            data_structure(allowed_token_types[:i])
+            for data_structure in allowed_data_structures
+            for i in range(1, len(allowed_token_types))
+        ):
+            app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = token_types
+            assert config.blacklist_checks == token_types
 
 
 def test_csrf_protect_config(app):

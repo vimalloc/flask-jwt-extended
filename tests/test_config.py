@@ -254,6 +254,10 @@ def test_invalid_config_options(app):
         with pytest.raises(RuntimeError):
             config.token_location
 
+        app.config['JWT_TOKEN_LOCATION'] = range(99)
+        with pytest.raises(RuntimeError):
+            config.token_location
+
         app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies', 'banana']
         with pytest.raises(RuntimeError):
             config.token_location
@@ -288,6 +292,10 @@ def test_invalid_config_options(app):
             config.blacklist_checks
 
         app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = {'token_type': 'access'}
+        with pytest.raises(RuntimeError):
+            config.blacklist_checks
+
+        app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = range(99)
         with pytest.raises(RuntimeError):
             config.blacklist_checks
 

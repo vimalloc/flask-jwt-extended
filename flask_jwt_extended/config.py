@@ -1,6 +1,12 @@
 import datetime
 from warnings import warn
 
+# In Python 2.7 collections.abc is a part of the collections module.
+try:
+    from collections.abc import Sequence, Set
+except ImportError:  # pragma: no cover
+    from collections import Sequence, Set
+
 from flask import current_app
 
 # Older versions of pyjwt do not have the requires_cryptography set. Also,
@@ -42,9 +48,11 @@ class _Config(object):
     @property
     def token_location(self):
         locations = current_app.config['JWT_TOKEN_LOCATION']
-        if not isinstance(locations, list):
-            locations = [locations]
-        if not locations:
+        if isinstance(locations, str):
+            locations = (locations,)
+        elif not isinstance(locations, (Sequence, Set)):
+            raise RuntimeError('JWT_TOKEN_LOCATION must be a sequence or a set')
+        elif not locations:
             raise RuntimeError('JWT_TOKEN_LOCATION must contain at least one '
                                'of "headers", "cookies", "query_string", or "json"')
         for location in locations:
@@ -202,8 +210,10 @@ class _Config(object):
     @property
     def blacklist_checks(self):
         check_type = current_app.config['JWT_BLACKLIST_TOKEN_CHECKS']
-        if not isinstance(check_type, list):
-            check_type = [check_type]
+        if isinstance(check_type, str):
+            check_type = (check_type,)
+        elif not isinstance(check_type, (Sequence, Set)):
+            raise RuntimeError('JWT_BLACKLIST_TOKEN_CHECKS must be a sequence or a set')
         for item in check_type:
             if item not in ('access', 'refresh'):
                 err = 'JWT_BLACKLIST_TOKEN_CHECKS must be "access" or "refresh"'

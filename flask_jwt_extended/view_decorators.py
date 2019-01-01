@@ -23,7 +23,7 @@ from flask_jwt_extended.utils import (
 
 def verify_jwt_in_request():
     """
-    Ensure that the requeste has a valid access token. This does not check the
+    Ensure that the requester has a valid access token. This does not check the
     freshness of the access token. Raises an appropiate exception there is
     no token or if the token is invalid.
     """
@@ -57,7 +57,7 @@ def verify_jwt_in_request_optional():
 
 def verify_fresh_jwt_in_request():
     """
-    Ensure that the requeste has a valid and fresh access token. Raises an
+    Ensure that the requester has a valid and fresh access token. Raises an
     appropiate exception if there is no token, the token is invalid, or the
     token is not marked as fresh.
     """
@@ -78,7 +78,7 @@ def verify_fresh_jwt_in_request():
 
 def verify_jwt_refresh_token_in_request():
     """
-    Ensure that the requeste has a valid refresh token. Raises an appropiate
+    Ensure that the requester has a valid refresh token. Raises an appropiate
     exception if there is no token or the token is invalid.
     """
     if request.method not in config.exempt_methods:

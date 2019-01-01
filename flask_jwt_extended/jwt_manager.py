@@ -1,6 +1,6 @@
 import datetime
 
-from jwt import ExpiredSignatureError, InvalidTokenError
+from jwt import ExpiredSignatureError, InvalidTokenError, InvalidAudienceError
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
@@ -13,7 +13,8 @@ from flask_jwt_extended.default_callbacks import (
     default_user_identity_callback, default_invalid_token_callback,
     default_unauthorized_callback, default_needs_fresh_token_callback,
     default_revoked_token_callback, default_user_loader_error_callback,
-    default_claims_verification_callback, default_verify_claims_failed_callback
+    default_claims_verification_callback, default_verify_claims_failed_callback,
+    default_decode_key_callback, default_encode_key_callback
 )
 from flask_jwt_extended.tokens import (
     encode_refresh_token, encode_access_token
@@ -53,6 +54,8 @@ class JWTManager(object):
         self._token_in_blacklist_callback = None
         self._claims_verification_callback = default_claims_verification_callback
         self._verify_claims_failed_callback = default_verify_claims_failed_callback
+        self._decode_key_callback = default_decode_key_callback
+        self._encode_key_callback = default_encode_key_callback
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
@@ -105,6 +108,10 @@ class JWTManager(object):
         def handle_wrong_token_error(e):
             return self._invalid_token_callback(str(e))
 
+        @app.errorhandler(InvalidAudienceError)
+        def handle_invalid_audience_error(e):
+            return self._invalid_token_callback(str(e))
+
         @app.errorhandler(RevokedTokenError)
         def handle_revoked_token_error(e):
             return self._revoked_token_callback()
@@ -131,7 +138,7 @@ class JWTManager(object):
         Sets the default configuration options used by this extension
         """
         # Where to look for the JWT. Available options are cookies or headers
-        app.config.setdefault('JWT_TOKEN_LOCATION', ['headers'])
+        app.config.setdefault('JWT_TOKEN_LOCATION', ('headers',))
 
         # Options for JWTs when the TOKEN_LOCATION is headers
         app.config.setdefault('JWT_HEADER_NAME', 'Authorization')
@@ -185,10 +192,11 @@ class JWTManager(object):
 
         # Options for blacklisting/revoking tokens
         app.config.setdefault('JWT_BLACKLIST_ENABLED', False)
-        app.config.setdefault('JWT_BLACKLIST_TOKEN_CHECKS', ['access', 'refresh'])
+        app.config.setdefault('JWT_BLACKLIST_TOKEN_CHECKS', ('access', 'refresh'))
 
         app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
         app.config.setdefault('JWT_USER_CLAIMS', 'user_claims')
+        app.config.setdefault('JWT_DECODE_AUDIENCE', None)
 
         app.config.setdefault('JWT_CLAIMS_IN_REFRESH_TOKEN', False)
 
@@ -200,11 +208,11 @@ class JWTManager(object):
         access token when :func:`~flask_jwt_extended.create_access_token` is
         called. By default, no extra user claims will be added to the JWT.
 
-        The callback function must be a function that takes only one argument,
+        *HINT*: The callback function must be a function that takes only **one** argument,
         which is the object passed into
         :func:`~flask_jwt_extended.create_access_token`, and returns the custom
         claims you want included in the access tokens. This returned claims
-        must be JSON serializable.
+        must be *JSON serializable*.
         """
         self._user_claims_callback = callback
         return callback
@@ -218,11 +226,11 @@ class JWTManager(object):
         return the unmodified object that is passed in as the `identity` kwarg
         to the above functions.
 
-        The callback function must be a function that takes only one argument,
+        *HINT*: The callback function must be a function that takes only **one** argument,
         which is the object passed into
         :func:`~flask_jwt_extended.create_access_token` or
         :func:`~flask_jwt_extended.create_refresh_token`, and returns the
-        JSON serializable identity of this token.
+        *JSON serializable* identity of this token.
         """
         self._user_identity_callback = callback
         return callback
@@ -235,8 +243,8 @@ class JWTManager(object):
 
         {"msg": "Token has expired"}
 
-        The callback must be a function that takes zero arguments, and returns
-        a Flask response.
+        *HINT*: The callback must be a function that takes **zero** arguments, and returns
+        a *Flask response*.
         """
         self._expired_token_callback = callback
         return callback
@@ -249,9 +257,9 @@ class JWTManager(object):
 
         {"msg": "<error description>"}
 
-        The callback must be a function that takes only one argument, which is
+        *HINT*: The callback must be a function that takes only **one** argument, which is
         a string which contains the reason why a token is invalid, and returns
-        a Flask response.
+        a *Flask response*.
         """
         self._invalid_token_callback = callback
         return callback
@@ -264,9 +272,9 @@ class JWTManager(object):
 
         {"msg": "<error description>"}
 
-        The callback must be a function that takes only one argument, which is
+        *HINT*: The callback must be a function that takes only **one** argument, which is
         a string which contains the reason why a JWT could not be found, and
-        returns a Flask response.
+        returns a *Flask response*.
         """
         self._unauthorized_callback = callback
         return callback
@@ -280,8 +288,8 @@ class JWTManager(object):
 
         {"msg": "Fresh token required"}
 
-        The callback must be a function that takes no arguments, and returns
-        a Flask response.
+        *HINT*: The callback must be a function that takes **no** arguments, and returns
+        a *Flask response*.
         """
         self._needs_fresh_token_callback = callback
         return callback
@@ -294,8 +302,8 @@ class JWTManager(object):
 
         {"msg": "Token has been revoked"}
 
-        The callback must be a function that takes no arguments, and returns
-        a Flask response.
+        *HINT*: The callback must be a function that takes **no** arguments, and returns
+        a *Flask response*.
         """
         self._revoked_token_callback = callback
         return callback
@@ -306,9 +314,9 @@ class JWTManager(object):
         automatically load an object when a protected endpoint is accessed.
         By default this is not used.
 
-        The callback must take one argument which is the identity JWT accessing
-        the protected endpoint, and it must return any object (which can then
-        be accessed via the :attr:`~flask_jwt_extended.current_user` LocalProxy
+        *HINT*: The callback must take **one** argument which is the identity JWT
+        accessing the protected endpoint, and it must return any object (which can
+        then be accessed via the :attr:`~flask_jwt_extended.current_user` LocalProxy
         in the protected endpoint), or `None` in the case of a user not being
         able to be loaded for any reason. If this callback function returns
         `None`, the :meth:`~flask_jwt_extended.JWTManager.user_loader_error_loader`
@@ -327,8 +335,8 @@ class JWTManager(object):
 
         {"msg": "Error loading the user <identity>"}
 
-        The callback must be a function that takes one argument, which is the
-        identity of the user who failed to load, and must return a Flask response.
+        *HINT*: The callback must be a function that takes **one** argument, which is the
+        identity of the user who failed to load, and must return a *Flask response*.
         """
         self._user_loader_error_callback = callback
         return callback
@@ -339,9 +347,9 @@ class JWTManager(object):
         a protected endpoint is accessed and will check if the JWT has been
         been revoked. By default, this callback is not used.
 
-        The callback must be a function that takes one argument, which is the
-        decoded JWT (python dictionary), and returns `True` if the token
-        has been blacklisted (or is otherwise considered revoked), or `False`
+        *HINT*: The callback must be a function that takes **one** argument, which is the
+        decoded JWT (python dictionary), and returns *`True`* if the token
+        has been blacklisted (or is otherwise considered revoked), or *`False`*
         otherwise.
         """
         self._token_in_blacklist_callback = callback
@@ -356,9 +364,9 @@ class JWTManager(object):
         :meth:`~flask_jwt_extended.JWTManager.claims_verification_failed_loader`
         decorator.
 
-        This callback must be a function that takes one argument, which is the
-        custom claims (python dict) present in the JWT, and returns `True` if the
-        claims are valid, or `False` otherwise.
+        *HINT*: This callback must be a function that takes **one** argument, which is the
+        custom claims (python dict) present in the JWT, and returns *`True`* if the
+        claims are valid, or *`False`* otherwise.
         """
         self._claims_verification_callback = callback
         return callback
@@ -372,10 +380,44 @@ class JWTManager(object):
 
         {"msg": "User claims verification failed"}
 
-        This callback must be a function that takes no arguments, and returns
-        a Flask response.
+        *HINT*: This callback must be a function that takes **no** arguments, and returns
+        a *Flask response*.
         """
         self._verify_claims_failed_callback = callback
+        return callback
+
+    def decode_key_loader(self, callback):
+        """
+        This decorator sets the callback function for getting the JWT decode key and
+        can be used to dynamically choose the appropriate decode key based on token
+        contents.
+
+        The default implementation returns the decode key specified by
+        `JWT_SECRET_KEY` or `JWT_PUBLIC_KEY`, depending on the signing algorithm.
+
+        *HINT*: The callback function should be a function that takes
+        **two** arguments, which are the unverified claims and headers of the jwt
+        (dictionaries). The function must return a *string* which is the decode key
+        in PEM format to verify the token.
+        """
+        self._decode_key_callback = callback
+        return callback
+
+    def encode_key_loader(self, callback):
+        """
+        This decorator sets the callback function for getting the JWT encode key and
+        can be used to dynamically choose the appropriate encode key based on the
+        token identity.
+
+        The default implementation returns the encode key specified by
+        `JWT_SECRET_KEY` or `JWT_PRIVATE_KEY`, depending on the signing algorithm.
+
+        *HINT*: The callback function must be a function that takes only **one**
+        argument, which is the identity as passed into the create_access_token
+        or create_refresh_token functions, and must return a *string* which is
+        the decode key to verify the token.
+        """
+        self._encode_key_callback = callback
         return callback
 
     def _create_refresh_token(self, identity, expires_delta=None):
@@ -389,7 +431,7 @@ class JWTManager(object):
 
         refresh_token = encode_refresh_token(
             identity=self._user_identity_callback(identity),
-            secret=config.encode_key,
+            secret=self._encode_key_callback(identity),
             algorithm=config.algorithm,
             expires_delta=expires_delta,
             user_claims=user_claims,
@@ -406,7 +448,7 @@ class JWTManager(object):
 
         access_token = encode_access_token(
             identity=self._user_identity_callback(identity),
-            secret=config.encode_key,
+            secret=self._encode_key_callback(identity),
             algorithm=config.algorithm,
             expires_delta=expires_delta,
             fresh=fresh,

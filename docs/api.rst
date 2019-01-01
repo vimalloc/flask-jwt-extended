@@ -14,16 +14,18 @@ Configuring Flask-JWT-Extended
   .. automethod:: init_app
   .. automethod:: claims_verification_loader
   .. automethod:: claims_verification_failed_loader
+  .. automethod:: decode_key_loader
+  .. automethod:: encode_key_loader
   .. automethod:: expired_token_loader
   .. automethod:: invalid_token_loader
   .. automethod:: needs_fresh_token_loader
   .. automethod:: revoked_token_loader
   .. automethod:: token_in_blacklist_loader
+  .. automethod:: unauthorized_loader
   .. automethod:: user_claims_loader
   .. automethod:: user_identity_loader
   .. automethod:: user_loader_callback_loader
   .. automethod:: user_loader_error_loader
-  .. automethod:: unauthorized_loader
 
 
 Protected endpoint decorators

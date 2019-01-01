@@ -1,5 +1,6 @@
 from flask import current_app
 from werkzeug.local import LocalProxy
+from warnings import warn
 
 try:
     from flask import _app_ctx_stack as ctx_stack
@@ -11,6 +12,7 @@ from flask_jwt_extended.exceptions import (
     RevokedTokenError, UserClaimsVerificationError, WrongTokenError
 )
 from flask_jwt_extended.tokens import decode_jwt
+import jwt
 
 
 # Proxy to access the current user
@@ -71,13 +73,30 @@ def decode_token(encoded_token, csrf_value=None):
     :param encoded_token: The encoded JWT to decode into a python dict.
     :param csrf_value: Expected CSRF double submit value (optional)
     """
+    jwt_manager = _get_jwt_manager()
+    unverified_claims = jwt.decode(
+        encoded_token, verify=False, algorithms=config.algorithm
+    )
+    unverified_headers = jwt.get_unverified_header(encoded_token)
+    # Attempt to call callback with both claims and headers, but fallback to just claims
+    # for backwards compatibility
+    try:
+        secret = jwt_manager._decode_key_callback(unverified_claims, unverified_headers)
+    except TypeError:
+        msg = (
+                "The single-argument (unverified_claims) form of decode_key_callback is deprecated. "
+                "Update your code to use the two-argument form (unverified_claims, unverified_headers)."
+        )
+        warn(msg, DeprecationWarning)
+        secret = jwt_manager._decode_key_callback(unverified_claims)
     return decode_jwt(
         encoded_token=encoded_token,
-        secret=config.decode_key,
+        secret=secret,
         algorithm=config.algorithm,
         identity_claim_key=config.identity_claim_key,
         user_claims_key=config.user_claims_key,
-        csrf_value=csrf_value
+        csrf_value=csrf_value,
+        audience=config.audience
     )
 
 
@@ -130,7 +149,7 @@ def create_refresh_token(identity, expires_delta=None):
                           expiration. If this is None, it will use the
                           'JWT_REFRESH_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
-    :return: An encoded access token
+    :return: An encoded refresh token
     """
     jwt_manager = _get_jwt_manager()
     return jwt_manager._create_refresh_token(identity, expires_delta)

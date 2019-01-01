@@ -15,7 +15,7 @@ def _create_csrf_token():
 
 def _encode_jwt(additional_token_data, expires_delta, secret, algorithm,
                 json_encoder=None):
-    uid = str(uuid.uuid4())
+    uid = _create_csrf_token()
     now = datetime.datetime.utcnow()
     token_data = {
         'iat': now,
@@ -113,7 +113,7 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
 
 
 def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
-               user_claims_key, csrf_value=None):
+               user_claims_key, csrf_value=None, audience=None):
     """
     Decodes an encoded JWT
 
@@ -123,21 +123,24 @@ def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
     :param identity_claim_key: expected key that contains the identity
     :param user_claims_key: expected key that contains the user claims
     :param csrf_value: Expected double submit csrf value
+    :param audience: expected audience in the JWT
     :return: Dictionary containing contents of the JWT
     """
-    # This call verifies the ext, iat, and nbf claims
-    data = jwt.decode(encoded_token, secret, algorithms=[algorithm])
+    # This call verifies the ext, iat, nbf, and aud claims
+    data = jwt.decode(encoded_token, secret, algorithms=[algorithm], audience=audience)
 
     # Make sure that any custom claims we expect in the token are present
     if 'jti' not in data:
-        raise JWTDecodeError("Missing claim: jti")
+        data['jti'] = None
     if identity_claim_key not in data:
         raise JWTDecodeError("Missing claim: {}".format(identity_claim_key))
-    if 'type' not in data or data['type'] not in ('refresh', 'access'):
+    if 'type' not in data:
+        data['type'] = 'access'
+    if data['type'] not in ('refresh', 'access'):
         raise JWTDecodeError("Missing or invalid claim: type")
     if data['type'] == 'access':
         if 'fresh' not in data:
-            raise JWTDecodeError("Missing claim: fresh")
+            data['fresh'] = False
     if user_claims_key not in data:
         data[user_claims_key] = {}
     if csrf_value:

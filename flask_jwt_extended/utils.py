@@ -84,8 +84,9 @@ def decode_token(encoded_token, csrf_value=None):
         secret = jwt_manager._decode_key_callback(unverified_claims, unverified_headers)
     except TypeError:
         msg = (
-                "The single-argument (unverified_claims) form of decode_key_callback is deprecated. "
-                "Update your code to use the two-argument form (unverified_claims, unverified_headers)."
+            "The single-argument (unverified_claims) form of decode_key_callback ",
+            "is deprecated. Update your code to use the two-argument form ",
+            "(unverified_claims, unverified_headers)."
         )
         warn(msg, DeprecationWarning)
         secret = jwt_manager._decode_key_callback(unverified_claims)
@@ -96,7 +97,8 @@ def decode_token(encoded_token, csrf_value=None):
         identity_claim_key=config.identity_claim_key,
         user_claims_key=config.user_claims_key,
         csrf_value=csrf_value,
-        audience=config.audience
+        audience=config.audience,
+        leeway=config.leeway
     )
 
 

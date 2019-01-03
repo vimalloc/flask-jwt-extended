@@ -4,7 +4,11 @@ from datetime import datetime, timedelta
 import warnings
 
 from flask import Flask
-from jwt import ExpiredSignatureError, InvalidSignatureError, InvalidAudienceError
+
+from jwt import (
+    ExpiredSignatureError, InvalidSignatureError, InvalidAudienceError,
+    ImmatureSignatureError
+)
 
 from flask_jwt_extended import (
     JWTManager, create_access_token, decode_token, create_refresh_token,
@@ -35,6 +39,20 @@ def default_access_token(app):
             'fresh': True,
             'csrf': 'abcd'
         }
+
+
+@pytest.fixture(scope='function')
+def patch_datetime_now(monkeypatch):
+
+    DATE_IN_FUTURE = datetime.utcnow() + timedelta(seconds=30)
+
+    class mydatetime(datetime):
+        @classmethod
+        def utcnow(cls):
+            return DATE_IN_FUTURE
+
+    monkeypatch.setattr(__name__ + ".datetime", mydatetime)
+    monkeypatch.setattr("datetime.datetime", mydatetime)
 
 
 @pytest.mark.parametrize("user_loader_return", [{}, None])
@@ -105,6 +123,18 @@ def test_never_expire_token(app):
         for token in (access_token, refresh_token):
             decoded = decode_token(token)
             assert 'exp' not in decoded
+
+
+def test_nbf_token_in_future(app, patch_datetime_now):
+    with pytest.raises(ImmatureSignatureError):
+        with app.test_request_context():
+            access_token = create_access_token('username')
+            decode_token(access_token)
+
+    with app.test_request_context():
+        app.config['JWT_DECODE_LEEWAY'] = 30
+        access_token = create_access_token('username')
+        decode_token(access_token)
 
 
 def test_alternate_identity_claim(app, default_access_token):

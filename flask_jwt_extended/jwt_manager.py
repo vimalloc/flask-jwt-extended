@@ -197,6 +197,7 @@ class JWTManager(object):
         app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
         app.config.setdefault('JWT_USER_CLAIMS', 'user_claims')
         app.config.setdefault('JWT_DECODE_AUDIENCE', None)
+        app.config.setdefault('JWT_DECODE_LEEWAY', 0)
 
         app.config.setdefault('JWT_CLAIMS_IN_REFRESH_TOKEN', False)
 

@@ -113,7 +113,8 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
 
 
 def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
-               user_claims_key, csrf_value=None, audience=None):
+               user_claims_key, csrf_value=None, audience=None,
+               leeway=0):
     """
     Decodes an encoded JWT
 
@@ -124,10 +125,13 @@ def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
     :param user_claims_key: expected key that contains the user claims
     :param csrf_value: Expected double submit csrf value
     :param audience: expected audience in the JWT
+    :param leeway: optional leeway to add some margin around expiration times
     :return: Dictionary containing contents of the JWT
     """
+
     # This call verifies the ext, iat, nbf, and aud claims
-    data = jwt.decode(encoded_token, secret, algorithms=[algorithm], audience=audience)
+    data = jwt.decode(encoded_token, secret, algorithms=[algorithm], audience=audience,
+                      leeway=leeway)
 
     # Make sure that any custom claims we expect in the token are present
     if 'jti' not in data:

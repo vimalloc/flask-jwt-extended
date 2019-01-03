@@ -47,6 +47,11 @@ General Options:
 ``JWT_DECODE_AUDIENCE``           The audience you expect in a JWT when decoding it.
                                   If this option differs from the 'aud' claim in a JWT, the ``'invalid_token_callback'`` is invoked.
                                   Defaults to ``'None'``.
+``JWT_DECODE_LEEWAY``             Define the leeway part of the expiration time definition, which
+                                  means you can validate an expiration time which is in the past but
+                                  not very far. This leeway is used for `nbf` (“not before”) and `exp`
+                                  (“expiration time”).
+                                  Defaults to ``0``
 ================================= =========================================
 
 

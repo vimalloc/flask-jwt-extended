@@ -11,4 +11,4 @@ from .utils import (
     unset_jwt_cookies, unset_refresh_cookies
 )
 
-__version__ = '3.14.0'
+__version__ = '3.15.0'

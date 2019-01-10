@@ -18,7 +18,7 @@ General Options:
 ``JWT_TOKEN_LOCATION``            Where to look for a JWT when processing a request. The
                                   options are ``'headers'``, ``'cookies'``, ``'query_string'``, or ``'json'``. You can pass
                                   in a sequence or a set to check more then one location, such as:
-                                  ``('headers', 'cookies')``. Defaults to ``('headers',)``
+                                  ``('headers', 'cookies')``. Defaults to ``['headers']``
 ``JWT_ACCESS_TOKEN_EXPIRES``      How long an access token should live before it expires. This
                                   takes a ``datetime.timedelta``, and defaults to 15 minutes.
                                   Can be set to ``False`` to disable expiration.

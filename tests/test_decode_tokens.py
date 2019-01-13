@@ -229,17 +229,23 @@ def test_custom_encode_decode_key_callbacks(app, default_access_token):
         decode_token(token)
 
 
-def test_valid_aud(app, default_access_token):
+@pytest.mark.parametrize("token_aud", ['foo', ['bar'], ['foo', 'bar', 'baz']])
+def test_valid_aud(app, default_access_token, token_aud):
+    app.config['JWT_DECODE_AUDIENCE'] = ['foo', 'bar']
+
+    default_access_token['aud'] = token_aud
+    invalid_token = encode_token(app, default_access_token)
+    with app.test_request_context():
+        decoded = decode_token(invalid_token)
+        assert decoded['aud'] == token_aud
+
+
+@pytest.mark.parametrize("token_aud", ['bar', ['bar'], ['bar', 'baz']])
+def test_invalid_aud(app, default_access_token, token_aud):
     app.config['JWT_DECODE_AUDIENCE'] = 'foo'
 
-    default_access_token['aud'] = 'bar'
+    default_access_token['aud'] = token_aud
     invalid_token = encode_token(app, default_access_token)
     with pytest.raises(InvalidAudienceError):
         with app.test_request_context():
             decode_token(invalid_token)
-
-    default_access_token['aud'] = 'foo'
-    valid_token = encode_token(app, default_access_token)
-    with app.test_request_context():
-        decoded = decode_token(valid_token)
-        assert decoded['aud'] == 'foo'

@@ -1,6 +1,11 @@
 import datetime
+from warnings import warn
 
 from jwt import ExpiredSignatureError, InvalidTokenError, InvalidAudienceError
+try:
+    from flask import _app_ctx_stack as ctx_stack
+except ImportError:  # pragma: no cover
+    from flask import _request_ctx_stack as ctx_stack
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
@@ -90,7 +95,16 @@ class JWTManager(object):
 
         @app.errorhandler(ExpiredSignatureError)
         def handle_expired_error(e):
-            return self._expired_token_callback()
+            try:
+                token = ctx_stack.top.expired_jwt
+                return self._expired_token_callback(token)
+            except TypeError:
+                msg = (
+                    "jwt.expired_token_loader callback now takes the expired token "
+                    "as an additional paramter. Example: expired_callback(token)"
+                )
+                warn(msg, DeprecationWarning)
+                return self._expired_token_callback()
 
         @app.errorhandler(InvalidHeaderError)
         def handle_invalid_header_error(e):

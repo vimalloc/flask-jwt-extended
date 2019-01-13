@@ -258,8 +258,9 @@ class JWTManager(object):
 
         {"msg": "Token has expired"}
 
-        *HINT*: The callback must be a function that takes **zero** arguments, and returns
-        a *Flask response*.
+        *HINT*: The callback must be a function that takes **one** argument,
+        which is a dictionary containing the data for the expired token, and
+        and returns a *Flask response*.
         """
         self._expired_token_callback = callback
         return callback

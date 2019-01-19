@@ -31,7 +31,7 @@ def test_user_claim_in_access_token(app):
     jwt = get_jwt_manager(app)
 
     @jwt.user_claims_loader
-    def add_claims(identity):
+    def add_claims(identity, extra_info_for_claims={}):
         return {'foo': 'bar'}
 
     with app.test_request_context():
@@ -47,7 +47,7 @@ def test_non_serializable_user_claims(app):
     jwt = get_jwt_manager(app)
 
     @jwt.user_claims_loader
-    def add_claims(identity):
+    def add_claims(identity, extra_info_for_claims={}):
         return app
 
     with pytest.raises(TypeError):
@@ -63,11 +63,11 @@ def test_token_from_complex_object(app):
     jwt = get_jwt_manager(app)
 
     @jwt.user_claims_loader
-    def add_claims(test_obj):
+    def add_claims(test_obj, extra_info_for_claims={}):
         return {'username': test_obj.username}
 
     @jwt.user_identity_loader
-    def add_claims(test_obj):
+    def add_claims(test_obj,  extra_info_for_claims={}):
         return test_obj.username
 
     with app.test_request_context():
@@ -89,7 +89,7 @@ def test_user_claims_with_different_name(app):
     app.config['JWT_USER_CLAIMS'] = 'banana'
 
     @jwt.user_claims_loader
-    def add_claims(identity):
+    def add_claims(identity, extra_info_for_claims={}):
         return {'foo': 'bar'}
 
     with app.test_request_context():
@@ -110,7 +110,7 @@ def test_user_claim_not_in_refresh_token(app):
     jwt = get_jwt_manager(app)
 
     @jwt.user_claims_loader
-    def add_claims(identity):
+    def add_claims(identity, extra_info_for_claims={}):
         return {'foo': 'bar'}
 
     with app.test_request_context():
@@ -127,7 +127,7 @@ def test_user_claim_in_refresh_token(app):
     jwt = get_jwt_manager(app)
 
     @jwt.user_claims_loader
-    def add_claims(identity):
+    def add_claims(identity, extra_info_for_claims={}):
         return {'foo': 'bar'}
 
     with app.test_request_context():

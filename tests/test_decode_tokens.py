@@ -60,7 +60,7 @@ def test_no_user_claims(app, user_loader_return):
     jwtM = get_jwt_manager(app)
 
     @jwtM.user_claims_loader
-    def empty_user_loader_return(identity):
+    def empty_user_loader_return(identity, extra_info_for_claims={}):
         return user_loader_return
 
     # Identity should not be in the actual token, but should be in the data

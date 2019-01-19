@@ -15,7 +15,7 @@ def app():
     jwt = JWTManager(app)
 
     @jwt.user_claims_loader
-    def add_user_claims(identity):
+    def add_user_claims(identity, extra_info_for_claims={}):
         return {'foo': 'bar'}
 
     @app.route('/protected1', methods=['GET'])

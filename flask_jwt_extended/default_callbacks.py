@@ -11,7 +11,7 @@ from flask import jsonify
 from flask_jwt_extended.config import config
 
 
-def default_user_claims_callback(userdata):
+def default_user_claims_callback(userdata, extra_info_for_claims={}):
     """
     By default, we add no additional claims to the access tokens.
 

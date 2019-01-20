@@ -43,14 +43,12 @@ def default_access_token(app):
 
 @pytest.fixture(scope='function')
 def patch_datetime_now(monkeypatch):
-
-    DATE_IN_FUTURE = datetime.utcnow() + timedelta(seconds=30)
+    date_in_future = datetime.utcnow() + timedelta(seconds=30)
 
     class mydatetime(datetime):
         @classmethod
         def utcnow(cls):
-            return DATE_IN_FUTURE
-
+            return date_in_future
     monkeypatch.setattr(__name__ + ".datetime", mydatetime)
     monkeypatch.setattr("datetime.datetime", mydatetime)
 
@@ -114,6 +112,17 @@ def test_expired_token(app):
             decode_token(access_token)
         with pytest.raises(ExpiredSignatureError):
             decode_token(refresh_token)
+
+
+def test_allow_expired_token(app):
+    with app.test_request_context():
+        delta = timedelta(minutes=-5)
+        access_token = create_access_token('username', expires_delta=delta)
+        refresh_token = create_refresh_token('username', expires_delta=delta)
+        for token in (access_token, refresh_token):
+            decoded = decode_token(token, allow_expired=True)
+            assert decoded['identity'] == 'username'
+            assert 'exp' in decoded
 
 
 def test_never_expire_token(app):

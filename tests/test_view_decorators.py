@@ -1,4 +1,5 @@
 import pytest
+import warnings
 from datetime import timedelta
 from flask import Flask, jsonify
 
@@ -246,14 +247,31 @@ def test_expired_token(app):
     assert response.status_code == 401
     assert response.get_json() == {'msg': 'Token has expired'}
 
-    # Test custom response
+    # Test depreciated custom response
     @jwtM.expired_token_loader
-    def custom_response():
+    def depreciated_custom_response():
         return jsonify(msg='foobar'), 201
 
-    response = test_client.get(url, headers=make_headers(token))
-    assert response.status_code == 201
-    assert response.get_json() == {'msg': 'foobar'}
+    warnings.simplefilter("always")
+    with warnings.catch_warnings(record=True) as w:
+        response = test_client.get(url, headers=make_headers(token))
+        assert response.status_code == 201
+        assert response.get_json() == {'msg': 'foobar'}
+        assert w[0].category == DeprecationWarning
+
+    # Test new custom response
+    @jwtM.expired_token_loader
+    def custom_response(token):
+        assert token['identity'] == 'username'
+        assert token['type'] == 'access'
+        return jsonify(msg='foobar'), 201
+
+    warnings.simplefilter("always")
+    with warnings.catch_warnings(record=True) as w:
+        response = test_client.get(url, headers=make_headers(token))
+        assert response.status_code == 201
+        assert response.get_json() == {'msg': 'foobar'}
+        assert len(w) == 0
 
 
 def test_no_token(app):

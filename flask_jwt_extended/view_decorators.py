@@ -3,6 +3,7 @@ from datetime import datetime
 from calendar import timegm
 
 from werkzeug.exceptions import BadRequest
+from jwt import ExpiredSignatureError
 
 from flask import request
 try:
@@ -191,7 +192,7 @@ def _decode_jwt_from_headers():
             raise InvalidHeaderError(msg)
         encoded_token = parts[1]
 
-    return decode_token(encoded_token)
+    return encoded_token, None
 
 
 def _decode_jwt_from_cookies(request_type):
@@ -213,7 +214,7 @@ def _decode_jwt_from_cookies(request_type):
     else:
         csrf_value = None
 
-    return decode_token(encoded_token, csrf_value=csrf_value)
+    return encoded_token, csrf_value
 
 
 def _decode_jwt_from_query_string():
@@ -222,7 +223,7 @@ def _decode_jwt_from_query_string():
     if not encoded_token:
         raise NoAuthorizationError('Missing "{}" query paramater'.format(query_param))
 
-    return decode_token(encoded_token)
+    return encoded_token, None
 
 
 def _decode_jwt_from_json(request_type):
@@ -241,29 +242,35 @@ def _decode_jwt_from_json(request_type):
     except BadRequest:
         raise NoAuthorizationError('Missing "{}" key in json data.'.format(token_key))
 
-    return decode_token(encoded_token)
+    return encoded_token, None
 
 
 def _decode_jwt_from_request(request_type):
     # All the places we can get a JWT from in this request
-    decode_functions = []
+    get_encoded_token_functions = []
     if config.jwt_in_cookies:
-        decode_functions.append(lambda: _decode_jwt_from_cookies(request_type))
+        get_encoded_token_functions.append(lambda: _decode_jwt_from_cookies(request_type))
     if config.jwt_in_query_string:
-        decode_functions.append(_decode_jwt_from_query_string)
+        get_encoded_token_functions.append(_decode_jwt_from_query_string)
     if config.jwt_in_headers:
-        decode_functions.append(_decode_jwt_from_headers)
+        get_encoded_token_functions.append(_decode_jwt_from_headers)
     if config.jwt_in_json:
-        decode_functions.append(lambda: _decode_jwt_from_json(request_type))
+        get_encoded_token_functions.append(lambda: _decode_jwt_from_json(request_type))
 
     # Try to find the token from one of these locations. It only needs to exist
     # in one place to be valid (not every location).
     errors = []
     decoded_token = None
-    for decode_function in decode_functions:
+    for get_encoded_token_function in get_encoded_token_functions:
         try:
-            decoded_token = decode_function()
+            encoded_token, csrf_token = get_encoded_token_function()
+            decoded_token = decode_token(encoded_token, csrf_token)
             break
+        except ExpiredSignatureError:
+            # Save the expired token so we can access it in a callback later
+            expired_data = decode_token(encoded_token, csrf_token, allow_expired=True)
+            ctx_stack.top.expired_jwt = expired_data
+            raise
         except NoAuthorizationError as e:
             errors.append(str(e))
 

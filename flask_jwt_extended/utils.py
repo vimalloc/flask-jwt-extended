@@ -65,13 +65,15 @@ def get_jti(encoded_token):
     return decode_token(encoded_token).get('jti')
 
 
-def decode_token(encoded_token, csrf_value=None):
+def decode_token(encoded_token, csrf_value=None, allow_expired=False):
     """
     Returns the decoded token (python dict) from an encoded JWT. This does all
     the checks to insure that the decoded token is valid before returning it.
 
     :param encoded_token: The encoded JWT to decode into a python dict.
     :param csrf_value: Expected CSRF double submit value (optional)
+    :param allow_expired: Options to ignore exp claim validation in token
+    :return: Dictionary containing contents of the JWT
     """
     jwt_manager = _get_jwt_manager()
     unverified_claims = jwt.decode(
@@ -90,6 +92,7 @@ def decode_token(encoded_token, csrf_value=None):
         )
         warn(msg, DeprecationWarning)
         secret = jwt_manager._decode_key_callback(unverified_claims)
+
     return decode_jwt(
         encoded_token=encoded_token,
         secret=secret,
@@ -98,7 +101,8 @@ def decode_token(encoded_token, csrf_value=None):
         user_claims_key=config.user_claims_key,
         csrf_value=csrf_value,
         audience=config.audience,
-        leeway=config.leeway
+        leeway=config.leeway,
+        allow_expired=allow_expired
     )
 
 

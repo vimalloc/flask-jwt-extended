@@ -20,10 +20,10 @@ General Options:
                                   in a sequence or a set to check more then one location, such as:
                                   ``('headers', 'cookies')``. Defaults to ``['headers']``
 ``JWT_ACCESS_TOKEN_EXPIRES``      How long an access token should live before it expires. This
-                                  takes a ``datetime.timedelta``, and defaults to 15 minutes.
+                                  takes a ``datetime.timedelta`` or an ``int`` (seconds), and defaults to 15 minutes.
                                   Can be set to ``False`` to disable expiration.
 ``JWT_REFRESH_TOKEN_EXPIRES``     How long a refresh token should live before it expires. This
-                                  takes a ``datetime.timedelta``, and defaults to 30 days.
+                                  takes a ``datetime.timedelta`` or ``int`` (seconds), and defaults to 30 days.
                                   Can be set to ``False`` to disable expiration.
 ``JWT_ALGORITHM``                 Which algorithm to sign the JWT with. `See here <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
                                   for the options. Defaults to ``'HS256'``.

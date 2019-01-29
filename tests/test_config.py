@@ -180,6 +180,15 @@ def test_tokens_never_expire(app):
         assert config.refresh_expires is False
 
 
+def test_tokens_with_int_values(app):
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 300
+    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 432000
+
+    with app.test_request_context():
+        assert config.access_expires == timedelta(minutes=5)
+        assert config.refresh_expires == timedelta(days=5)
+
+
 # noinspection PyStatementEffect
 def test_symmetric_secret_key(app):
     with app.test_request_context():

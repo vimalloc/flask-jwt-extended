@@ -186,16 +186,22 @@ class _Config(object):
     @property
     def access_expires(self):
         delta = current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
+        if type(delta) is int:
+            delta = datetime.timedelta(seconds=delta)
         if not isinstance(delta, datetime.timedelta) and delta is not False:
-            err = 'JWT_ACCESS_TOKEN_EXPIRES must be a datetime.timedelta or False'
+            err = 'JWT_ACCESS_TOKEN_EXPIRES must be a ' \
+                  'datetime.timedelta, int or False'
             raise RuntimeError(err)
         return delta
 
     @property
     def refresh_expires(self):
         delta = current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
+        if type(delta) is int:
+            delta = datetime.timedelta(seconds=delta)
         if not isinstance(delta, datetime.timedelta) and delta is not False:
-            err = 'JWT_REFRESH_TOKEN_EXPIRES must be a datetime.timedelta or False'
+            err = 'JWT_REFRESH_TOKEN_EXPIRES must be a ' \
+                  'datetime.timedelta, int or False'
             raise RuntimeError(err)
         return delta
 

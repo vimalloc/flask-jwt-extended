@@ -1,6 +1,7 @@
+from warnings import warn
+
 from flask import current_app
 from werkzeug.local import LocalProxy
-from warnings import warn
 
 try:
     from flask import _app_ctx_stack as ctx_stack
@@ -82,6 +83,12 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
     unverified_headers = jwt.get_unverified_header(encoded_token)
     # Attempt to call callback with both claims and headers, but fallback to just claims
     # for backwards compatibility
+
+    # Added possibility to disable audience check
+    verify_audience = True
+    if config.audience is None:
+        verify_audience = False
+
     try:
         secret = jwt_manager._decode_key_callback(unverified_claims, unverified_headers)
     except TypeError:
@@ -102,7 +109,8 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
         csrf_value=csrf_value,
         audience=config.audience,
         leeway=config.leeway,
-        allow_expired=allow_expired
+        allow_expired=allow_expired,
+        verify_audience=verify_audience
     )
 
 

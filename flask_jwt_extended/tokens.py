@@ -1,6 +1,5 @@
 import datetime
 import uuid
-
 from calendar import timegm
 
 import jwt
@@ -114,7 +113,7 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
 
 def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
                user_claims_key, csrf_value=None, audience=None,
-               leeway=0, allow_expired=False):
+               leeway=0, allow_expired=False, verify_audience=False):
     """
     Decodes an encoded JWT
 
@@ -127,11 +126,14 @@ def decode_jwt(encoded_token, secret, algorithm, identity_claim_key,
     :param audience: expected audience in the JWT
     :param leeway: optional leeway to add some margin around expiration times
     :param allow_expired: Options to ignore exp claim validation in token
+    :param verify_audience: Options to ignore aud claim validation in token
     :return: Dictionary containing contents of the JWT
     """
     options = {}
     if allow_expired:
         options['verify_exp'] = False
+
+    options['verify_aud'] = verify_audience
 
     # This call verifies the ext, iat, nbf, and aud claims
     data = jwt.decode(encoded_token, secret, algorithms=[algorithm], audience=audience,

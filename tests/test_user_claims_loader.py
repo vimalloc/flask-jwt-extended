@@ -137,3 +137,41 @@ def test_user_claim_in_refresh_token(app):
     response = test_client.get('/protected2', headers=make_headers(refresh_token))
     assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200
+
+
+def test_user_claim_in_refresh_token_specified_at_creation(app):
+    app.config['JWT_CLAIMS_IN_REFRESH_TOKEN'] = True
+
+    with app.test_request_context():
+        refresh_token = create_refresh_token('username', user_claims={'foo': 'bar'})
+
+    test_client = app.test_client()
+    response = test_client.get('/protected2', headers=make_headers(refresh_token))
+    assert response.get_json() == {'foo': 'bar'}
+    assert response.status_code == 200
+
+
+def test_user_claims_in_access_token_specified_at_creation(app):
+    with app.test_request_context():
+        access_token = create_access_token('username', user_claims={'foo': 'bar'})
+
+    test_client = app.test_client()
+    response = test_client.get('/protected', headers=make_headers(access_token))
+    assert response.get_json() == {'foo': 'bar'}
+    assert response.status_code == 200
+
+
+def test_user_claims_in_access_token_specified_at_creation_override(app):
+    jwt = get_jwt_manager(app)
+
+    @jwt.user_claims_loader
+    def add_claims(identity):
+        return {'default': 'value'}
+
+    with app.test_request_context():
+        access_token = create_access_token('username', user_claims={'foo': 'bar'})
+
+    test_client = app.test_client()
+    response = test_client.get('/protected', headers=make_headers(access_token))
+    assert response.get_json() == {'foo': 'bar'}
+    assert response.status_code == 200

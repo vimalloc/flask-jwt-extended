@@ -32,6 +32,7 @@ setup(name='Flask-JWT-Extended',
           'Werkzeug>=0.14',  # Needed for SameSite cookie functionality
           'Flask',
           'PyJWT',
+          'six',
       ],
       extras_require={
         'asymmetric_crypto':  ["cryptography >= 2.3"]

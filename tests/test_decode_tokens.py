@@ -1,6 +1,7 @@
 import jwt
 import pytest
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 import warnings
 
 from flask import Flask
@@ -103,9 +104,10 @@ def test_bad_token_type(app, default_access_token):
             decode_token(bad_type_token)
 
 
-def test_expired_token(app):
+@pytest.mark.parametrize("delta_func", [timedelta, relativedelta])
+def test_expired_token(app, delta_func):
     with app.test_request_context():
-        delta = timedelta(minutes=-5)
+        delta = delta_func(minutes=-5)
         access_token = create_access_token('username', expires_delta=delta)
         refresh_token = create_refresh_token('username', expires_delta=delta)
         with pytest.raises(ExpiredSignatureError):
@@ -114,9 +116,10 @@ def test_expired_token(app):
             decode_token(refresh_token)
 
 
-def test_allow_expired_token(app):
+@pytest.mark.parametrize("delta_func", [timedelta, relativedelta])
+def test_allow_expired_token(app, delta_func):
     with app.test_request_context():
-        delta = timedelta(minutes=-5)
+        delta = delta_func(minutes=-5)
         access_token = create_access_token('username', expires_delta=delta)
         refresh_token = create_refresh_token('username', expires_delta=delta)
         for token in (access_token, refresh_token):

@@ -2,6 +2,7 @@ import warnings
 
 import pytest
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 from flask import Flask
 from flask.json import JSONEncoder
 
@@ -72,7 +73,8 @@ def test_default_configs(app):
         assert config.error_msg_key == 'msg'
 
 
-def test_override_configs(app):
+@pytest.mark.parametrize("delta_func", [timedelta, relativedelta])
+def test_override_configs(app, delta_func):
     app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'query_string', 'json']
     app.config['JWT_HEADER_NAME'] = 'TestHeader'
     app.config['JWT_HEADER_TYPE'] = 'TestType'
@@ -100,8 +102,8 @@ def test_override_configs(app):
     app.config['JWT_ACCESS_CSRF_HEADER_NAME'] = 'X-ACCESS-CSRF'
     app.config['JWT_REFRESH_CSRF_HEADER_NAME'] = 'X-REFRESH-CSRF'
 
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=5)
-    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=5)
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = delta_func(minutes=5)
+    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = delta_func(days=5)
     app.config['JWT_ALGORITHM'] = 'HS512'
 
     app.config['JWT_BLACKLIST_ENABLED'] = True
@@ -151,8 +153,8 @@ def test_override_configs(app):
         assert config.access_csrf_header_name == 'X-ACCESS-CSRF'
         assert config.refresh_csrf_header_name == 'X-REFRESH-CSRF'
 
-        assert config.access_expires == timedelta(minutes=5)
-        assert config.refresh_expires == timedelta(days=5)
+        assert config.access_expires == delta_func(minutes=5)
+        assert config.refresh_expires == delta_func(days=5)
         assert config.algorithm == 'HS512'
 
         assert config.blacklist_enabled is True

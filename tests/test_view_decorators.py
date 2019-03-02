@@ -1,6 +1,7 @@
 import pytest
 import warnings
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 from flask import Flask, jsonify
 
 from flask_jwt_extended import (
@@ -146,7 +147,8 @@ def test_refresh_jwt_required(app):
     assert response.get_json() == {'foo': 'bar'}
 
 
-def test_jwt_optional(app):
+@pytest.mark.parametrize("delta_func", [timedelta, relativedelta])
+def test_jwt_optional(app, delta_func):
     url = '/optional_protected'
 
     test_client = app.test_client()
@@ -156,7 +158,7 @@ def test_jwt_optional(app):
         refresh_token = create_refresh_token('username')
         expired_token = create_access_token(
             identity='username',
-            expires_delta=timedelta(minutes=-1)
+            expires_delta=delta_func(minutes=-1)
         )
 
     response = test_client.get(url, headers=make_headers(fresh_access_token))
@@ -235,12 +237,13 @@ def test_jwt_invalid_audience(app):
     assert response.get_json() == {'msg': 'Invalid audience'}
 
 
-def test_expired_token(app):
+@pytest.mark.parametrize("delta_func", [timedelta, relativedelta])
+def test_expired_token(app, delta_func):
     url = '/protected'
     jwtM = get_jwt_manager(app)
     test_client = app.test_client()
     with app.test_request_context():
-        token = create_access_token('username', expires_delta=timedelta(minutes=-1))
+        token = create_access_token('username', expires_delta=delta_func(minutes=-1))
 
     # Test default response
     response = test_client.get(url, headers=make_headers(token))

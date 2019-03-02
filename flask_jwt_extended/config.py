@@ -1,5 +1,6 @@
 import datetime
 from warnings import warn
+from six import raise_from
 
 # In Python 2.7 collections.abc is a part of the collections module.
 try:
@@ -188,10 +189,14 @@ class _Config(object):
         delta = current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
         if type(delta) is int:
             delta = datetime.timedelta(seconds=delta)
-        if not isinstance(delta, datetime.timedelta) and delta is not False:
-            err = 'JWT_ACCESS_TOKEN_EXPIRES must be a ' \
-                  'datetime.timedelta, int or False'
-            raise RuntimeError(err)
+        if delta is not False:
+            try:
+                delta + datetime.datetime.now()
+            except TypeError as e:
+                err = (
+                    "must be able to add JWT_ACCESS_TOKEN_EXPIRES to datetime.datetime"
+                )
+                raise_from(RuntimeError(err), e)
         return delta
 
     @property
@@ -199,10 +204,14 @@ class _Config(object):
         delta = current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
         if type(delta) is int:
             delta = datetime.timedelta(seconds=delta)
-        if not isinstance(delta, datetime.timedelta) and delta is not False:
-            err = 'JWT_REFRESH_TOKEN_EXPIRES must be a ' \
-                  'datetime.timedelta, int or False'
-            raise RuntimeError(err)
+        if delta is not False:
+            try:
+                delta + datetime.datetime.now()
+            except TypeError as e:
+                err = (
+                    "must be able to add JWT_REFRESH_TOKEN_EXPIRES to datetime.datetime"
+                )
+                raise_from(RuntimeError(err), e)
         return delta
 
     @property

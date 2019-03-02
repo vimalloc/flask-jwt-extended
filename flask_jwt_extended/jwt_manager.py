@@ -436,14 +436,12 @@ class JWTManager(object):
         self._encode_key_callback = callback
         return callback
 
-    def _create_refresh_token(self, identity, expires_delta=None):
+    def _create_refresh_token(self, identity, expires_delta=None, user_claims=None):
         if expires_delta is None:
             expires_delta = config.refresh_expires
 
-        if config.user_claims_in_refresh_token:
+        if user_claims is None and config.user_claims_in_refresh_token:
             user_claims = self._user_claims_callback(identity)
-        else:
-            user_claims = None
 
         refresh_token = encode_refresh_token(
             identity=self._user_identity_callback(identity),
@@ -458,9 +456,12 @@ class JWTManager(object):
         )
         return refresh_token
 
-    def _create_access_token(self, identity, fresh=False, expires_delta=None):
+    def _create_access_token(self, identity, fresh=False, expires_delta=None, user_claims=None):
         if expires_delta is None:
             expires_delta = config.access_expires
+
+        if user_claims is None:
+            user_claims = self._user_claims_callback(identity)
 
         access_token = encode_access_token(
             identity=self._user_identity_callback(identity),
@@ -468,7 +469,7 @@ class JWTManager(object):
             algorithm=config.algorithm,
             expires_delta=expires_delta,
             fresh=fresh,
-            user_claims=self._user_claims_callback(identity),
+            user_claims=user_claims,
             csrf=config.csrf_protect,
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,

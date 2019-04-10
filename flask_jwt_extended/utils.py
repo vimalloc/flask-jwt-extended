@@ -1,5 +1,6 @@
 from flask import current_app
 from werkzeug.local import LocalProxy
+from jwt import ExpiredSignatureError
 from warnings import warn
 
 try:
@@ -93,17 +94,32 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
         warn(msg, DeprecationWarning)
         secret = jwt_manager._decode_key_callback(unverified_claims)
 
-    return decode_jwt(
-        encoded_token=encoded_token,
-        secret=secret,
-        algorithm=config.algorithm,
-        identity_claim_key=config.identity_claim_key,
-        user_claims_key=config.user_claims_key,
-        csrf_value=csrf_value,
-        audience=config.audience,
-        leeway=config.leeway,
-        allow_expired=allow_expired
-    )
+    try:
+        return decode_jwt(
+            encoded_token=encoded_token,
+            secret=secret,
+            algorithm=config.algorithm,
+            identity_claim_key=config.identity_claim_key,
+            user_claims_key=config.user_claims_key,
+            csrf_value=csrf_value,
+            audience=config.audience,
+            leeway=config.leeway,
+            allow_expired=allow_expired
+        )
+    except ExpiredSignatureError:
+        expired_token = decode_jwt(
+            encoded_token=encoded_token,
+            secret=secret,
+            algorithm=config.algorithm,
+            identity_claim_key=config.identity_claim_key,
+            user_claims_key=config.user_claims_key,
+            csrf_value=csrf_value,
+            audience=config.audience,
+            leeway=config.leeway,
+            allow_expired=True
+        )
+        ctx_stack.top.expired_jwt = expired_token
+        raise
 
 
 def _get_jwt_manager():

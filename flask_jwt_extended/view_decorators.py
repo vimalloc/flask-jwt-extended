@@ -3,7 +3,6 @@ from datetime import datetime
 from calendar import timegm
 
 from werkzeug.exceptions import BadRequest
-from jwt import ExpiredSignatureError
 
 from flask import request
 try:
@@ -266,11 +265,6 @@ def _decode_jwt_from_request(request_type):
             encoded_token, csrf_token = get_encoded_token_function()
             decoded_token = decode_token(encoded_token, csrf_token)
             break
-        except ExpiredSignatureError:
-            # Save the expired token so we can access it in a callback later
-            expired_data = decode_token(encoded_token, csrf_token, allow_expired=True)
-            ctx_stack.top.expired_jwt = expired_data
-            raise
         except NoAuthorizationError as e:
             errors.append(str(e))
 

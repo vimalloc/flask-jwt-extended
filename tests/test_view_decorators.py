@@ -6,7 +6,8 @@ from flask import Flask, jsonify
 
 from flask_jwt_extended import (
     jwt_required, fresh_jwt_required, JWTManager, jwt_refresh_token_required,
-    jwt_optional, create_access_token, create_refresh_token, get_jwt_identity
+    jwt_optional, create_access_token, create_refresh_token, get_jwt_identity,
+    decode_token
 )
 from tests.utils import make_headers, encode_token, get_jwt_manager
 
@@ -275,6 +276,26 @@ def test_expired_token(app, delta_func):
         assert response.status_code == 201
         assert response.get_json() == {'msg': 'foobar'}
         assert len(w) == 0
+
+
+def test_expired_token_via_decode_token(app):
+    jwtM = get_jwt_manager(app)
+
+    @jwtM.expired_token_loader
+    def depreciated_custom_response(expired_token):
+        assert expired_token['identity'] == 'username'
+        return jsonify(msg='foobar'), 401
+
+    @app.route('/test')
+    def test_route():
+        token = create_access_token('username', expires_delta=timedelta(minutes=-1))
+        decode_token(token)
+        return jsonify(msg='baz'), 200
+
+    test_client = app.test_client()
+    response = test_client.get('/test')
+    assert response.get_json() == {'msg': 'foobar'}
+    assert response.status_code == 401
 
 
 def test_no_token(app):

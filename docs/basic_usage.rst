@@ -40,7 +40,7 @@ We can see this in action using CURL:
     "logged_in_as": "test"
   }
 
-NOTE: Remember to change the secret key of your application, and insure that no
+NOTE: Remember to change the secret key of your application, and ensure that no
 one is able to view it. The JSON Web Tokens are signed with the secret key, so
 if someone gets that, they can create arbitrary tokens, and in essence log in
 as any user.

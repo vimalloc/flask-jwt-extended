@@ -36,7 +36,7 @@ def partially_protected():
     if current_user:
         return jsonify(logged_in_as=current_user), 200
     else:
-        return jsonify(loggeed_in_as='anonymous user'), 200
+        return jsonify(logged_in_as='anonymous user'), 200
 
 
 if __name__ == '__main__':

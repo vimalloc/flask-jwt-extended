@@ -162,7 +162,7 @@ def test_override_configs(app, delta_func):
         assert config.blacklist_access_tokens is False
         assert config.blacklist_refresh_tokens is True
 
-        assert config.cookie_max_age == 2147483647
+        assert config.cookie_max_age == 31540000
 
         assert config.identity_claim_key == 'foo'
         assert config.user_claims_key == 'bar'

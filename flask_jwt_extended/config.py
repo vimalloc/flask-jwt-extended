@@ -276,8 +276,8 @@ class _Config(object):
     def cookie_max_age(self):
         # Returns the appropiate value for max_age for flask set_cookies. If
         # session cookie is true, return None, otherwise return a number of
-        # seconds a long ways in the future
-        return None if self.session_cookie else 2147483647  # 2^31
+        # seconds 1 year in the future
+        return None if self.session_cookie else 31540000  # 1 year
 
     @property
     def identity_claim_key(self):

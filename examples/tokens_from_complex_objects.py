@@ -62,7 +62,7 @@ def login():
 def protected():
     ret = {
         'current_identity': get_jwt_identity(),  # test
-        'current_roles': get_jwt_claims()  # ['foo', 'bar']
+        'current_roles': get_jwt_claims()['roles']  # ['foo', 'bar']
     }
     return jsonify(ret), 200
 

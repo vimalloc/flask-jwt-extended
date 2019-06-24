@@ -31,6 +31,8 @@ General Options:
                                   Can be set to ``False`` to disable expiration.
 ``JWT_ALGORITHM``                 Which algorithm to sign the JWT with. `See here <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
                                   for the options. Defaults to ``'HS256'``.
+``JWT_DECODE_ALGORITHMS``         Which algorithms are allowed to decode a JWT.
+                                  Defaults to a list with only the algorithm set in ``JWT_ALGORITHM``.
 ``JWT_SECRET_KEY``                The secret key needed for symmetric based signing algorithms,
                                   such as ``HS*``. If this is not set, we use the
                                   flask ``SECRET_KEY`` value instead.

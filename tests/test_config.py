@@ -55,6 +55,7 @@ def test_default_configs(app):
         assert config.access_expires == timedelta(minutes=15)
         assert config.refresh_expires == timedelta(days=30)
         assert config.algorithm == 'HS256'
+        assert config.decode_algorithms == ['HS256']
         assert config.is_asymmetric is False
         assert config.blacklist_enabled is False
         assert config.blacklist_checks == ('access', 'refresh')
@@ -105,6 +106,7 @@ def test_override_configs(app, delta_func):
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = delta_func(minutes=5)
     app.config['JWT_REFRESH_TOKEN_EXPIRES'] = delta_func(days=5)
     app.config['JWT_ALGORITHM'] = 'HS512'
+    app.config['JWT_DECODE_ALGORITHMS'] = ['HS512', 'HS256']
 
     app.config['JWT_BLACKLIST_ENABLED'] = True
     app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ('refresh',)
@@ -156,6 +158,7 @@ def test_override_configs(app, delta_func):
         assert config.access_expires == delta_func(minutes=5)
         assert config.refresh_expires == delta_func(days=5)
         assert config.algorithm == 'HS512'
+        assert config.decode_algorithms == ['HS512', 'HS256']
 
         assert config.blacklist_enabled is True
         assert config.blacklist_checks == ('refresh',)
@@ -396,3 +399,11 @@ def test_depreciated_options(app):
             assert len(w) == 2
             assert w[0].category == DeprecationWarning
             assert w[1].category == DeprecationWarning
+
+
+def test_missing_algorithm_in_decode_algorithms(app):
+    app.config['JWT_ALGORITHM'] = 'RS256'
+    app.config['JWT_DECODE_ALGORITHMS'] = ['HS512']
+
+    with app.test_request_context():
+        assert config.decode_algorithms == ['HS512', 'RS256']

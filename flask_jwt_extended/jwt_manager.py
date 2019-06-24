@@ -194,6 +194,9 @@ class JWTManager(object):
         # https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py
         app.config.setdefault('JWT_ALGORITHM', 'HS256')
 
+        # What algorithms are allowed to decode a token
+        app.config.setdefault('JWT_DECODE_ALGORITHMS', None)
+
         # Secret key to sign JWTs with. Only used if a symmetric algorithm is
         # used (such as the HS* algorithms). We will use the app secret key
         # if this is not set.

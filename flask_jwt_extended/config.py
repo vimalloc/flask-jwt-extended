@@ -219,6 +219,15 @@ class _Config(object):
         return current_app.config['JWT_ALGORITHM']
 
     @property
+    def decode_algorithms(self):
+        algorithms = current_app.config['JWT_DECODE_ALGORITHMS']
+        if not algorithms:
+            return [self.algorithm]
+        if self.algorithm not in algorithms:
+            algorithms.append(self.algorithm)
+        return algorithms
+
+    @property
     def blacklist_enabled(self):
         return current_app.config['JWT_BLACKLIST_ENABLED']
 

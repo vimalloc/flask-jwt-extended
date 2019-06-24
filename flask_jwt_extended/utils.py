@@ -78,7 +78,7 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
     """
     jwt_manager = _get_jwt_manager()
     unverified_claims = jwt.decode(
-        encoded_token, verify=False, algorithms=config.algorithm
+        encoded_token, verify=False, algorithms=config.decode_algorithms
     )
     unverified_headers = jwt.get_unverified_header(encoded_token)
     # Attempt to call callback with both claims and headers, but fallback to just claims
@@ -98,7 +98,7 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
         return decode_jwt(
             encoded_token=encoded_token,
             secret=secret,
-            algorithm=config.algorithm,
+            algorithms=config.decode_algorithms,
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
             csrf_value=csrf_value,
@@ -110,7 +110,7 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
         expired_token = decode_jwt(
             encoded_token=encoded_token,
             secret=secret,
-            algorithm=config.algorithm,
+            algorithms=config.decode_algorithms,
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
             csrf_value=csrf_value,

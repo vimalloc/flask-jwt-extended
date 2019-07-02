@@ -247,14 +247,19 @@ def _decode_jwt_from_json(request_type):
 def _decode_jwt_from_request(request_type):
     # All the places we can get a JWT from in this request
     get_encoded_token_functions = []
-    if config.jwt_in_cookies:
-        get_encoded_token_functions.append(lambda: _decode_jwt_from_cookies(request_type))
-    if config.jwt_in_query_string:
-        get_encoded_token_functions.append(_decode_jwt_from_query_string)
-    if config.jwt_in_headers:
-        get_encoded_token_functions.append(_decode_jwt_from_headers)
-    if config.jwt_in_json:
-        get_encoded_token_functions.append(lambda: _decode_jwt_from_json(request_type))
+
+    locations = config.token_location
+
+    # add the functions in the order specified in JWT_TOKEN_LOCATION
+    for location in locations:
+        if location == 'cookies' and config.jwt_in_cookies:
+            get_encoded_token_functions.append(lambda: _decode_jwt_from_cookies(request_type))
+        if location == 'query_string' and config.jwt_in_query_string:
+            get_encoded_token_functions.append(_decode_jwt_from_query_string)
+        if location == 'headers' and config.jwt_in_headers:
+            get_encoded_token_functions.append(_decode_jwt_from_headers)
+        if location == 'json' and config.jwt_in_json:
+            get_encoded_token_functions.append(lambda: _decode_jwt_from_json(request_type))
 
     # Try to find the token from one of these locations. It only needs to exist
     # in one place to be valid (not every location).

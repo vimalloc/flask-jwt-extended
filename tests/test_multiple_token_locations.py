@@ -73,9 +73,9 @@ def test_json_access(app):
 @pytest.mark.parametrize("options", [
     (['cookies', 'headers'], ('Missing JWT in cookies or headers (Missing cookie '
                               '"access_token_cookie"; Missing Authorization Header)')),
-    (['json', 'query_string'], ('Missing JWT in json or query_string (Missing "jwt" '
-                                'query paramater; Invalid content-type. Must be '
-                                'application/json.)')),
+    (['json', 'query_string'], ('Missing JWT in json or query_string (Invalid '
+                                'content-type. Must be application/json.; '
+                                'Missing "jwt" query paramater)')),
 ])
 def test_no_jwt_in_request(app, options):
     token_locations, expected_err = options
@@ -84,3 +84,48 @@ def test_no_jwt_in_request(app, options):
     response = test_client.get('/protected')
     assert response.status_code == 401
     assert response.get_json() == {'msg': expected_err}
+
+
+@pytest.mark.parametrize("options", [
+    (['cookies', 'headers'], 200, None, {'foo': 'bar'}),
+    (['headers', 'cookies'], 200, None, {'foo': 'bar'}),
+])
+def test_order_of_jwt_locations_in_request(app, options):
+    """ test order doesn't matter if at least one valid token is set"""
+    token_locations, status_code, expected_err, expected_dict = options
+    app.config['JWT_TOKEN_LOCATION'] = token_locations
+    test_client = app.test_client()
+    test_client.get('/cookie_login')
+    response = test_client.get('/protected')
+
+    assert response.status_code == status_code
+    if expected_dict:
+        assert response.get_json() == expected_dict
+    else:
+        assert response.get_json() == {'msg': expected_err}
+
+
+@pytest.mark.parametrize("options", [
+    (['cookies', 'headers'], 200, None, {'foo': 'bar'}),
+    (['headers', 'cookies'], 422, ('Invalid header padding'), None),
+])
+def test_order_of_jwt_locations_with_one_invalid_token_in_request(app, options):
+    """ test order doesn't matter if at least one valid token is set"""
+    token_locations, status_code, expected_err, expected_dict = options
+    app.config['JWT_TOKEN_LOCATION'] = token_locations
+    test_client = app.test_client()
+
+    with app.test_request_context():
+        access_token = create_access_token('username')
+    # invalidate the token, to check token location precedence
+    access_token = "000000{}".format(access_token[5:])
+    access_headers = {'Authorization': 'Bearer {}'.format(access_token)}
+    # set valid cookies
+    test_client.get('/cookie_login')
+    response = test_client.get('/protected', headers=access_headers)
+
+    assert response.status_code == status_code
+    if expected_dict:
+        assert response.get_json() == expected_dict
+    else:
+        assert response.get_json() == {'msg': expected_err}

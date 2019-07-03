@@ -33,7 +33,7 @@ def add_claims_to_access_token(identity):
     if identity == 'admin':
         return {'roles': 'admin'}
     else:
-        return {'roles': 'pesant'}
+        return {'roles': 'peasant'}
 
 
 @app.route('/login', methods=['POST'])

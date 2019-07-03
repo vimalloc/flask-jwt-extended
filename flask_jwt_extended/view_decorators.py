@@ -252,14 +252,14 @@ def _decode_jwt_from_request(request_type):
 
     # add the functions in the order specified in JWT_TOKEN_LOCATION
     for location in locations:
-        if location == 'cookies' and config.jwt_in_cookies:
+        if location == 'cookies':
             get_encoded_token_functions.append(
                 lambda: _decode_jwt_from_cookies(request_type))
-        if location == 'query_string' and config.jwt_in_query_string:
+        if location == 'query_string':
             get_encoded_token_functions.append(_decode_jwt_from_query_string)
-        if location == 'headers' and config.jwt_in_headers:
+        if location == 'headers':
             get_encoded_token_functions.append(_decode_jwt_from_headers)
-        if location == 'json' and config.jwt_in_json:
+        if location == 'json':
             get_encoded_token_functions.append(
                 lambda: _decode_jwt_from_json(request_type))
 

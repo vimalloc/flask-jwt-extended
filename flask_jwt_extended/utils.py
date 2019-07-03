@@ -150,7 +150,7 @@ def create_access_token(identity, fresh=False, expires_delta=None, user_claims=N
                           expiration. If this is None, it will use the
                           'JWT_ACCESS_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
-    :param user_claims: Optionnal JSON serializable to override user claims.
+    :param user_claims: Optional JSON serializable to override user claims.
     :return: An encoded access token
     """
     jwt_manager = _get_jwt_manager()
@@ -172,7 +172,7 @@ def create_refresh_token(identity, expires_delta=None, user_claims=None):
                           expiration. If this is None, it will use the
                           'JWT_REFRESH_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
-    :param user_claims: Optionnal JSON serializable to override user claims.
+    :param user_claims: Optional JSON serializable to override user claims.
     :return: An encoded refresh token
     """
     jwt_manager = _get_jwt_manager()

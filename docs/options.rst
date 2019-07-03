@@ -18,7 +18,9 @@ General Options:
 ``JWT_TOKEN_LOCATION``            Where to look for a JWT when processing a request. The
                                   options are ``'headers'``, ``'cookies'``, ``'query_string'``, or ``'json'``. You can pass
                                   in a sequence or a set to check more then one location, such as:
-                                  ``('headers', 'cookies')``. Defaults to ``['headers']``
+                                  ``('headers', 'cookies')``. Defaults to ``['headers']``.
+                                  The order sets the precedence, so that if a valid token is
+                                  found in an earlier location in this list, the request is authenticated.
 ``JWT_ACCESS_TOKEN_EXPIRES``      How long an access token should live before it expires. This
                                   takes any value that can be safely added to a ``datetime.datetime`` object, including
                                   ``datetime.timedelta``, `dateutil.relativedelta <https://dateutil.readthedocs.io/en/stable/relativedelta.html>`_,

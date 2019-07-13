@@ -4,7 +4,7 @@ from calendar import timegm
 
 from werkzeug.exceptions import BadRequest
 
-from flask import request
+from flask import current_app, request
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
@@ -16,8 +16,8 @@ from flask_jwt_extended.exceptions import (
     UserLoadError
 )
 from flask_jwt_extended.utils import (
-    decode_token, has_user_loader, user_loader, verify_token_claims,
-    verify_token_not_blacklisted, verify_token_type
+    is_jwt_enabled, decode_token, has_user_loader, user_loader,
+    verify_token_claims, verify_token_not_blacklisted, verify_token_type
 )
 
 
@@ -27,7 +27,7 @@ def verify_jwt_in_request():
     freshness of the access token. Raises an appropiate exception there is
     no token or if the token is invalid.
     """
-    if request.method not in config.exempt_methods:
+    if is_jwt_enabled() and request.method not in config.exempt_methods:
         jwt_data = _decode_jwt_from_request(request_type='access')
         ctx_stack.top.jwt = jwt_data
         verify_token_claims(jwt_data)
@@ -46,7 +46,7 @@ def verify_jwt_in_request_optional():
     etc), this will still raise the appropiate exception.
     """
     try:
-        if request.method not in config.exempt_methods:
+        if is_jwt_enabled() and request.method not in config.exempt_methods:
             jwt_data = _decode_jwt_from_request(request_type='access')
             ctx_stack.top.jwt = jwt_data
             verify_token_claims(jwt_data)
@@ -61,7 +61,7 @@ def verify_fresh_jwt_in_request():
     appropiate exception if there is no token, the token is invalid, or the
     token is not marked as fresh.
     """
-    if request.method not in config.exempt_methods:
+    if is_jwt_enabled() and request.method not in config.exempt_methods:
         jwt_data = _decode_jwt_from_request(request_type='access')
         ctx_stack.top.jwt = jwt_data
         fresh = jwt_data['fresh']
@@ -81,7 +81,7 @@ def verify_jwt_refresh_token_in_request():
     Ensure that the requester has a valid refresh token. Raises an appropiate
     exception if there is no token or the token is invalid.
     """
-    if request.method not in config.exempt_methods:
+    if is_jwt_enabled() and request.method not in config.exempt_methods:
         jwt_data = _decode_jwt_from_request(request_type='refresh')
         ctx_stack.top.jwt = jwt_data
         _load_user(jwt_data[config.identity_claim_key])

@@ -151,6 +151,9 @@ class JWTManager(object):
         """
         Sets the default configuration options used by this extension
         """
+        # Enable jwt
+        app.config.setdefault('JWT_ENABLED', True)
+
         # Where to look for the JWT. Available options are cookies or headers
         app.config.setdefault('JWT_TOKEN_LOCATION', ('headers',))
 

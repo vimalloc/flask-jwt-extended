@@ -20,6 +20,10 @@ import jwt
 current_user = LocalProxy(lambda: get_current_user())
 
 
+def is_jwt_enabled():
+    return current_app.config["JWT_ENABLED"]
+
+
 def get_raw_jwt():
     """
     In a protected endpoint, this will return the python dictionary which has

@@ -8,7 +8,7 @@ from flask import Flask
 
 from jwt import (
     ExpiredSignatureError, InvalidSignatureError, InvalidAudienceError,
-    ImmatureSignatureError, InvalidIssuerError
+    ImmatureSignatureError, InvalidIssuerError, DecodeError
 )
 
 from flask_jwt_extended import (
@@ -277,5 +277,12 @@ def test_invalid_iss(app, default_access_token):
     default_access_token['iss'] = 'foobar'
     invalid_token = encode_token(app, default_access_token)
     with pytest.raises(InvalidIssuerError):
+        with app.test_request_context():
+            decode_token(invalid_token)
+
+
+def test_malformed_token(app):
+    invalid_token = 'foobarbaz'
+    with pytest.raises(DecodeError):
         with app.test_request_context():
             decode_token(invalid_token)

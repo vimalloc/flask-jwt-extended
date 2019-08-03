@@ -3,7 +3,7 @@ from warnings import warn
 
 from jwt import (
     ExpiredSignatureError, InvalidTokenError, InvalidAudienceError,
-    InvalidIssuerError
+    InvalidIssuerError, DecodeError
 )
 try:
     from flask import _app_ctx_stack as ctx_stack
@@ -110,6 +110,10 @@ class JWTManager(object):
                 return self._expired_token_callback()
 
         @app.errorhandler(InvalidHeaderError)
+        def handle_invalid_header_error(e):
+            return self._invalid_token_callback(str(e))
+
+        @app.errorhandler(DecodeError)
         def handle_invalid_header_error(e):
             return self._invalid_token_callback(str(e))
 

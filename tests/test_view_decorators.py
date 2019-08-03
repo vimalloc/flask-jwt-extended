@@ -237,6 +237,29 @@ def test_jwt_invalid_audience(app):
     assert response.status_code == 422
     assert response.get_json() == {'msg': 'Invalid audience'}
 
+def test_jwt_invalid_issuer(app):
+    url = '/protected'
+    jwtM = get_jwt_manager(app)
+    test_client = app.test_client()
+
+    # No issuer claim expected or provided - OK
+    access_token = encode_token(app, {'identity': 'me'})
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.status_code == 200
+
+    # Issuer claim expected and not provided - not OK
+    app.config['JWT_DECODE_ISSUER'] = 'my_issuer'
+    access_token = encode_token(app, {'identity': 'me'})
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.status_code == 422
+    assert response.get_json() == {'msg': 'Token is missing the "iss" claim'}
+
+    # Issuer claim still expected and wrong one provided - not OK
+    access_token = encode_token(app, {'iss': 'different_issuer', 'identity': 'me'})
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.status_code == 422
+    assert response.get_json() == {'msg': 'Invalid issuer'}
+
 
 @pytest.mark.parametrize("delta_func", [timedelta, relativedelta])
 def test_expired_token(app, delta_func):

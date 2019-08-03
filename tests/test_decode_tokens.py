@@ -8,7 +8,7 @@ from flask import Flask
 
 from jwt import (
     ExpiredSignatureError, InvalidSignatureError, InvalidAudienceError,
-    ImmatureSignatureError
+    ImmatureSignatureError, InvalidIssuerError
 )
 
 from flask_jwt_extended import (
@@ -246,9 +246,9 @@ def test_valid_aud(app, default_access_token, token_aud):
     app.config['JWT_DECODE_AUDIENCE'] = ['foo', 'bar']
 
     default_access_token['aud'] = token_aud
-    invalid_token = encode_token(app, default_access_token)
+    valid_token = encode_token(app, default_access_token)
     with app.test_request_context():
-        decoded = decode_token(invalid_token)
+        decoded = decode_token(valid_token)
         assert decoded['aud'] == token_aud
 
 
@@ -259,5 +259,23 @@ def test_invalid_aud(app, default_access_token, token_aud):
     default_access_token['aud'] = token_aud
     invalid_token = encode_token(app, default_access_token)
     with pytest.raises(InvalidAudienceError):
+        with app.test_request_context():
+            decode_token(invalid_token)
+
+def test_valid_iss(app, default_access_token):
+    app.config['JWT_DECODE_ISSUER'] = 'foobar'
+
+    default_access_token['iss'] = 'foobar'
+    valid_token = encode_token(app, default_access_token)
+    with app.test_request_context():
+        decoded = decode_token(valid_token)
+        assert decoded['iss'] == 'foobar'
+
+def test_invalid_iss(app, default_access_token):
+    app.config['JWT_DECODE_ISSUER'] = 'baz'
+
+    default_access_token['iss'] = 'foobar'
+    invalid_token = encode_token(app, default_access_token)
+    with pytest.raises(InvalidIssuerError):
         with app.test_request_context():
             decode_token(invalid_token)

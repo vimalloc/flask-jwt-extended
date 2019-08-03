@@ -1,7 +1,10 @@
 import datetime
 from warnings import warn
 
-from jwt import ExpiredSignatureError, InvalidTokenError, InvalidAudienceError
+from jwt import (
+    ExpiredSignatureError, InvalidTokenError, InvalidAudienceError,
+    InvalidIssuerError
+)
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
@@ -126,6 +129,10 @@ class JWTManager(object):
         def handle_invalid_audience_error(e):
             return self._invalid_token_callback(str(e))
 
+        @app.errorhandler(InvalidIssuerError)
+        def handle_invalid_issuer_error(e):
+            return self._invalid_token_callback(str(e))
+
         @app.errorhandler(RevokedTokenError)
         def handle_revoked_token_error(e):
             return self._revoked_token_callback()
@@ -214,6 +221,7 @@ class JWTManager(object):
         app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
         app.config.setdefault('JWT_USER_CLAIMS', 'user_claims')
         app.config.setdefault('JWT_DECODE_AUDIENCE', None)
+        app.config.setdefault('JWT_DECODE_ISSUER', None)
         app.config.setdefault('JWT_DECODE_LEEWAY', 0)
 
         app.config.setdefault('JWT_CLAIMS_IN_REFRESH_TOKEN', False)

@@ -103,6 +103,7 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
             user_claims_key=config.user_claims_key,
             csrf_value=csrf_value,
             audience=config.audience,
+            issuer=config.issuer,
             leeway=config.leeway,
             allow_expired=allow_expired
         )
@@ -115,6 +116,7 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
             user_claims_key=config.user_claims_key,
             csrf_value=csrf_value,
             audience=config.audience,
+            issuer=config.issuer,
             leeway=config.leeway,
             allow_expired=True
         )

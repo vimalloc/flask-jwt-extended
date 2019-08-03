@@ -317,6 +317,10 @@ class _Config(object):
         return current_app.config['JWT_DECODE_AUDIENCE']
 
     @property
+    def issuer(self):
+        return current_app.config['JWT_DECODE_ISSUER']
+
+    @property
     def leeway(self):
         return current_app.config['JWT_DECODE_LEEWAY']
 

@@ -196,6 +196,9 @@ class JWTManager(object):
         app.config.setdefault('JWT_REFRESH_CSRF_COOKIE_NAME', 'csrf_refresh_token')
         app.config.setdefault('JWT_ACCESS_CSRF_COOKIE_PATH', '/')
         app.config.setdefault('JWT_REFRESH_CSRF_COOKIE_PATH', '/')
+        app.config.setdefault('JWT_CSRF_CHECK_FORM', False)
+        app.config.setdefault('JWT_ACCESS_CSRF_FIELD_NAME', 'csrf_token')
+        app.config.setdefault('JWT_REFRESH_CSRF_FIELD_NAME', 'csrf_token')
 
         # How long an a token will live before they expire.
         app.config.setdefault('JWT_ACCESS_TOKEN_EXPIRES', datetime.timedelta(minutes=15))

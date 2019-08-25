@@ -157,6 +157,14 @@ These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use cookies and
                                   Only applicable if ``JWT_CSRF_IN_COOKIES`` is ``True``
 ``JWT_REFRESH_CSRF_COOKIE_PATH``  Path of the CSRF refresh cookie. Defaults to ``'/'``.
                                   Only applicable if ``JWT_CSRF_IN_COOKIES`` is ``True``
+``JWT_CSRF_CHECK_FORM``           When no CSRF token can be found in the header, check the form data. Defaults to
+                                  ``False``.
+``JWT_ACCESS_CSRF_FIELD_NAME``    Name of the form field that should contain the CSRF double submit value for access
+                                  tokens when no header is present. Only applicable if ``JWT_CSRF_CHECK_FORM`` is
+                                  ``True``. Defaults to ``'csrf_token'``.
+``JWT_REFRESH_CSRF_FIELD_NAME``   Name of the form field that should contain the CSRF double submit value for refresh
+                                  tokens when no header is present. Only applicable if ``JWT_CSRF_CHECK_FORM`` is
+                                  ``True``. Defaults to ``'csrf_token'``.
 ================================= =========================================
 
 

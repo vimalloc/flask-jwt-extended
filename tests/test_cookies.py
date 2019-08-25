@@ -139,7 +139,7 @@ def test_default_access_csrf_protection(app, options):
     # Test you cannot post without the additional csrf protection
     response = test_client.post(post_url)
     assert response.status_code == 401
-    assert response.get_json() == {'msg': 'Missing CSRF token in headers'}
+    assert response.get_json() == {'msg': 'Missing CSRF token'}
 
     # Test that you can post with the csrf double submit value
     csrf_headers = {'X-CSRF-TOKEN': csrf_token}
@@ -202,6 +202,48 @@ def test_csrf_with_custom_header_names(app, options):
 
 
 @pytest.mark.parametrize("options", [
+    ('/refresh_token', 'csrf_refresh_token', '/post_refresh_protected'),
+    ('/access_token', 'csrf_access_token', '/post_protected')
+])
+def test_csrf_with_default_form_field(app, options):
+    app.config['JWT_CSRF_CHECK_FORM'] = True
+    test_client = app.test_client()
+    auth_url, csrf_cookie_name, post_url = options
+
+    # Get the jwt cookies and csrf double submit tokens
+    response = test_client.get(auth_url)
+    csrf_token = _get_cookie_from_response(response, csrf_cookie_name)[csrf_cookie_name]
+
+    # Test that you can post with the csrf double submit value
+    csrf_data = {'csrf_token': csrf_token}
+    response = test_client.post(post_url, data=csrf_data)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+
+
+@pytest.mark.parametrize("options", [
+    ('/refresh_token', 'csrf_refresh_token', '/post_refresh_protected'),
+    ('/access_token', 'csrf_access_token', '/post_protected')
+])
+def test_csrf_with_custom_form_field(app, options):
+    app.config['JWT_CSRF_CHECK_FORM'] = True
+    app.config['JWT_ACCESS_CSRF_FIELD_NAME'] = 'FOO'
+    app.config['JWT_REFRESH_CSRF_FIELD_NAME'] = 'FOO'
+    test_client = app.test_client()
+    auth_url, csrf_cookie_name, post_url = options
+
+    # Get the jwt cookies and csrf double submit tokens
+    response = test_client.get(auth_url)
+    csrf_token = _get_cookie_from_response(response, csrf_cookie_name)[csrf_cookie_name]
+
+    # Test that you can post with the csrf double submit value
+    csrf_data = {'FOO': csrf_token}
+    response = test_client.post(post_url, data=csrf_data)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+
+
+@pytest.mark.parametrize("options", [
     ('/refresh_token', 'csrf_refresh_token', '/refresh_protected', '/post_refresh_protected'),  # nopep8
     ('/access_token', 'csrf_access_token', '/protected', '/post_protected')
 ])
@@ -222,7 +264,7 @@ def test_custom_csrf_methods(app, options):
     # Insure GET requests now fail without csrf
     response = test_client.get(get_url)
     assert response.status_code == 401
-    assert response.get_json() == {'msg': 'Missing CSRF token in headers'}
+    assert response.get_json() == {'msg': 'Missing CSRF token'}
 
     # Insure GET requests now succeed with csrf
     csrf_headers = {'X-CSRF-TOKEN': csrf_token}
@@ -430,4 +472,4 @@ def test_jwt_optional_with_csrf_enabled(app):
     csrf_token = csrf_cookie['csrf_access_token']
     response = test_client.post('/optional_post_protected')
     assert response.status_code == 401
-    assert response.get_json() == {'msg': 'Missing CSRF token in headers'}
+    assert response.get_json() == {'msg': 'Missing CSRF token'}

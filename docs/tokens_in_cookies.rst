@@ -78,3 +78,39 @@ to the caller, like such:
       set_access_cookies(resp, access_token)
       set_refresh_cookies(resp, refresh_token)
       return resp, 200
+
+
+Typically JWT is used with API servers using JSON payloads, often via AJAX. However you may have an endpoint that
+receives POST requests directly from an HTML form. Without AJAX, you can't set the CSRF headers to pass your token to
+the server. In this scenario you can send the token in a hidden form field. To accomplish this, first configure JWT to
+check the form for CSRF tokens. Now it's not necessary to send the csrf in a separate cookie, you can render it
+directly into your HTML template:
+
+
+.. code-block:: python
+
+  app.config['JWT_CSRF_CHECK_FORM'] = True
+
+  ...
+
+  @app.route('/protected', methods=['GET', 'POST'])
+  @jwt_optional
+  def protected():
+    if request.method == "GET":
+        return render_template(
+            "form.html", csrf_token=(get_raw_jwt() or {}).get("csrf")
+        )
+    else:
+      # handle POST request
+      current_user = get_jwt_identity()
+
+
+In the HTML template, pass the token back to the server via a hidden input.
+
+.. code-block:: html
+
+  <form method="POST">
+    ...
+    <input name="csrf_token" type="hidden" value="{{ csrf_token }}">
+    <button>Submit</button>
+  </form>

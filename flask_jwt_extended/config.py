@@ -185,6 +185,18 @@ class _Config(object):
                current_app.config['JWT_REFRESH_CSRF_HEADER_NAME']
 
     @property
+    def csrf_check_form(self):
+        return current_app.config['JWT_CSRF_CHECK_FORM']
+
+    @property
+    def access_csrf_field_name(self):
+        return current_app.config['JWT_ACCESS_CSRF_FIELD_NAME']
+
+    @property
+    def refresh_csrf_field_name(self):
+        return current_app.config['JWT_REFRESH_CSRF_FIELD_NAME']
+
+    @property
     def access_expires(self):
         delta = current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
         if type(delta) is int:

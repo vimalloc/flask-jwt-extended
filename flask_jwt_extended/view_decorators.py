@@ -170,12 +170,24 @@ def _decode_jwt_from_headers():
     header_type = config.header_type
 
     # Verify we have the auth header
-    jwt_header = request.headers.get(header_name, None)
-    if not jwt_header:
+    auth_header = request.headers.get(header_name, None)
+    if not auth_header:
         raise NoAuthorizationError("Missing {} Header".format(header_name))
 
     # Make sure the header is in a valid format that we are expecting, ie
     # <HeaderName>: <HeaderType(optional)> <JWT>
+
+    field_values = auth_header.split(', |,')
+
+    jwt_header = [s for s in field_values if s.startswith(header_type)]
+    if len(jwt_header < 1):
+        msg = "{} header does not contain type {}".format(
+            header_name,
+            header_type
+        )
+        raise InvalidHeaderError(msg)
+    jwt_header = jwt_header[0]    
+
     parts = jwt_header.split()
     if not header_type:
         if len(parts) != 1:

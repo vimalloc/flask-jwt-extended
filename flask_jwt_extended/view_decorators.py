@@ -176,17 +176,23 @@ def _decode_jwt_from_headers():
 
     # Make sure the header is in a valid format that we are expecting, ie
     # <HeaderName>: <HeaderType(optional)> <JWT>
+    jwt_header = None
 
-    field_values = auth_header.split(', |,')
+    # Check if header is comma delimited, ie
+    # <HeaderName>: <field> <value>, <field> <value>, etc...
+    if header_type and len(header_type.strip()) > 0:
+        field_values = auth_header.split(', |,')
 
-    jwt_header = [s for s in field_values if s.startswith(header_type)]
-    if len(jwt_header < 1):
-        msg = "{} header does not contain type {}".format(
-            header_name,
-            header_type
-        )
-        raise InvalidHeaderError(msg)
-    jwt_header = jwt_header[0]    
+        jwt_header = [s for s in field_values if s.startswith(header_type)]
+        if len(jwt_header < 1):
+            msg = "{} header does not contain type {}".format(
+                header_name,
+                header_type
+            )
+            raise InvalidHeaderError(msg)
+        jwt_header = jwt_header[0]
+    else:
+        jwt_header = auth_header
 
     parts = jwt_header.split()
     if not header_type:

@@ -201,12 +201,6 @@ def _decode_jwt_from_headers():
             raise InvalidHeaderError(msg)
         encoded_token = parts[0]
     else:
-        if parts[0] != header_type or len(parts) != 2:
-            msg = "Bad {} header. Expected value '{} <JWT>'".format(
-                header_name,
-                header_type
-            )
-            raise InvalidHeaderError(msg)
         encoded_token = parts[1]
 
     return encoded_token, None

@@ -87,7 +87,7 @@ class _Config(object):
 
     @property
     def header_type(self):
-        return current_app.config['JWT_HEADER_TYPE']
+        return current_app.config.get('JWT_HEADER_TYPE')
 
     @property
     def query_string_name(self):

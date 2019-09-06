@@ -19,13 +19,46 @@ def app():
     return app
 
 
+def test_default_headers(app):
+    app.config
+    test_client = app.test_client()
+
+    with app.test_request_context():
+        access_token = create_access_token('username')
+    
+    # Ensure other authorization types don't work
+    access_headers = {'Authorization': 'Basic basiccreds'}
+    response = test_client.get('/protected', headers=access_headers)
+    expected_json = {'msg': "Bad Authorization header. Expected value 'Bearer <JWT>'"}
+    assert response.status_code == 422
+    assert response.get_json() == expected_json
+
+    # Ensure default headers work
+    access_headers = {'Authorization': 'Bearer {}'.format(access_token)}
+    response = test_client.get('/protected', headers=access_headers)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+
+    # Ensure default headers work with multiple field values
+    access_headers = {'Authorization': 'Bearer {}, Basic randomcredshere'.format(access_token)}
+    response = test_client.get('/protected', headers=access_headers)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+
+    # Ensure default headers work with multiple field values in any position
+    access_headers = {'Authorization': 'Basic randomcredshere, Bearer {}'.format(access_token)}
+    response = test_client.get('/protected', headers=access_headers)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+
+
 def test_custom_header_name(app):
     app.config['JWT_HEADER_NAME'] = 'Foo'
     test_client = app.test_client()
 
     with app.test_request_context():
         access_token = create_access_token('username')
-
+    
     # Insure 'default' headers no longer work
     access_headers = {'Authorization': 'Bearer {}'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
@@ -34,6 +67,18 @@ def test_custom_header_name(app):
 
     # Insure new headers do work
     access_headers = {'Foo': 'Bearer {}'.format(access_token)}
+    response = test_client.get('/protected', headers=access_headers)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+
+    # Ensure new headers work with multiple field values
+    access_headers = {'Foo': 'Bearer {}, Basic randomcredshere'.format(access_token)}
+    response = test_client.get('/protected', headers=access_headers)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+
+    # Ensure new headers work with multiple field values in any position
+    access_headers = {'Foo': 'Basic randomcredshere, Bearer {}'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {'foo': 'bar'}
@@ -55,6 +100,18 @@ def test_custom_header_type(app):
 
     # Insure new headers do work
     access_headers = {'Authorization': 'JWT {}'.format(access_token)}
+    response = test_client.get('/protected', headers=access_headers)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+    
+    # Ensure new headers work with multiple field values
+    access_headers = {'Authorization': 'JWT {}, Basic randomcredshere'.format(access_token)}
+    response = test_client.get('/protected', headers=access_headers)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+
+    # Ensure new headers work with multiple field values in any position
+    access_headers = {'Authorization': 'Basic randomcredshere, JWT {}'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {'foo': 'bar'}

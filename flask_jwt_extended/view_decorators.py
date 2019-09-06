@@ -1,6 +1,7 @@
 from functools import wraps
 from datetime import datetime
 from calendar import timegm
+from re import split
 
 from werkzeug.exceptions import BadRequest
 
@@ -180,12 +181,11 @@ def _decode_jwt_from_headers():
 
     # Check if header is comma delimited, ie
     # <HeaderName>: <field> <value>, <field> <value>, etc...
-    if header_type and len(header_type.strip()) > 0:
-        field_values = auth_header.split(', |,')
-
+    if header_type:
+        field_values = split(r',\s*', auth_header)
         jwt_header = [s for s in field_values if s.startswith(header_type)]
-        if len(jwt_header < 1):
-            msg = "{} header does not contain type {}".format(
+        if len(jwt_header) < 1:
+            msg = "Bad {} header. Expected value '{} <JWT>'".format(
                 header_name,
                 header_type
             )

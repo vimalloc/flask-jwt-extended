@@ -1,6 +1,7 @@
 from functools import wraps
 from datetime import datetime
 from calendar import timegm
+from re import split
 
 from werkzeug.exceptions import BadRequest
 
@@ -170,12 +171,29 @@ def _decode_jwt_from_headers():
     header_type = config.header_type
 
     # Verify we have the auth header
-    jwt_header = request.headers.get(header_name, None)
-    if not jwt_header:
+    auth_header = request.headers.get(header_name, None)
+    if not auth_header:
         raise NoAuthorizationError("Missing {} Header".format(header_name))
 
     # Make sure the header is in a valid format that we are expecting, ie
     # <HeaderName>: <HeaderType(optional)> <JWT>
+    jwt_header = None
+
+    # Check if header is comma delimited, ie
+    # <HeaderName>: <field> <value>, <field> <value>, etc...
+    if header_type:
+        field_values = split(r',\s*', auth_header)
+        jwt_header = [s for s in field_values if s.split()[0] == header_type]
+        if len(jwt_header) < 1:
+            msg = "Bad {} header. Expected value '{} <JWT>'".format(
+                header_name,
+                header_type
+            )
+            raise InvalidHeaderError(msg)
+        jwt_header = jwt_header[0]
+    else:
+        jwt_header = auth_header
+
     parts = jwt_header.split()
     if not header_type:
         if len(parts) != 1:
@@ -183,12 +201,6 @@ def _decode_jwt_from_headers():
             raise InvalidHeaderError(msg)
         encoded_token = parts[0]
     else:
-        if parts[0] != header_type or len(parts) != 2:
-            msg = "Bad {} header. Expected value '{} <JWT>'".format(
-                header_name,
-                header_type
-            )
-            raise InvalidHeaderError(msg)
         encoded_token = parts[1]
 
     return encoded_token, None

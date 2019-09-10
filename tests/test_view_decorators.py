@@ -361,3 +361,4 @@ def test_different_token_algorightm(app):
     response = test_client.get(url, headers=make_headers(token))
     assert response.status_code == 422
     assert response.get_json() == {'msg': 'The specified alg value is not allowed'}
+    

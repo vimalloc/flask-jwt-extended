@@ -183,7 +183,7 @@ def _decode_jwt_from_headers():
     # <HeaderName>: <field> <value>, <field> <value>, etc...
     if header_type:
         field_values = split(r',\s*', auth_header)
-        jwt_header = [s for s in field_values if s.split()[0]==header_type]
+        jwt_header = [s for s in field_values if s.split()[0] == header_type]
         if len(jwt_header) < 1:
             msg = "Bad {} header. Expected value '{} <JWT>'".format(
                 header_name,

@@ -25,7 +25,7 @@ def test_default_headers(app):
 
     with app.test_request_context():
         access_token = create_access_token('username')
-    
+
     # Ensure other authorization types don't work
     access_headers = {'Authorization': 'Basic basiccreds'}
     response = test_client.get('/protected', headers=access_headers)
@@ -40,13 +40,13 @@ def test_default_headers(app):
     assert response.get_json() == {'foo': 'bar'}
 
     # Ensure default headers work with multiple field values
-    access_headers = {'Authorization': 'Bearer {}, Basic randomcredshere'.format(access_token)}
+    access_headers = {'Authorization': 'Bearer {}, Basic creds'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {'foo': 'bar'}
 
     # Ensure default headers work with multiple field values in any position
-    access_headers = {'Authorization': 'Basic randomcredshere, Bearer {}'.format(access_token)}
+    access_headers = {'Authorization': 'Basic creds, Bearer {}'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {'foo': 'bar'}
@@ -58,7 +58,7 @@ def test_custom_header_name(app):
 
     with app.test_request_context():
         access_token = create_access_token('username')
-    
+
     # Insure 'default' headers no longer work
     access_headers = {'Authorization': 'Bearer {}'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
@@ -103,15 +103,15 @@ def test_custom_header_type(app):
     response = test_client.get('/protected', headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {'foo': 'bar'}
-    
+
     # Ensure new headers work with multiple field values
-    access_headers = {'Authorization': 'JWT {}, Basic randomcredshere'.format(access_token)}
+    access_headers = {'Authorization': 'JWT {}, Basic creds'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {'foo': 'bar'}
 
     # Ensure new headers work with multiple field values in any position
-    access_headers = {'Authorization': 'Basic randomcredshere, JWT {}'.format(access_token)}
+    access_headers = {'Authorization': 'Basic creds, JWT {}'.format(access_token)}
     response = test_client.get('/protected', headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {'foo': 'bar'}

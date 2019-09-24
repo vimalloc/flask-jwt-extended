@@ -455,7 +455,8 @@ class JWTManager(object):
         self._encode_key_callback = callback
         return callback
 
-    def _create_refresh_token(self, identity, expires_delta=None, user_claims=None, headers=None):
+    def _create_refresh_token(self, identity, expires_delta=None, user_claims=None,
+                              headers=None):
         if expires_delta is None:
             expires_delta = config.refresh_expires
 
@@ -476,7 +477,8 @@ class JWTManager(object):
         )
         return refresh_token
 
-    def _create_access_token(self, identity, fresh=False, expires_delta=None, user_claims=None, headers=None):
+    def _create_access_token(self, identity, fresh=False, expires_delta=None, user_claims=None,
+                             headers=None):
         if expires_delta is None:
             expires_delta = config.access_expires
 

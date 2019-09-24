@@ -133,7 +133,8 @@ def _get_jwt_manager():
                            "application before using this method")
 
 
-def create_access_token(identity, fresh=False, expires_delta=None, user_claims=None, headers=None):
+def create_access_token(identity, fresh=False, expires_delta=None, user_claims=None,
+                        headers=None):
     """
     Create a new access token.
 
@@ -158,7 +159,8 @@ def create_access_token(identity, fresh=False, expires_delta=None, user_claims=N
     :return: An encoded access token
     """
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._create_access_token(identity, fresh, expires_delta, user_claims, headers=headers)
+    return jwt_manager._create_access_token(identity, fresh, expires_delta, user_claims,
+                                            headers=headers)
 
 
 def create_refresh_token(identity, expires_delta=None, user_claims=None):

@@ -13,7 +13,7 @@ from jwt import (
 
 from flask_jwt_extended import (
     JWTManager, create_access_token, decode_token, create_refresh_token,
-    get_jti
+    get_jti, get_unverified_jwt_headers
 )
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import JWTDecodeError
@@ -40,6 +40,12 @@ def default_access_token(app):
             'fresh': True,
             'csrf': 'abcd'
         }
+
+
+@pytest.fixture(scope='function')
+def default_access_token_header(app):
+    with app.test_request_context():
+        return {'kid': 'foobarbaz'}
 
 
 @pytest.fixture(scope='function')
@@ -286,3 +292,10 @@ def test_malformed_token(app):
     with pytest.raises(DecodeError):
         with app.test_request_context():
             decode_token(invalid_token)
+
+
+def test_jwt_headers(app):
+    token = encode_token(app, default_access_token, headers=default_access_token_header)
+
+    with app.test_request_context():
+        assert default_access_token_header == get_unverified_jwt_headers(token)

@@ -5,6 +5,7 @@ from jwt import (
     ExpiredSignatureError, InvalidTokenError, InvalidAudienceError,
     InvalidIssuerError, DecodeError
 )
+
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
@@ -454,7 +455,7 @@ class JWTManager(object):
         self._encode_key_callback = callback
         return callback
 
-    def _create_refresh_token(self, identity, expires_delta=None, user_claims=None):
+    def _create_refresh_token(self, identity, expires_delta=None, user_claims=None, headers=None):
         if expires_delta is None:
             expires_delta = config.refresh_expires
 
@@ -470,11 +471,12 @@ class JWTManager(object):
             csrf=config.csrf_protect,
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
-            json_encoder=config.json_encoder
+            json_encoder=config.json_encoder,
+            headers=headers
         )
         return refresh_token
 
-    def _create_access_token(self, identity, fresh=False, expires_delta=None, user_claims=None):
+    def _create_access_token(self, identity, fresh=False, expires_delta=None, user_claims=None, headers=None):
         if expires_delta is None:
             expires_delta = config.access_expires
 
@@ -491,6 +493,7 @@ class JWTManager(object):
             csrf=config.csrf_protect,
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
-            json_encoder=config.json_encoder
+            json_encoder=config.json_encoder,
+            headers=headers
         )
         return access_token

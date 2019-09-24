@@ -477,8 +477,8 @@ class JWTManager(object):
         )
         return refresh_token
 
-    def _create_access_token(self, identity, fresh=False, expires_delta=None, user_claims=None,
-                             headers=None):
+    def _create_access_token(self, identity, fresh=False, expires_delta=None,
+                             user_claims=None, headers=None):
         if expires_delta is None:
             expires_delta = config.access_expires
 

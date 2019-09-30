@@ -18,7 +18,7 @@ from flask_jwt_extended.exceptions import (
 )
 from flask_jwt_extended.utils import (
     decode_token, has_user_loader, user_loader, verify_token_claims,
-    verify_token_not_blacklisted, verify_token_type
+    verify_token_not_blacklisted, verify_token_type, get_unverified_jwt_headers
 )
 
 
@@ -29,8 +29,9 @@ def verify_jwt_in_request():
     no token or if the token is invalid.
     """
     if request.method not in config.exempt_methods:
-        jwt_data = _decode_jwt_from_request(request_type='access')
+        jwt_data, jwt_header = _decode_jwt_from_request(request_type='access')
         ctx_stack.top.jwt = jwt_data
+        ctx_stack.top.jwt_header = jwt_header
         verify_token_claims(jwt_data)
         _load_user(jwt_data[config.identity_claim_key])
 
@@ -48,8 +49,9 @@ def verify_jwt_in_request_optional():
     """
     try:
         if request.method not in config.exempt_methods:
-            jwt_data = _decode_jwt_from_request(request_type='access')
+            jwt_data, jwt_header = _decode_jwt_from_request(request_type='access')
             ctx_stack.top.jwt = jwt_data
+            ctx_stack.top.jwt_header = jwt_header
             verify_token_claims(jwt_data)
             _load_user(jwt_data[config.identity_claim_key])
     except (NoAuthorizationError, InvalidHeaderError):
@@ -63,8 +65,9 @@ def verify_fresh_jwt_in_request():
     token is not marked as fresh.
     """
     if request.method not in config.exempt_methods:
-        jwt_data = _decode_jwt_from_request(request_type='access')
+        jwt_data, jwt_header = _decode_jwt_from_request(request_type='access')
         ctx_stack.top.jwt = jwt_data
+        ctx_stack.top.jwt_header = jwt_header
         fresh = jwt_data['fresh']
         if isinstance(fresh, bool):
             if not fresh:
@@ -83,8 +86,9 @@ def verify_jwt_refresh_token_in_request():
     exception if there is no token or the token is invalid.
     """
     if request.method not in config.exempt_methods:
-        jwt_data = _decode_jwt_from_request(request_type='refresh')
+        jwt_data, jwt_header = _decode_jwt_from_request(request_type='refresh')
         ctx_stack.top.jwt = jwt_data
+        ctx_stack.top.jwt_header = jwt_header
         _load_user(jwt_data[config.identity_claim_key])
 
 
@@ -283,10 +287,12 @@ def _decode_jwt_from_request(request_type):
     # in one place to be valid (not every location).
     errors = []
     decoded_token = None
+    jwt_header = None
     for get_encoded_token_function in get_encoded_token_functions:
         try:
             encoded_token, csrf_token = get_encoded_token_function()
             decoded_token = decode_token(encoded_token, csrf_token)
+            jwt_header = get_unverified_jwt_headers(encoded_token)
             break
         except NoAuthorizationError as e:
             errors.append(str(e))
@@ -309,4 +315,4 @@ def _decode_jwt_from_request(request_type):
 
     verify_token_type(decoded_token, expected_type=request_type)
     verify_token_not_blacklisted(decoded_token, request_type)
-    return decoded_token
+    return decoded_token, jwt_header

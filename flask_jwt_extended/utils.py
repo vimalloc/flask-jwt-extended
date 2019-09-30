@@ -30,6 +30,15 @@ def get_raw_jwt():
     return getattr(ctx_stack.top, 'jwt', {})
 
 
+def get_raw_jwt_header():
+    """
+    In a protected endpoint, this will return the python dictionary which has
+    the JWT headers values. If no
+    JWT is currently present, an empty dict is returned instead.
+    """
+    return getattr(ctx_stack.top, 'jwt_header', {})
+
+
 def get_jwt_identity():
     """
     In a protected endpoint, this will return the identity of the JWT that is
@@ -155,7 +164,7 @@ def create_access_token(identity, fresh=False, expires_delta=None, user_claims=N
                           'JWT_ACCESS_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
     :param user_claims: Optional JSON serializable to override user claims.
-    :param headers: Optional
+    :param headers: Optional, valid dict for specifying additional headers in JWT header section
     :return: An encoded access token
     """
     jwt_manager = _get_jwt_manager()
@@ -163,7 +172,8 @@ def create_access_token(identity, fresh=False, expires_delta=None, user_claims=N
                                             headers=headers)
 
 
-def create_refresh_token(identity, expires_delta=None, user_claims=None):
+def create_refresh_token(identity, expires_delta=None, user_claims=None,
+                         headers=None):
     """
     Creates a new refresh token.
 
@@ -179,10 +189,12 @@ def create_refresh_token(identity, expires_delta=None, user_claims=None):
                           'JWT_REFRESH_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
     :param user_claims: Optional JSON serializable to override user claims.
+    :param headers: Optional, valid dict for specifying additional headers in JWT header section
     :return: An encoded refresh token
     """
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._create_refresh_token(identity, expires_delta, user_claims)
+    return jwt_manager._create_refresh_token(identity, expires_delta, user_claims,
+                                             headers=headers)
 
 
 def has_user_loader():

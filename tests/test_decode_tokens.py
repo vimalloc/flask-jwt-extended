@@ -43,14 +43,6 @@ def default_access_token(app):
 
 
 @pytest.fixture(scope='function')
-def default_access_token_header(app):
-    with app.test_request_context():
-        return {'kid': 'foobarbaz',
-                'alg': config.algorithm,
-                'typ': 'JWT'}
-
-
-@pytest.fixture(scope='function')
 def patch_datetime_now(monkeypatch):
     date_in_future = datetime.utcnow() + timedelta(seconds=30)
 
@@ -296,8 +288,10 @@ def test_malformed_token(app):
             decode_token(invalid_token)
 
 
-def test_jwt_headers(app, default_access_token, default_access_token_header):
-    token = encode_token(app, default_access_token, headers=default_access_token_header)
-
+def test_jwt_headers(app):
+    jwt_header = {"foo": "bar"}
     with app.test_request_context():
-        assert default_access_token_header == get_unverified_jwt_headers(token)
+        access_token = create_access_token('username', headers= jwt_header)
+        refresh_token = create_refresh_token('username', headers= jwt_header)
+        assert get_unverified_jwt_headers(access_token)["foo"] == "bar"
+        assert get_unverified_jwt_headers(refresh_token)["foo"] == "bar"

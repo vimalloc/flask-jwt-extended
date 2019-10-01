@@ -291,7 +291,7 @@ def test_malformed_token(app):
 def test_jwt_headers(app):
     jwt_header = {"foo": "bar"}
     with app.test_request_context():
-        access_token = create_access_token('username', headers= jwt_header)
-        refresh_token = create_refresh_token('username', headers= jwt_header)
+        access_token = create_access_token('username', headers=jwt_header)
+        refresh_token = create_refresh_token('username', headers=jwt_header)
         assert get_unverified_jwt_headers(access_token)["foo"] == "bar"
         assert get_unverified_jwt_headers(refresh_token)["foo"] == "bar"

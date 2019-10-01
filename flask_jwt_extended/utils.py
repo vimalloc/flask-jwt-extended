@@ -164,7 +164,8 @@ def create_access_token(identity, fresh=False, expires_delta=None, user_claims=N
                           'JWT_ACCESS_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
     :param user_claims: Optional JSON serializable to override user claims.
-    :param headers: Optional, valid dict for specifying additional headers in JWT header section
+    :param headers: Optional, valid dict for specifying additional headers in JWT
+                    header section
     :return: An encoded access token
     """
     jwt_manager = _get_jwt_manager()
@@ -189,7 +190,8 @@ def create_refresh_token(identity, expires_delta=None, user_claims=None,
                           'JWT_REFRESH_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
     :param user_claims: Optional JSON serializable to override user claims.
-    :param headers: Optional, valid dict for specifying additional headers in JWT header section
+    :param headers: Optional, valid dict for specifying additional headers in JWT
+                    header section
     :return: An encoded refresh token
     """
     jwt_manager = _get_jwt_manager()

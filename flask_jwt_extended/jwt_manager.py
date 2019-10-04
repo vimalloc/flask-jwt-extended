@@ -5,6 +5,7 @@ from jwt import (
     ExpiredSignatureError, InvalidTokenError, InvalidAudienceError,
     InvalidIssuerError, DecodeError
 )
+
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
@@ -22,8 +23,8 @@ from flask_jwt_extended.default_callbacks import (
     default_unauthorized_callback, default_needs_fresh_token_callback,
     default_revoked_token_callback, default_user_loader_error_callback,
     default_claims_verification_callback, default_verify_claims_failed_callback,
-    default_decode_key_callback, default_encode_key_callback
-)
+    default_decode_key_callback, default_encode_key_callback,
+    default_jwt_headers_callback)
 from flask_jwt_extended.tokens import (
     encode_refresh_token, encode_access_token
 )
@@ -64,6 +65,7 @@ class JWTManager(object):
         self._verify_claims_failed_callback = default_verify_claims_failed_callback
         self._decode_key_callback = default_decode_key_callback
         self._encode_key_callback = default_encode_key_callback
+        self._jwt_additional_header_callback = default_jwt_headers_callback
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
@@ -454,12 +456,32 @@ class JWTManager(object):
         self._encode_key_callback = callback
         return callback
 
-    def _create_refresh_token(self, identity, expires_delta=None, user_claims=None):
+    def additional_headers_loader(self, callback):
+        """
+        This decorator sets the callback function for adding custom headers to an
+        access token when :func:`~flask_jwt_extended.create_access_token` is
+        called. By default, two headers will be added the type of the token, which is JWT,
+        and the signing algorithm being used, such as HMAC SHA256 or RSA.
+
+        *HINT*: The callback function must be a function that takes **no** argument,
+        which is the object passed into
+        :func:`~flask_jwt_extended.create_access_token`, and returns the custom
+        claims you want included in the access tokens. This returned claims
+        must be *JSON serializable*.
+        """
+        self._jwt_additional_header_callback = callback
+        return callback
+
+    def _create_refresh_token(self, identity, expires_delta=None, user_claims=None,
+                              headers=None):
         if expires_delta is None:
             expires_delta = config.refresh_expires
 
         if user_claims is None and config.user_claims_in_refresh_token:
             user_claims = self._user_claims_callback(identity)
+
+        if headers is None:
+            headers = self._jwt_additional_header_callback(identity)
 
         refresh_token = encode_refresh_token(
             identity=self._user_identity_callback(identity),
@@ -470,16 +492,21 @@ class JWTManager(object):
             csrf=config.csrf_protect,
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
-            json_encoder=config.json_encoder
+            json_encoder=config.json_encoder,
+            headers=headers
         )
         return refresh_token
 
-    def _create_access_token(self, identity, fresh=False, expires_delta=None, user_claims=None):
+    def _create_access_token(self, identity, fresh=False, expires_delta=None,
+                             user_claims=None, headers=None):
         if expires_delta is None:
             expires_delta = config.access_expires
 
         if user_claims is None:
             user_claims = self._user_claims_callback(identity)
+
+        if headers is None:
+            headers = self._jwt_additional_header_callback(identity)
 
         access_token = encode_access_token(
             identity=self._user_identity_callback(identity),
@@ -491,6 +518,7 @@ class JWTManager(object):
             csrf=config.csrf_protect,
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
-            json_encoder=config.json_encoder
+            json_encoder=config.json_encoder,
+            headers=headers
         )
         return access_token

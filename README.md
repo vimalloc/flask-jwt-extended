@@ -21,7 +21,7 @@ easier. These include:
 
 
 ### Usage
-[View the documentation online](http://flask-jwt-extended.readthedocs.io/en/latest/)
+[View the documentation online](https://flask-jwt-extended.readthedocs.io/en/stable/)
 
 
 ### Changelog

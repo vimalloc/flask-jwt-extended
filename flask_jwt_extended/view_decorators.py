@@ -188,7 +188,7 @@ def _decode_jwt_from_headers():
     if header_type:
         field_values = split(r',\s*', auth_header)
         jwt_header = [s for s in field_values if s.split()[0] == header_type]
-        if len(jwt_header) < 1:
+        if len(jwt_header) < 1 or len(jwt_header[0].split()) != 2:
             msg = "Bad {} header. Expected value '{} <JWT>'".format(
                 header_name,
                 header_type

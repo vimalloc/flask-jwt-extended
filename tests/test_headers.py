@@ -151,6 +151,15 @@ def test_missing_headers(app):
     assert response.get_json() == {'foo': "bar"}
 
 
+def test_header_without_jwt(app):
+    jwtM = get_jwt_manager(app)
+    test_client = app.test_client()
+
+    access_headers = {'Authorization': 'Bearer '}
+    response = test_client.get('/protected', headers=access_headers)
+    assert response.status_code == 422
+    assert response.get_json() == {'msg': "Bad Authorization header. Expected value 'Bearer <JWT>'"}
+
 def test_custom_error_msg_key(app):
     app.config['JWT_ERROR_MESSAGE_KEY'] = 'message'
     response = app.test_client().get('/protected', headers=None)

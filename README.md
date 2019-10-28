@@ -3,10 +3,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/vimalloc/flask-jwt-extended/badge.svg?branch=master)](https://coveralls.io/github/vimalloc/flask-jwt-extended?branch=master)
 [![PyPI version](https://badge.fury.io/py/Flask-JWT-Extended.svg)](https://badge.fury.io/py/Flask-JWT-Extended)
 [![Documentation Status](https://readthedocs.org/projects/flask-jwt-extended/badge/)](http://flask-jwt-extended.readthedocs.io/en/latest/)
-[![Join the chat at https://gitter.im/flask-jwt-extended/Lobby](https://badges.gitter.im/flask-jwt-extended/Lobby.svg)](https://gitter.im/flask-jwt-extended/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ### Features
-
 Flask-JWT-Extended not only adds support for using JSON Web Tokens (JWT) to Flask for protecting views,
 but also many helpful (and **optional**) features  built in to make working with JSON Web Tokens
 easier. These include:
@@ -19,18 +17,15 @@ easier. These include:
 * Token revoking/blacklisting
 * Storing tokens in cookies and CSRF protection
 
-
 ### Usage
 [View the documentation online](https://flask-jwt-extended.readthedocs.io/en/stable/)
-
 
 ### Changelog
 You can view the changelog [here](https://github.com/vimalloc/flask-jwt-extended/releases).
 This project follows [semantic versioning](https://semver.org/).
 
 ### Chatting
-Come chat with the community or ask questions at https://gitter.im/flask-jwt-extended/Lobby.
-
+Come chat with the community or ask questions at https://discord.gg/EJBsbFd
 
 ### Local Development
 We require 100% code coverage in our unit tests. You can run the tests locally

@@ -106,7 +106,7 @@ class JWTManager(object):
             except TypeError:
                 msg = (
                     "jwt.expired_token_loader callback now takes the expired token "
-                    "as an additional paramter. Example: expired_callback(token)"
+                    "as an additional parameter. Example: expired_callback(token)"
                 )
                 warn(msg, DeprecationWarning)
                 return self._expired_token_callback()

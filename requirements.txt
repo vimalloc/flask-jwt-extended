@@ -26,7 +26,6 @@ PyJWT==1.7.1
 pyparsing==2.4.5
 pytz==2019.3
 requests==2.22.0
-six==1.13.0
 snowballstemmer==2.0.0
 Sphinx==2.2.1
 sphinxcontrib-applehelp==1.0.1

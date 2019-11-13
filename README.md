@@ -30,7 +30,7 @@ Come chat with the community or ask questions at https://discord.gg/EJBsbFd
 ### Local Development
 We require 100% code coverage in our unit tests. You can run the tests locally
 with `tox` which will print out a code coverage report. Creating a pull request
-will run the tests against python 2.7, 3.5, 3.6, 3.7, 3.8 and PyPy.
+will run the tests against python 3.5, 3.6, 3.7, and 3.8.
 ```
 $ tox
 ```

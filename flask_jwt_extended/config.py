@@ -1,12 +1,7 @@
 import datetime
 from warnings import warn
-from six import raise_from
 
-# In Python 2.7 collections.abc is a part of the collections module.
-try:
-    from collections.abc import Sequence, Set
-except ImportError:  # pragma: no cover
-    from collections import Sequence, Set
+from collections import Sequence, Set
 
 from flask import current_app
 
@@ -208,7 +203,7 @@ class _Config(object):
                 err = (
                     "must be able to add JWT_ACCESS_TOKEN_EXPIRES to datetime.datetime"
                 )
-                raise_from(RuntimeError(err), e)
+                raise RuntimeError(err) from e
         return delta
 
     @property
@@ -223,7 +218,7 @@ class _Config(object):
                 err = (
                     "must be able to add JWT_REFRESH_TOKEN_EXPIRES to datetime.datetime"
                 )
-                raise_from(RuntimeError(err), e)
+                raise RuntimeError(err) from e
         return delta
 
     @property

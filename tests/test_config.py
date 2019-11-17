@@ -385,22 +385,6 @@ def test_csrf_protect_config(app):
         assert config.csrf_protect is False
 
 
-def test_depreciated_options(app):
-    app.config['JWT_CSRF_HEADER_NAME'] = 'Auth'
-
-    # Cause all warnings to always be triggered.
-    warnings.simplefilter("always")
-
-    # Verify our warnings are thrown
-    with app.test_request_context():
-        with warnings.catch_warnings(record=True) as w:
-            assert config.access_csrf_header_name == 'Auth'
-            assert config.refresh_csrf_header_name == 'Auth'
-            assert len(w) == 2
-            assert w[0].category == DeprecationWarning
-            assert w[1].category == DeprecationWarning
-
-
 def test_missing_algorithm_in_decode_algorithms(app):
     app.config['JWT_ALGORITHM'] = 'RS256'
     app.config['JWT_DECODE_ALGORITHMS'] = ['HS512']

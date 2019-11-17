@@ -1,5 +1,4 @@
 import datetime
-from warnings import warn
 
 from collections import Sequence, Set
 
@@ -156,28 +155,13 @@ class _Config(object):
     def refresh_csrf_cookie_path(self):
         return current_app.config['JWT_REFRESH_CSRF_COOKIE_PATH']
 
-    @staticmethod
-    def _get_depreciated_csrf_header_name():
-        # This used to be the same option for access and refresh header names.
-        # This gives users a warning if they are still using the old behavior
-        old_name = current_app.config.get('JWT_CSRF_HEADER_NAME', None)
-        if old_name:
-            msg = (
-                "JWT_CSRF_HEADER_NAME is depreciated. Use JWT_ACCESS_CSRF_HEADER_NAME "
-                "or JWT_REFRESH_CSRF_HEADER_NAME instead"
-            )
-            warn(msg, DeprecationWarning)
-        return old_name
-
     @property
     def access_csrf_header_name(self):
-        return self._get_depreciated_csrf_header_name() or \
-               current_app.config['JWT_ACCESS_CSRF_HEADER_NAME']
+        return current_app.config['JWT_ACCESS_CSRF_HEADER_NAME']
 
     @property
     def refresh_csrf_header_name(self):
-        return self._get_depreciated_csrf_header_name() or \
-               current_app.config['JWT_REFRESH_CSRF_HEADER_NAME']
+        return current_app.config['JWT_REFRESH_CSRF_HEADER_NAME']
 
     @property
     def csrf_check_form(self):

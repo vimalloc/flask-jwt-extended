@@ -283,18 +283,6 @@ def test_expired_token(app, delta_func):
     assert response.status_code == 401
     assert response.get_json() == {'msg': 'Token has expired'}
 
-    # Test depreciated custom response
-    @jwtM.expired_token_loader
-    def depreciated_custom_response():
-        return jsonify(msg='foobar'), 201
-
-    warnings.simplefilter("always")
-    with warnings.catch_warnings(record=True) as w:
-        response = test_client.get(url, headers=make_headers(token))
-        assert response.status_code == 201
-        assert response.get_json() == {'msg': 'foobar'}
-        assert w[0].category == DeprecationWarning
-
     # Test new custom response
     @jwtM.expired_token_loader
     def custom_response(token):
@@ -302,12 +290,9 @@ def test_expired_token(app, delta_func):
         assert token['type'] == 'access'
         return jsonify(msg='foobar'), 201
 
-    warnings.simplefilter("always")
-    with warnings.catch_warnings(record=True) as w:
-        response = test_client.get(url, headers=make_headers(token))
-        assert response.status_code == 201
-        assert response.get_json() == {'msg': 'foobar'}
-        assert len(w) == 0
+    response = test_client.get(url, headers=make_headers(token))
+    assert response.status_code == 201
+    assert response.get_json() == {'msg': 'foobar'}
 
 
 def test_expired_token_via_decode_token(app):

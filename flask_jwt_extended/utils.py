@@ -1,5 +1,3 @@
-from warnings import warn
-
 from flask import current_app
 from jwt import ExpiredSignatureError
 from werkzeug.local import LocalProxy
@@ -91,18 +89,7 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
         encoded_token, verify=False, algorithms=config.decode_algorithms
     )
     unverified_headers = jwt.get_unverified_header(encoded_token)
-    # Attempt to call callback with both claims and headers, but fallback to just claims
-    # for backwards compatibility
-    try:
-        secret = jwt_manager._decode_key_callback(unverified_claims, unverified_headers)
-    except TypeError:
-        msg = (
-            "The single-argument (unverified_claims) form of decode_key_callback ",
-            "is deprecated. Update your code to use the two-argument form ",
-            "(unverified_claims, unverified_headers)."
-        )
-        warn(msg, DeprecationWarning)
-        secret = jwt_manager._decode_key_callback(unverified_claims)
+    secret = jwt_manager._decode_key_callback(unverified_claims, unverified_headers)
 
     try:
         return decode_jwt(

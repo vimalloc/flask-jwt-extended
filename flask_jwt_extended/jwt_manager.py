@@ -1,5 +1,4 @@
 import datetime
-from warnings import warn
 
 from jwt import (
     ExpiredSignatureError, InvalidTokenError, InvalidAudienceError,
@@ -100,16 +99,8 @@ class JWTManager(object):
 
         @app.errorhandler(ExpiredSignatureError)
         def handle_expired_error(e):
-            try:
-                token = ctx_stack.top.expired_jwt
-                return self._expired_token_callback(token)
-            except TypeError:
-                msg = (
-                    "jwt.expired_token_loader callback now takes the expired token "
-                    "as an additional parameter. Example: expired_callback(token)"
-                )
-                warn(msg, DeprecationWarning)
-                return self._expired_token_callback()
+            token = ctx_stack.top.expired_jwt
+            return self._expired_token_callback(token)
 
         @app.errorhandler(InvalidHeaderError)
         def handle_invalid_header_error(e):

@@ -13,8 +13,18 @@ from flask import current_app
 try:
     from jwt.algorithms import requires_cryptography
 except ImportError:  # pragma: no cover
-    requires_cryptography = {'RS256', 'RS384', 'RS512', 'ES256', 'ES384',
-                             'ES521', 'ES512', 'PS256', 'PS384', 'PS512'}
+    requires_cryptography = {
+        "RS256",
+        "RS384",
+        "RS512",
+        "ES256",
+        "ES384",
+        "ES521",
+        "ES512",
+        "PS256",
+        "PS384",
+        "PS512",
+    }
 
 
 class _Config(object):
@@ -42,142 +52,146 @@ class _Config(object):
 
     @property
     def token_location(self):
-        locations = current_app.config['JWT_TOKEN_LOCATION']
+        locations = current_app.config["JWT_TOKEN_LOCATION"]
         if isinstance(locations, str):
             locations = (locations,)
         elif not isinstance(locations, (Sequence, Set)):
-            raise RuntimeError('JWT_TOKEN_LOCATION must be a sequence or a set')
+            raise RuntimeError("JWT_TOKEN_LOCATION must be a sequence or a set")
         elif not locations:
-            raise RuntimeError('JWT_TOKEN_LOCATION must contain at least one '
-                               'of "headers", "cookies", "query_string", or "json"')
+            raise RuntimeError(
+                "JWT_TOKEN_LOCATION must contain at least one "
+                'of "headers", "cookies", "query_string", or "json"'
+            )
         for location in locations:
-            if location not in ('headers', 'cookies', 'query_string', 'json'):
-                raise RuntimeError('JWT_TOKEN_LOCATION can only contain '
-                                   '"headers", "cookies", "query_string", or "json"')
+            if location not in ("headers", "cookies", "query_string", "json"):
+                raise RuntimeError(
+                    "JWT_TOKEN_LOCATION can only contain "
+                    '"headers", "cookies", "query_string", or "json"'
+                )
         return locations
 
     @property
     def jwt_in_cookies(self):
-        return 'cookies' in self.token_location
+        return "cookies" in self.token_location
 
     @property
     def jwt_in_headers(self):
-        return 'headers' in self.token_location
+        return "headers" in self.token_location
 
     @property
     def jwt_in_query_string(self):
-        return 'query_string' in self.token_location
+        return "query_string" in self.token_location
 
     @property
     def jwt_in_json(self):
-        return 'json' in self.token_location
+        return "json" in self.token_location
 
     @property
     def header_name(self):
-        name = current_app.config['JWT_HEADER_NAME']
+        name = current_app.config["JWT_HEADER_NAME"]
         if not name:
             raise RuntimeError("JWT_ACCESS_HEADER_NAME cannot be empty")
         return name
 
     @property
     def header_type(self):
-        return current_app.config['JWT_HEADER_TYPE']
+        return current_app.config["JWT_HEADER_TYPE"]
 
     @property
     def query_string_name(self):
-        return current_app.config['JWT_QUERY_STRING_NAME']
+        return current_app.config["JWT_QUERY_STRING_NAME"]
 
     @property
     def access_cookie_name(self):
-        return current_app.config['JWT_ACCESS_COOKIE_NAME']
+        return current_app.config["JWT_ACCESS_COOKIE_NAME"]
 
     @property
     def refresh_cookie_name(self):
-        return current_app.config['JWT_REFRESH_COOKIE_NAME']
+        return current_app.config["JWT_REFRESH_COOKIE_NAME"]
 
     @property
     def access_cookie_path(self):
-        return current_app.config['JWT_ACCESS_COOKIE_PATH']
+        return current_app.config["JWT_ACCESS_COOKIE_PATH"]
 
     @property
     def refresh_cookie_path(self):
-        return current_app.config['JWT_REFRESH_COOKIE_PATH']
+        return current_app.config["JWT_REFRESH_COOKIE_PATH"]
 
     @property
     def cookie_secure(self):
-        return current_app.config['JWT_COOKIE_SECURE']
+        return current_app.config["JWT_COOKIE_SECURE"]
 
     @property
     def cookie_domain(self):
-        return current_app.config['JWT_COOKIE_DOMAIN']
+        return current_app.config["JWT_COOKIE_DOMAIN"]
 
     @property
     def session_cookie(self):
-        return current_app.config['JWT_SESSION_COOKIE']
+        return current_app.config["JWT_SESSION_COOKIE"]
 
     @property
     def cookie_samesite(self):
-        return current_app.config['JWT_COOKIE_SAMESITE']
+        return current_app.config["JWT_COOKIE_SAMESITE"]
 
     @property
     def json_key(self):
-        return current_app.config['JWT_JSON_KEY']
+        return current_app.config["JWT_JSON_KEY"]
 
     @property
     def refresh_json_key(self):
-        return current_app.config['JWT_REFRESH_JSON_KEY']
+        return current_app.config["JWT_REFRESH_JSON_KEY"]
 
     @property
     def csrf_protect(self):
-        return self.jwt_in_cookies and current_app.config['JWT_COOKIE_CSRF_PROTECT']
+        return self.jwt_in_cookies and current_app.config["JWT_COOKIE_CSRF_PROTECT"]
 
     @property
     def csrf_request_methods(self):
-        return current_app.config['JWT_CSRF_METHODS']
+        return current_app.config["JWT_CSRF_METHODS"]
 
     @property
     def csrf_in_cookies(self):
-        return current_app.config['JWT_CSRF_IN_COOKIES']
+        return current_app.config["JWT_CSRF_IN_COOKIES"]
 
     @property
     def access_csrf_cookie_name(self):
-        return current_app.config['JWT_ACCESS_CSRF_COOKIE_NAME']
+        return current_app.config["JWT_ACCESS_CSRF_COOKIE_NAME"]
 
     @property
     def refresh_csrf_cookie_name(self):
-        return current_app.config['JWT_REFRESH_CSRF_COOKIE_NAME']
+        return current_app.config["JWT_REFRESH_CSRF_COOKIE_NAME"]
 
     @property
     def access_csrf_cookie_path(self):
-        return current_app.config['JWT_ACCESS_CSRF_COOKIE_PATH']
+        return current_app.config["JWT_ACCESS_CSRF_COOKIE_PATH"]
 
     @property
     def refresh_csrf_cookie_path(self):
-        return current_app.config['JWT_REFRESH_CSRF_COOKIE_PATH']
+        return current_app.config["JWT_REFRESH_CSRF_COOKIE_PATH"]
 
     @property
     def access_csrf_header_name(self):
-        return current_app.config['JWT_ACCESS_CSRF_HEADER_NAME']
+        return current_app.config["JWT_ACCESS_CSRF_HEADER_NAME"]
 
     @property
     def refresh_csrf_header_name(self):
-        return current_app.config['JWT_REFRESH_CSRF_HEADER_NAME']
+        return current_app.config["JWT_REFRESH_CSRF_HEADER_NAME"]
 
     @property
     def csrf_check_form(self):
-        return current_app.config['JWT_CSRF_CHECK_FORM']
+        return current_app.config["JWT_CSRF_CHECK_FORM"]
 
     @property
     def access_csrf_field_name(self):
-        return current_app.config['JWT_ACCESS_CSRF_FIELD_NAME']
+        return current_app.config["JWT_ACCESS_CSRF_FIELD_NAME"]
 
     @property
     def refresh_csrf_field_name(self):
-        return current_app.config['JWT_REFRESH_CSRF_FIELD_NAME']
+        return current_app.config["JWT_REFRESH_CSRF_FIELD_NAME"]
 
     @property
     def access_expires(self):
-        delta = current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
+        delta = current_app.config["JWT_ACCESS_TOKEN_EXPIRES"]
         if type(delta) is int:
             delta = datetime.timedelta(seconds=delta)
         if delta is not False:
@@ -192,7 +206,7 @@ class _Config(object):
 
     @property
     def refresh_expires(self):
-        delta = current_app.config['JWT_REFRESH_TOKEN_EXPIRES']
+        delta = current_app.config["JWT_REFRESH_TOKEN_EXPIRES"]
         if type(delta) is int:
             delta = datetime.timedelta(seconds=delta)
         if delta is not False:
@@ -207,11 +221,11 @@ class _Config(object):
 
     @property
     def algorithm(self):
-        return current_app.config['JWT_ALGORITHM']
+        return current_app.config["JWT_ALGORITHM"]
 
     @property
     def decode_algorithms(self):
-        algorithms = current_app.config['JWT_DECODE_ALGORITHMS']
+        algorithms = current_app.config["JWT_DECODE_ALGORITHMS"]
         if not algorithms:
             return [self.algorithm]
         if self.algorithm not in algorithms:
@@ -220,56 +234,62 @@ class _Config(object):
 
     @property
     def blacklist_enabled(self):
-        return current_app.config['JWT_BLACKLIST_ENABLED']
+        return current_app.config["JWT_BLACKLIST_ENABLED"]
 
     @property
     def blacklist_checks(self):
-        check_type = current_app.config['JWT_BLACKLIST_TOKEN_CHECKS']
+        check_type = current_app.config["JWT_BLACKLIST_TOKEN_CHECKS"]
         if isinstance(check_type, str):
             check_type = (check_type,)
         elif not isinstance(check_type, (Sequence, Set)):
-            raise RuntimeError('JWT_BLACKLIST_TOKEN_CHECKS must be a sequence or a set')
+            raise RuntimeError("JWT_BLACKLIST_TOKEN_CHECKS must be a sequence or a set")
         for item in check_type:
-            if item not in ('access', 'refresh'):
+            if item not in ("access", "refresh"):
                 err = 'JWT_BLACKLIST_TOKEN_CHECKS must be "access" or "refresh"'
                 raise RuntimeError(err)
         return check_type
 
     @property
     def blacklist_access_tokens(self):
-        return 'access' in self.blacklist_checks
+        return "access" in self.blacklist_checks
 
     @property
     def blacklist_refresh_tokens(self):
-        return 'refresh' in self.blacklist_checks
+        return "refresh" in self.blacklist_checks
 
     @property
     def _secret_key(self):
-        key = current_app.config['JWT_SECRET_KEY']
+        key = current_app.config["JWT_SECRET_KEY"]
         if not key:
-            key = current_app.config.get('SECRET_KEY', None)
+            key = current_app.config.get("SECRET_KEY", None)
             if not key:
-                raise RuntimeError('JWT_SECRET_KEY or flask SECRET_KEY '
-                                   'must be set when using symmetric '
-                                   'algorithm "{}"'.format(self.algorithm))
+                raise RuntimeError(
+                    "JWT_SECRET_KEY or flask SECRET_KEY "
+                    "must be set when using symmetric "
+                    'algorithm "{}"'.format(self.algorithm)
+                )
         return key
 
     @property
     def _public_key(self):
-        key = current_app.config['JWT_PUBLIC_KEY']
+        key = current_app.config["JWT_PUBLIC_KEY"]
         if not key:
-            raise RuntimeError('JWT_PUBLIC_KEY must be set to use '
-                               'asymmetric cryptography algorithm '
-                               '"{}"'.format(self.algorithm))
+            raise RuntimeError(
+                "JWT_PUBLIC_KEY must be set to use "
+                "asymmetric cryptography algorithm "
+                '"{}"'.format(self.algorithm)
+            )
         return key
 
     @property
     def _private_key(self):
-        key = current_app.config['JWT_PRIVATE_KEY']
+        key = current_app.config["JWT_PRIVATE_KEY"]
         if not key:
-            raise RuntimeError('JWT_PRIVATE_KEY must be set to use '
-                               'asymmetric cryptography algorithm '
-                               '"{}"'.format(self.algorithm))
+            raise RuntimeError(
+                "JWT_PRIVATE_KEY must be set to use "
+                "asymmetric cryptography algorithm "
+                '"{}"'.format(self.algorithm)
+            )
         return key
 
     @property
@@ -281,15 +301,15 @@ class _Config(object):
 
     @property
     def identity_claim_key(self):
-        return current_app.config['JWT_IDENTITY_CLAIM']
+        return current_app.config["JWT_IDENTITY_CLAIM"]
 
     @property
     def user_claims_key(self):
-        return current_app.config['JWT_USER_CLAIMS']
+        return current_app.config["JWT_USER_CLAIMS"]
 
     @property
     def user_claims_in_refresh_token(self):
-        return current_app.config['JWT_CLAIMS_IN_REFRESH_TOKEN']
+        return current_app.config["JWT_CLAIMS_IN_REFRESH_TOKEN"]
 
     @property
     def exempt_methods(self):
@@ -297,7 +317,7 @@ class _Config(object):
 
     @property
     def error_msg_key(self):
-        return current_app.config['JWT_ERROR_MESSAGE_KEY']
+        return current_app.config["JWT_ERROR_MESSAGE_KEY"]
 
     @property
     def json_encoder(self):
@@ -305,15 +325,15 @@ class _Config(object):
 
     @property
     def audience(self):
-        return current_app.config['JWT_DECODE_AUDIENCE']
+        return current_app.config["JWT_DECODE_AUDIENCE"]
 
     @property
     def issuer(self):
-        return current_app.config['JWT_DECODE_ISSUER']
+        return current_app.config["JWT_DECODE_ISSUER"]
 
     @property
     def leeway(self):
-        return current_app.config['JWT_DECODE_LEEWAY']
+        return current_app.config["JWT_DECODE_LEEWAY"]
 
 
 config = _Config()

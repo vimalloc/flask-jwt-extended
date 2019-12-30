@@ -50,7 +50,7 @@ def default_expired_token_callback(expired_token):
     By default, if an expired token attempts to access a protected endpoint,
     we return a generic error message with a 401 status
     """
-    return jsonify({config.error_msg_key: 'Token has expired'}), 401
+    return jsonify({config.error_msg_key: "Token has expired"}), 401
 
 
 def default_invalid_token_callback(error_string):
@@ -78,7 +78,7 @@ def default_needs_fresh_token_callback():
     By default, if a non-fresh jwt is used to access a ```fresh_jwt_required```
     endpoint, we return a general error message with a 401 status code
     """
-    return jsonify({config.error_msg_key: 'Fresh token required'}), 401
+    return jsonify({config.error_msg_key: "Fresh token required"}), 401
 
 
 def default_revoked_token_callback():
@@ -86,7 +86,7 @@ def default_revoked_token_callback():
     By default, if a revoked token is used to access a protected endpoint, we
     return a general error message with a 401 status code
     """
-    return jsonify({config.error_msg_key: 'Token has been revoked'}), 401
+    return jsonify({config.error_msg_key: "Token has been revoked"}), 401
 
 
 def default_user_loader_error_callback(identity):
@@ -111,7 +111,7 @@ def default_verify_claims_failed_callback():
     By default, if the user claims verification failed, we return a generic
     error message with a 400 status code
     """
-    return jsonify({config.error_msg_key: 'User claims verification failed'}), 400
+    return jsonify({config.error_msg_key: "User claims verification failed"}), 400
 
 
 def default_decode_key_callback(claims, headers):

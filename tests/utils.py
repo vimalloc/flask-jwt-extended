@@ -10,14 +10,14 @@ def encode_token(app, token_data, headers=None):
             config.decode_key,
             algorithm=config.algorithm,
             json_encoder=config.json_encoder,
-            headers=headers
+            headers=headers,
         )
-        return token.decode('utf-8')
+        return token.decode("utf-8")
 
 
 def get_jwt_manager(app):
-    return app.extensions['flask-jwt-extended']
+    return app.extensions["flask-jwt-extended"]
 
 
 def make_headers(jwt):
-    return {'Authorization': 'Bearer {}'.format(jwt)}
+    return {"Authorization": "Bearer {}".format(jwt)}

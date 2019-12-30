@@ -12,28 +12,45 @@ def _create_csrf_token():
     return str(uuid.uuid4())
 
 
-def _encode_jwt(additional_token_data, expires_delta, secret, algorithm,
-                json_encoder=None, headers=None):
+def _encode_jwt(
+    additional_token_data,
+    expires_delta,
+    secret,
+    algorithm,
+    json_encoder=None,
+    headers=None,
+):
     uid = _create_csrf_token()
     now = datetime.datetime.utcnow()
     token_data = {
-        'iat': now,
-        'nbf': now,
-        'jti': uid,
+        "iat": now,
+        "nbf": now,
+        "jti": uid,
     }
     # If expires_delta is False, the JWT should never expire
     # and the 'exp' claim is not set.
     if expires_delta:
-        token_data['exp'] = now + expires_delta
+        token_data["exp"] = now + expires_delta
     token_data.update(additional_token_data)
-    encoded_token = jwt.encode(token_data, secret, algorithm,
-                               json_encoder=json_encoder, headers=headers).decode('utf-8')
+    encoded_token = jwt.encode(
+        token_data, secret, algorithm, json_encoder=json_encoder, headers=headers
+    ).decode("utf-8")
     return encoded_token
 
 
-def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
-                        user_claims, csrf, identity_claim_key, user_claims_key,
-                        json_encoder=None, headers=None):
+def encode_access_token(
+    identity,
+    secret,
+    algorithm,
+    expires_delta,
+    fresh,
+    user_claims,
+    csrf,
+    identity_claim_key,
+    user_claims_key,
+    json_encoder=None,
+    headers=None,
+):
     """
     Creates a new encoded (utf-8) access token.
 
@@ -63,8 +80,8 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
 
     token_data = {
         identity_claim_key: identity,
-        'fresh': fresh,
-        'type': 'access',
+        "fresh": fresh,
+        "type": "access",
     }
 
     # Don't add extra data to the token if user_claims is empty.
@@ -72,14 +89,29 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
         token_data[user_claims_key] = user_claims
 
     if csrf:
-        token_data['csrf'] = _create_csrf_token()
-    return _encode_jwt(token_data, expires_delta, secret, algorithm,
-                       json_encoder=json_encoder, headers=headers)
+        token_data["csrf"] = _create_csrf_token()
+    return _encode_jwt(
+        token_data,
+        expires_delta,
+        secret,
+        algorithm,
+        json_encoder=json_encoder,
+        headers=headers,
+    )
 
 
-def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims,
-                         csrf, identity_claim_key, user_claims_key,
-                         json_encoder=None, headers=None):
+def encode_refresh_token(
+    identity,
+    secret,
+    algorithm,
+    expires_delta,
+    user_claims,
+    csrf,
+    identity_claim_key,
+    user_claims_key,
+    json_encoder=None,
+    headers=None,
+):
     """
     Creates a new encoded (utf-8) refresh token.
 
@@ -100,7 +132,7 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
     """
     token_data = {
         identity_claim_key: identity,
-        'type': 'refresh',
+        "type": "refresh",
     }
 
     # Don't add extra data to the token if user_claims is empty.
@@ -108,14 +140,29 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
         token_data[user_claims_key] = user_claims
 
     if csrf:
-        token_data['csrf'] = _create_csrf_token()
-    return _encode_jwt(token_data, expires_delta, secret, algorithm,
-                       json_encoder=json_encoder, headers=headers)
+        token_data["csrf"] = _create_csrf_token()
+    return _encode_jwt(
+        token_data,
+        expires_delta,
+        secret,
+        algorithm,
+        json_encoder=json_encoder,
+        headers=headers,
+    )
 
 
-def decode_jwt(encoded_token, secret, algorithms, identity_claim_key,
-               user_claims_key, csrf_value=None, audience=None,
-               leeway=0, allow_expired=False, issuer=None):
+def decode_jwt(
+    encoded_token,
+    secret,
+    algorithms,
+    identity_claim_key,
+    user_claims_key,
+    csrf_value=None,
+    audience=None,
+    leeway=0,
+    allow_expired=False,
+    issuer=None,
+):
     """
     Decodes an encoded JWT
 
@@ -133,29 +180,36 @@ def decode_jwt(encoded_token, secret, algorithms, identity_claim_key,
     """
     options = {}
     if allow_expired:
-        options['verify_exp'] = False
+        options["verify_exp"] = False
 
     # This call verifies the ext, iat, nbf, and aud claims
-    data = jwt.decode(encoded_token, secret, algorithms=algorithms, audience=audience,
-                      leeway=leeway, options=options, issuer=issuer)
+    data = jwt.decode(
+        encoded_token,
+        secret,
+        algorithms=algorithms,
+        audience=audience,
+        leeway=leeway,
+        options=options,
+        issuer=issuer,
+    )
 
     # Make sure that any custom claims we expect in the token are present
-    if 'jti' not in data:
-        data['jti'] = None
+    if "jti" not in data:
+        data["jti"] = None
     if identity_claim_key not in data:
         raise JWTDecodeError("Missing claim: {}".format(identity_claim_key))
-    if 'type' not in data:
-        data['type'] = 'access'
-    if data['type'] not in ('refresh', 'access'):
+    if "type" not in data:
+        data["type"] = "access"
+    if data["type"] not in ("refresh", "access"):
         raise JWTDecodeError("Missing or invalid claim: type")
-    if data['type'] == 'access':
-        if 'fresh' not in data:
-            data['fresh'] = False
+    if data["type"] == "access":
+        if "fresh" not in data:
+            data["fresh"] = False
     if user_claims_key not in data:
         data[user_claims_key] = {}
     if csrf_value:
-        if 'csrf' not in data:
+        if "csrf" not in data:
             raise JWTDecodeError("Missing claim: csrf")
-        if not safe_str_cmp(data['csrf'], csrf_value):
+        if not safe_str_cmp(data["csrf"], csrf_value):
             raise CSRFError("CSRF double submit tokens do not match")
     return data

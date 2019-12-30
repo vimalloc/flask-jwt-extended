@@ -27,17 +27,23 @@ This project follows [semantic versioning](https://semver.org/).
 ### Chatting
 Come chat with the community or ask questions at https://discord.gg/EJBsbFd
 
-### Local Development
+### Contributing
 We require 100% code coverage in our unit tests. You can run the tests locally
-with `tox` which will print out a code coverage report. Creating a pull request
-will run the tests against python 3.5, 3.6, 3.7, and 3.8.
+with `tox` which will print out a code coverage report and verify the code
+format looks good.
 ```
 $ tox
 ```
 
-We also require features to be well documented. After installing the requirements,
-you can generate a local copy of documentation by going to the `docs` directory
-and running:
+We use [black](https://github.com/psf/black) to format all our code. Any code
+not formatted will be treated as an error on on a `tox` run. To automatically
+format code, run:
+```
+$ black --target-version py35 setup.py flask_jwt_extended/ tests/
+```
+
+We also require features to be well documented.  You can generate a local copy
+of the documentation by going to the `docs` directory and running:
 ```
 $ make clean && make html
 ```

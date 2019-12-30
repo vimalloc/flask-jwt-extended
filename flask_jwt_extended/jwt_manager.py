@@ -1,8 +1,11 @@
 import datetime
 
 from jwt import (
-    ExpiredSignatureError, InvalidTokenError, InvalidAudienceError,
-    InvalidIssuerError, DecodeError
+    ExpiredSignatureError,
+    InvalidTokenError,
+    InvalidAudienceError,
+    InvalidIssuerError,
+    DecodeError,
 )
 
 try:
@@ -12,21 +15,32 @@ except ImportError:  # pragma: no cover
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import (
-    JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
-    RevokedTokenError, FreshTokenRequired, CSRFError, UserLoadError,
-    UserClaimsVerificationError
+    JWTDecodeError,
+    NoAuthorizationError,
+    InvalidHeaderError,
+    WrongTokenError,
+    RevokedTokenError,
+    FreshTokenRequired,
+    CSRFError,
+    UserLoadError,
+    UserClaimsVerificationError,
 )
 from flask_jwt_extended.default_callbacks import (
-    default_expired_token_callback, default_user_claims_callback,
-    default_user_identity_callback, default_invalid_token_callback,
-    default_unauthorized_callback, default_needs_fresh_token_callback,
-    default_revoked_token_callback, default_user_loader_error_callback,
-    default_claims_verification_callback, default_verify_claims_failed_callback,
-    default_decode_key_callback, default_encode_key_callback,
-    default_jwt_headers_callback)
-from flask_jwt_extended.tokens import (
-    encode_refresh_token, encode_access_token
+    default_expired_token_callback,
+    default_user_claims_callback,
+    default_user_identity_callback,
+    default_invalid_token_callback,
+    default_unauthorized_callback,
+    default_needs_fresh_token_callback,
+    default_revoked_token_callback,
+    default_user_loader_error_callback,
+    default_claims_verification_callback,
+    default_verify_claims_failed_callback,
+    default_decode_key_callback,
+    default_encode_key_callback,
+    default_jwt_headers_callback,
 )
+from flask_jwt_extended.tokens import encode_refresh_token, encode_access_token
 from flask_jwt_extended.utils import get_jwt_identity
 
 
@@ -77,9 +91,9 @@ class JWTManager(object):
         :param app: A flask application
         """
         # Save this so we can use it later in the extension
-        if not hasattr(app, 'extensions'):   # pragma: no cover
+        if not hasattr(app, "extensions"):  # pragma: no cover
             app.extensions = {}
-        app.extensions['flask-jwt-extended'] = self
+        app.extensions["flask-jwt-extended"] = self
 
         # Set all the default configurations for this extension
         self._set_default_configuration_options(app)
@@ -89,6 +103,7 @@ class JWTManager(object):
         """
         Sets the error handler callbacks used by this extension
         """
+
         @app.errorhandler(NoAuthorizationError)
         def handle_auth_error(e):
             return self._unauthorized_callback(str(e))
@@ -156,77 +171,79 @@ class JWTManager(object):
         Sets the default configuration options used by this extension
         """
         # Where to look for the JWT. Available options are cookies or headers
-        app.config.setdefault('JWT_TOKEN_LOCATION', ('headers',))
+        app.config.setdefault("JWT_TOKEN_LOCATION", ("headers",))
 
         # Options for JWTs when the TOKEN_LOCATION is headers
-        app.config.setdefault('JWT_HEADER_NAME', 'Authorization')
-        app.config.setdefault('JWT_HEADER_TYPE', 'Bearer')
+        app.config.setdefault("JWT_HEADER_NAME", "Authorization")
+        app.config.setdefault("JWT_HEADER_TYPE", "Bearer")
 
         # Options for JWTs then the TOKEN_LOCATION is query_string
-        app.config.setdefault('JWT_QUERY_STRING_NAME', 'jwt')
+        app.config.setdefault("JWT_QUERY_STRING_NAME", "jwt")
 
         # Option for JWTs when the TOKEN_LOCATION is cookies
-        app.config.setdefault('JWT_ACCESS_COOKIE_NAME', 'access_token_cookie')
-        app.config.setdefault('JWT_REFRESH_COOKIE_NAME', 'refresh_token_cookie')
-        app.config.setdefault('JWT_ACCESS_COOKIE_PATH', '/')
-        app.config.setdefault('JWT_REFRESH_COOKIE_PATH', '/')
-        app.config.setdefault('JWT_COOKIE_SECURE', False)
-        app.config.setdefault('JWT_COOKIE_DOMAIN', None)
-        app.config.setdefault('JWT_SESSION_COOKIE', True)
-        app.config.setdefault('JWT_COOKIE_SAMESITE', None)
+        app.config.setdefault("JWT_ACCESS_COOKIE_NAME", "access_token_cookie")
+        app.config.setdefault("JWT_REFRESH_COOKIE_NAME", "refresh_token_cookie")
+        app.config.setdefault("JWT_ACCESS_COOKIE_PATH", "/")
+        app.config.setdefault("JWT_REFRESH_COOKIE_PATH", "/")
+        app.config.setdefault("JWT_COOKIE_SECURE", False)
+        app.config.setdefault("JWT_COOKIE_DOMAIN", None)
+        app.config.setdefault("JWT_SESSION_COOKIE", True)
+        app.config.setdefault("JWT_COOKIE_SAMESITE", None)
 
         # Option for JWTs when the TOKEN_LOCATION is json
-        app.config.setdefault('JWT_JSON_KEY', 'access_token')
-        app.config.setdefault('JWT_REFRESH_JSON_KEY', 'refresh_token')
+        app.config.setdefault("JWT_JSON_KEY", "access_token")
+        app.config.setdefault("JWT_REFRESH_JSON_KEY", "refresh_token")
 
         # Options for using double submit csrf protection
-        app.config.setdefault('JWT_COOKIE_CSRF_PROTECT', True)
-        app.config.setdefault('JWT_CSRF_METHODS', ['POST', 'PUT', 'PATCH', 'DELETE'])
-        app.config.setdefault('JWT_ACCESS_CSRF_HEADER_NAME', 'X-CSRF-TOKEN')
-        app.config.setdefault('JWT_REFRESH_CSRF_HEADER_NAME', 'X-CSRF-TOKEN')
-        app.config.setdefault('JWT_CSRF_IN_COOKIES', True)
-        app.config.setdefault('JWT_ACCESS_CSRF_COOKIE_NAME', 'csrf_access_token')
-        app.config.setdefault('JWT_REFRESH_CSRF_COOKIE_NAME', 'csrf_refresh_token')
-        app.config.setdefault('JWT_ACCESS_CSRF_COOKIE_PATH', '/')
-        app.config.setdefault('JWT_REFRESH_CSRF_COOKIE_PATH', '/')
-        app.config.setdefault('JWT_CSRF_CHECK_FORM', False)
-        app.config.setdefault('JWT_ACCESS_CSRF_FIELD_NAME', 'csrf_token')
-        app.config.setdefault('JWT_REFRESH_CSRF_FIELD_NAME', 'csrf_token')
+        app.config.setdefault("JWT_COOKIE_CSRF_PROTECT", True)
+        app.config.setdefault("JWT_CSRF_METHODS", ["POST", "PUT", "PATCH", "DELETE"])
+        app.config.setdefault("JWT_ACCESS_CSRF_HEADER_NAME", "X-CSRF-TOKEN")
+        app.config.setdefault("JWT_REFRESH_CSRF_HEADER_NAME", "X-CSRF-TOKEN")
+        app.config.setdefault("JWT_CSRF_IN_COOKIES", True)
+        app.config.setdefault("JWT_ACCESS_CSRF_COOKIE_NAME", "csrf_access_token")
+        app.config.setdefault("JWT_REFRESH_CSRF_COOKIE_NAME", "csrf_refresh_token")
+        app.config.setdefault("JWT_ACCESS_CSRF_COOKIE_PATH", "/")
+        app.config.setdefault("JWT_REFRESH_CSRF_COOKIE_PATH", "/")
+        app.config.setdefault("JWT_CSRF_CHECK_FORM", False)
+        app.config.setdefault("JWT_ACCESS_CSRF_FIELD_NAME", "csrf_token")
+        app.config.setdefault("JWT_REFRESH_CSRF_FIELD_NAME", "csrf_token")
 
         # How long an a token will live before they expire.
-        app.config.setdefault('JWT_ACCESS_TOKEN_EXPIRES', datetime.timedelta(minutes=15))
-        app.config.setdefault('JWT_REFRESH_TOKEN_EXPIRES', datetime.timedelta(days=30))
+        app.config.setdefault(
+            "JWT_ACCESS_TOKEN_EXPIRES", datetime.timedelta(minutes=15)
+        )
+        app.config.setdefault("JWT_REFRESH_TOKEN_EXPIRES", datetime.timedelta(days=30))
 
         # What algorithm to use to sign the token. See here for a list of options:
         # https://github.com/jpadilla/pyjwt/blob/master/jwt/api_jwt.py
-        app.config.setdefault('JWT_ALGORITHM', 'HS256')
+        app.config.setdefault("JWT_ALGORITHM", "HS256")
 
         # What algorithms are allowed to decode a token
-        app.config.setdefault('JWT_DECODE_ALGORITHMS', None)
+        app.config.setdefault("JWT_DECODE_ALGORITHMS", None)
 
         # Secret key to sign JWTs with. Only used if a symmetric algorithm is
         # used (such as the HS* algorithms). We will use the app secret key
         # if this is not set.
-        app.config.setdefault('JWT_SECRET_KEY', None)
+        app.config.setdefault("JWT_SECRET_KEY", None)
 
         # Keys to sign JWTs with when use when using an asymmetric
         # (public/private key) algorithm, such as RS* or EC*
-        app.config.setdefault('JWT_PRIVATE_KEY', None)
-        app.config.setdefault('JWT_PUBLIC_KEY', None)
+        app.config.setdefault("JWT_PRIVATE_KEY", None)
+        app.config.setdefault("JWT_PUBLIC_KEY", None)
 
         # Options for blacklisting/revoking tokens
-        app.config.setdefault('JWT_BLACKLIST_ENABLED', False)
-        app.config.setdefault('JWT_BLACKLIST_TOKEN_CHECKS', ('access', 'refresh'))
+        app.config.setdefault("JWT_BLACKLIST_ENABLED", False)
+        app.config.setdefault("JWT_BLACKLIST_TOKEN_CHECKS", ("access", "refresh"))
 
-        app.config.setdefault('JWT_IDENTITY_CLAIM', 'sub')
-        app.config.setdefault('JWT_USER_CLAIMS', 'user_claims')
-        app.config.setdefault('JWT_DECODE_AUDIENCE', None)
-        app.config.setdefault('JWT_DECODE_ISSUER', None)
-        app.config.setdefault('JWT_DECODE_LEEWAY', 0)
+        app.config.setdefault("JWT_IDENTITY_CLAIM", "sub")
+        app.config.setdefault("JWT_USER_CLAIMS", "user_claims")
+        app.config.setdefault("JWT_DECODE_AUDIENCE", None)
+        app.config.setdefault("JWT_DECODE_ISSUER", None)
+        app.config.setdefault("JWT_DECODE_LEEWAY", 0)
 
-        app.config.setdefault('JWT_CLAIMS_IN_REFRESH_TOKEN', False)
+        app.config.setdefault("JWT_CLAIMS_IN_REFRESH_TOKEN", False)
 
-        app.config.setdefault('JWT_ERROR_MESSAGE_KEY', 'msg')
+        app.config.setdefault("JWT_ERROR_MESSAGE_KEY", "msg")
 
     def user_claims_loader(self, callback):
         """
@@ -463,8 +480,9 @@ class JWTManager(object):
         self._jwt_additional_header_callback = callback
         return callback
 
-    def _create_refresh_token(self, identity, expires_delta=None, user_claims=None,
-                              headers=None):
+    def _create_refresh_token(
+        self, identity, expires_delta=None, user_claims=None, headers=None
+    ):
         if expires_delta is None:
             expires_delta = config.refresh_expires
 
@@ -484,12 +502,13 @@ class JWTManager(object):
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
             json_encoder=config.json_encoder,
-            headers=headers
+            headers=headers,
         )
         return refresh_token
 
-    def _create_access_token(self, identity, fresh=False, expires_delta=None,
-                             user_claims=None, headers=None):
+    def _create_access_token(
+        self, identity, fresh=False, expires_delta=None, user_claims=None, headers=None
+    ):
         if expires_delta is None:
             expires_delta = config.access_expires
 
@@ -510,6 +529,6 @@ class JWTManager(object):
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
             json_encoder=config.json_encoder,
-            headers=headers
+            headers=headers,
         )
         return access_token

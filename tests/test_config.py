@@ -64,7 +64,7 @@ def test_default_configs(app):
 
         assert config.cookie_max_age is None
 
-        assert config.identity_claim_key == 'identity'
+        assert config.identity_claim_key == 'sub'
         assert config.user_claims_key == 'user_claims'
 
         assert config.user_claims_in_refresh_token is False

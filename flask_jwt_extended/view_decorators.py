@@ -23,13 +23,10 @@ from flask_jwt_extended.utils import (
 
 
 # TODO:
-#   - Fix up current unit tests to work with the new decorator w/ args
-#   - Ability to make fresh or non-fresh refresh tokens (just cause)
-
-# TODO:
 #   - Make custom claims part of the top level for the JWT
 #   - Get rid of fresh tokens entirely. Make that a thing handled with
-#     custom decorators
+#     custom decorators (and a `patterns` section of the documentation
+#     on how to handle that).
 #   - Identity -> sub by default
 
 

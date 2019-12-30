@@ -75,7 +75,7 @@ def test_token_from_complex_object(app):
 
         # Make sure the changes appear in the token
         decoded_token = decode_token(access_token)
-        assert decoded_token['identity'] == 'username'
+        assert decoded_token['sub'] == 'username'
         assert decoded_token['user_claims'] == {'username': 'username'}
 
     test_client = app.test_client()

@@ -72,7 +72,7 @@ def test_no_user_claims(app, user_loader_return):
         assert config.user_claims_key in extension_decoded
 
 
-@pytest.mark.parametrize("missing_claims", ['identity', 'csrf'])
+@pytest.mark.parametrize("missing_claims", ['sub', 'csrf'])
 def test_missing_claims(app, default_access_token, missing_claims):
     del default_access_token[missing_claims]
     missing_jwt_token = encode_token(app, default_access_token)
@@ -124,7 +124,7 @@ def test_allow_expired_token(app, delta_func):
         refresh_token = create_refresh_token('username', expires_delta=delta)
         for token in (access_token, refresh_token):
             decoded = decode_token(token, allow_expired=True)
-            assert decoded['identity'] == 'username'
+            assert decoded['sub'] == 'username'
             assert 'exp' in decoded
 
 
@@ -150,7 +150,7 @@ def test_nbf_token_in_future(app, patch_datetime_now):
 
 
 def test_alternate_identity_claim(app, default_access_token):
-    app.config['JWT_IDENTITY_CLAIM'] = 'sub'
+    app.config['JWT_IDENTITY_CLAIM'] = 'banana'
 
     # Insure decoding fails if the claim isn't there
     token = encode_token(app, default_access_token)
@@ -159,13 +159,13 @@ def test_alternate_identity_claim(app, default_access_token):
             decode_token(token)
 
     # Insure the claim exists in the decoded jwt
-    del default_access_token['identity']
-    default_access_token['sub'] = 'username'
+    del default_access_token['sub']
+    default_access_token['banana'] = 'username'
     token = encode_token(app, default_access_token)
     with app.test_request_context():
         decoded = decode_token(token)
-        assert 'sub' in decoded
-        assert 'identity' not in decoded
+        assert 'banana' in decoded
+        assert 'sub' not in decoded
 
 
 def test_get_jti(app, default_access_token):
@@ -213,7 +213,7 @@ def test_custom_encode_decode_key_callbacks(app, default_access_token):
 
     @jwtM.decode_key_loader
     def get_decode_key_1(claims, headers):
-        assert claims['identity'] == 'username'
+        assert claims['sub'] == 'username'
         return 'different secret'
 
     with app.test_request_context():

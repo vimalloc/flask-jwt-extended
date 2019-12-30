@@ -210,7 +210,7 @@ def test_jwt_missing_claims(app):
 
     response = test_client.get(url, headers=make_headers(token))
     assert response.status_code == 422
-    assert response.get_json() == {'msg': 'Missing claim: identity'}
+    assert response.get_json() == {'msg': 'Missing claim: sub'}
 
 
 def test_jwt_invalid_audience(app):
@@ -218,19 +218,19 @@ def test_jwt_invalid_audience(app):
     test_client = app.test_client()
 
     # No audience claim expected or provided - OK
-    access_token = encode_token(app, {'identity': 'me'})
+    access_token = encode_token(app, {'sub': 'me'})
     response = test_client.get(url, headers=make_headers(access_token))
     assert response.status_code == 200
 
     # Audience claim expected and not provided - not OK
     app.config['JWT_DECODE_AUDIENCE'] = 'my_audience'
-    access_token = encode_token(app, {'identity': 'me'})
+    access_token = encode_token(app, {'sub': 'me'})
     response = test_client.get(url, headers=make_headers(access_token))
     assert response.status_code == 422
     assert response.get_json() == {'msg': 'Token is missing the "aud" claim'}
 
     # Audience claim still expected and wrong one provided - not OK
-    access_token = encode_token(app, {'aud': 'different_audience', 'identity': 'me'})
+    access_token = encode_token(app, {'aud': 'different_audience', 'sub': 'me'})
     response = test_client.get(url, headers=make_headers(access_token))
     assert response.status_code == 422
     assert response.get_json() == {'msg': 'Invalid audience'}
@@ -241,19 +241,19 @@ def test_jwt_invalid_issuer(app):
     test_client = app.test_client()
 
     # No issuer claim expected or provided - OK
-    access_token = encode_token(app, {'identity': 'me'})
+    access_token = encode_token(app, {'sub': 'me'})
     response = test_client.get(url, headers=make_headers(access_token))
     assert response.status_code == 200
 
     # Issuer claim expected and not provided - not OK
     app.config['JWT_DECODE_ISSUER'] = 'my_issuer'
-    access_token = encode_token(app, {'identity': 'me'})
+    access_token = encode_token(app, {'sub': 'me'})
     response = test_client.get(url, headers=make_headers(access_token))
     assert response.status_code == 422
     assert response.get_json() == {'msg': 'Token is missing the "iss" claim'}
 
     # Issuer claim still expected and wrong one provided - not OK
-    access_token = encode_token(app, {'iss': 'different_issuer', 'identity': 'me'})
+    access_token = encode_token(app, {'iss': 'different_issuer', 'sub': 'me'})
     response = test_client.get(url, headers=make_headers(access_token))
     assert response.status_code == 422
     assert response.get_json() == {'msg': 'Invalid issuer'}
@@ -285,7 +285,7 @@ def test_expired_token(app, delta_func):
     # Test new custom response
     @jwtM.expired_token_loader
     def custom_response(token):
-        assert token['identity'] == 'username'
+        assert token['sub'] == 'username'
         assert token['type'] == 'access'
         return jsonify(msg='foobar'), 201
 
@@ -299,7 +299,7 @@ def test_expired_token_via_decode_token(app):
 
     @jwtM.expired_token_loader
     def depreciated_custom_response(expired_token):
-        assert expired_token['identity'] == 'username'
+        assert expired_token['sub'] == 'username'
         return jsonify(msg='foobar'), 401
 
     @app.route('/test')

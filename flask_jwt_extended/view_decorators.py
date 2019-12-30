@@ -22,14 +22,6 @@ from flask_jwt_extended.utils import (
 )
 
 
-# TODO:
-#   - Make custom claims part of the top level for the JWT
-#   - Get rid of fresh tokens entirely. Make that a thing handled with
-#     custom decorators (and a `patterns` section of the documentation
-#     on how to handle that).
-#   - Identity -> sub by default
-
-
 def _verify_token_is_fresh(jwt_data):
     fresh = jwt_data['fresh']
     if isinstance(fresh, bool):

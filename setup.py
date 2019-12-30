@@ -11,9 +11,6 @@ with io.open("flask_jwt_extended/__init__.py", encoding="utf-8") as f:
     version = re.search(r"__version__ = \"(.+)\"", f.read()).group(1)
 
 
-
-
-
 with open("README.md", "r") as f:
     long_description = f.read()
 

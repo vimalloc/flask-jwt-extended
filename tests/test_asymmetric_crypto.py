@@ -39,7 +39,7 @@ def app():
     JWTManager(app)
 
     @app.route('/protected', methods=['GET'])
-    @jwt_required
+    @jwt_required()
     def protected():
         return jsonify(foo='bar')
 

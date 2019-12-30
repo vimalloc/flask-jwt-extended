@@ -15,12 +15,12 @@ def app():
     JWTManager(app)
 
     @app.route('/get_user1', methods=['GET'])
-    @jwt_required
+    @jwt_required()
     def get_user1():
         return jsonify(foo=get_current_user()['username'])
 
     @app.route('/get_user2', methods=['GET'])
-    @jwt_required
+    @jwt_required()
     def get_user2():
         return jsonify(foo=current_user['username'])
 

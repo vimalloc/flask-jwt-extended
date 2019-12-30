@@ -2,9 +2,9 @@ import pytest
 from flask import Flask, jsonify
 
 from flask_jwt_extended import (
-    jwt_required, JWTManager, jwt_refresh_token_required, create_access_token,
-    create_refresh_token, set_access_cookies, set_refresh_cookies,
-    unset_jwt_cookies, unset_access_cookies, unset_refresh_cookies, jwt_optional
+    jwt_required, JWTManager, create_access_token, create_refresh_token,
+    set_access_cookies, set_refresh_cookies, unset_jwt_cookies,
+    unset_access_cookies, unset_refresh_cookies
 )
 
 
@@ -61,27 +61,27 @@ def app():
         return resp
 
     @app.route('/protected', methods=['GET'])
-    @jwt_required
+    @jwt_required()
     def protected():
         return jsonify(foo='bar')
 
     @app.route('/post_protected', methods=['POST'])
-    @jwt_required
+    @jwt_required()
     def post_protected():
         return jsonify(foo='bar')
 
     @app.route('/refresh_protected', methods=['GET'])
-    @jwt_refresh_token_required
+    @jwt_required(refresh=True)
     def refresh_protected():
         return jsonify(foo='bar')
 
     @app.route('/post_refresh_protected', methods=['POST'])
-    @jwt_refresh_token_required
+    @jwt_required(refresh=True)
     def post_refresh_protected():
         return jsonify(foo='bar')
 
     @app.route('/optional_post_protected', methods=['POST'])
-    @jwt_optional
+    @jwt_required(optional=True)
     def optional_post_protected():
         return jsonify(foo='bar')
 

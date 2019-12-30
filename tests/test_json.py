@@ -2,8 +2,7 @@ import pytest
 from flask import Flask, jsonify
 
 from flask_jwt_extended import (
-    JWTManager, jwt_required, jwt_refresh_token_required, create_access_token,
-    create_refresh_token
+    JWTManager, jwt_required, create_access_token, create_refresh_token
 )
 from tests.utils import get_jwt_manager
 
@@ -16,12 +15,12 @@ def app():
     JWTManager(app)
 
     @app.route('/protected', methods=['POST'])
-    @jwt_required
+    @jwt_required()
     def access_protected():
         return jsonify(foo='bar')
 
     @app.route('/refresh', methods=['POST'])
-    @jwt_refresh_token_required
+    @jwt_required(refresh=True)
     def refresh_protected():
         return jsonify(foo='bar')
 

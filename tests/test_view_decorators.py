@@ -5,9 +5,8 @@ from dateutil.relativedelta import relativedelta
 from flask import Flask, jsonify
 
 from flask_jwt_extended import (
-    jwt_required, fresh_jwt_required, JWTManager, jwt_refresh_token_required,
-    jwt_optional, create_access_token, create_refresh_token, get_jwt_identity,
-    decode_token
+    jwt_required, JWTManager, create_access_token, create_refresh_token,
+    get_jwt_identity, decode_token
 )
 from tests.utils import make_headers, encode_token, get_jwt_manager
 
@@ -19,22 +18,22 @@ def app():
     JWTManager(app)
 
     @app.route('/protected', methods=['GET'])
-    @jwt_required
+    @jwt_required()
     def protected():
         return jsonify(foo='bar')
 
     @app.route('/fresh_protected', methods=['GET'])
-    @fresh_jwt_required
+    @jwt_required(fresh=True)
     def fresh_protected():
         return jsonify(foo='bar')
 
     @app.route('/refresh_protected', methods=['GET'])
-    @jwt_refresh_token_required
+    @jwt_required(refresh=True)
     def refresh_protected():
         return jsonify(foo='bar')
 
     @app.route('/optional_protected', methods=['GET'])
-    @jwt_optional
+    @jwt_required(optional=True)
     def optional_protected():
         if get_jwt_identity():
             return jsonify(foo='baz')

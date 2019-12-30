@@ -1,7 +1,5 @@
 from flask import Flask
-from flask_jwt_extended import (
-    JWTManager, jwt_required, fresh_jwt_required, jwt_refresh_token_required
-)
+from flask_jwt_extended import JWTManager, jwt_required
 import pytest
 
 
@@ -12,19 +10,19 @@ def app():
     JWTManager(app)
 
     @app.route('/jwt_required', methods=["GET", "OPTIONS"])
-    @jwt_required
+    @jwt_required()
     def jwt_required_endpoint():
-        return b'ok'
+        return 'ok'
 
     @app.route('/fresh_jwt_required', methods=["GET", "OPTIONS"])
-    @fresh_jwt_required
+    @jwt_required(fresh=True)
     def fresh_jwt_required_endpoint():
-        return b'ok'
+        return 'ok'
 
     @app.route('/jwt_refresh_token_required', methods=["GET", "OPTIONS"])
-    @jwt_refresh_token_required
+    @jwt_required(refresh=True)
     def jwt_refresh_token_required_endpoint():
-        return b'ok'
+        return 'ok'
 
     return app
 

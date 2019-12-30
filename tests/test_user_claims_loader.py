@@ -3,7 +3,7 @@ from flask import Flask, jsonify
 
 from flask_jwt_extended import (
     JWTManager, create_access_token, jwt_required, get_jwt_claims,
-    decode_token, jwt_refresh_token_required, create_refresh_token
+    decode_token, create_refresh_token
 )
 from tests.utils import get_jwt_manager, make_headers
 
@@ -15,12 +15,12 @@ def app():
     JWTManager(app)
 
     @app.route('/protected', methods=['GET'])
-    @jwt_required
+    @jwt_required()
     def get_claims():
         return jsonify(get_jwt_claims())
 
     @app.route('/protected2', methods=['GET'])
-    @jwt_refresh_token_required
+    @jwt_required(refresh=True)
     def get_refresh_claims():
         return jsonify(get_jwt_claims())
 

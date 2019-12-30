@@ -22,77 +22,60 @@ from flask_jwt_extended.utils import (
 )
 
 
-def verify_jwt_in_request():
+# TODO:
+#   - Fix up current unit tests to work with the new decorator w/ args
+#   - Ability to make fresh or non-fresh refresh tokens (just cause)
+
+# TODO:
+#   - Make custom claims part of the top level for the JWT
+#   - Get rid of fresh tokens entirely. Make that a thing handled with
+#     custom decorators
+#   - Identity -> sub by default
+
+
+def _verify_token_is_fresh(jwt_data):
+    fresh = jwt_data['fresh']
+    if isinstance(fresh, bool):
+        if not fresh:
+            raise FreshTokenRequired('Fresh token required')
+    else:
+        now = timegm(datetime.utcnow().utctimetuple())
+        if fresh < now:
+            raise FreshTokenRequired('Fresh token required')
+
+
+def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
     """
     Ensure that the requester has a valid access token. This does not check the
     freshness of the access token. Raises an appropiate exception there is
     no token or if the token is invalid.
     """
-    if request.method not in config.exempt_methods:
-        jwt_data, jwt_header = _decode_jwt_from_request(request_type='access')
-        ctx_stack.top.jwt = jwt_data
-        ctx_stack.top.jwt_header = jwt_header
-        verify_token_claims(jwt_data)
-        _load_user(jwt_data[config.identity_claim_key])
+    if request.method in config.exempt_methods:
+        return
 
-
-def verify_jwt_in_request_optional():
-    """
-    Optionally check if this request has a valid access token.  If an access
-    token in present in the request, :func:`~flask_jwt_extended.get_jwt_identity`
-    will return  the identity of the access token. If no access token is
-    present in the request, this simply returns, and
-    :func:`~flask_jwt_extended.get_jwt_identity` will return `None` instead.
-
-    If there is an invalid access token in the request (expired, tampered with,
-    etc), this will still raise the appropiate exception.
-    """
     try:
-        if request.method not in config.exempt_methods:
-            jwt_data, jwt_header = _decode_jwt_from_request(request_type='access')
-            ctx_stack.top.jwt = jwt_data
-            ctx_stack.top.jwt_header = jwt_header
-            verify_token_claims(jwt_data)
-            _load_user(jwt_data[config.identity_claim_key])
-    except (NoAuthorizationError, InvalidHeaderError):
-        pass
-
-
-def verify_fresh_jwt_in_request():
-    """
-    Ensure that the requester has a valid and fresh access token. Raises an
-    appropiate exception if there is no token, the token is invalid, or the
-    token is not marked as fresh.
-    """
-    if request.method not in config.exempt_methods:
-        jwt_data, jwt_header = _decode_jwt_from_request(request_type='access')
-        ctx_stack.top.jwt = jwt_data
-        ctx_stack.top.jwt_header = jwt_header
-        fresh = jwt_data['fresh']
-        if isinstance(fresh, bool):
-            if not fresh:
-                raise FreshTokenRequired('Fresh token required')
+        if refresh:
+            jwt_data, jwt_header = _decode_jwt_from_request('refresh')
         else:
-            now = timegm(datetime.utcnow().utctimetuple())
-            if fresh < now:
-                raise FreshTokenRequired('Fresh token required')
+            jwt_data, jwt_header = _decode_jwt_from_request('access')
+    except (NoAuthorizationError, InvalidHeaderError):
+        if optional:
+            return
+        else:
+            raise
+
+    # TODO: Move storing data in the ctx at the very end after everything has
+    #       been validated. Pass in invalid tokens directly to exceptions
+    ctx_stack.top.jwt = jwt_data
+    ctx_stack.top.jwt_header = jwt_header
+    if fresh:
+        _verify_token_is_fresh(jwt_data)
+    if not refresh or config.user_claims_in_refresh_token:
         verify_token_claims(jwt_data)
-        _load_user(jwt_data[config.identity_claim_key])
+    _load_user(jwt_data[config.identity_claim_key])
 
 
-def verify_jwt_refresh_token_in_request():
-    """
-    Ensure that the requester has a valid refresh token. Raises an appropiate
-    exception if there is no token or the token is invalid.
-    """
-    if request.method not in config.exempt_methods:
-        jwt_data, jwt_header = _decode_jwt_from_request(request_type='refresh')
-        ctx_stack.top.jwt = jwt_data
-        ctx_stack.top.jwt_header = jwt_header
-        _load_user(jwt_data[config.identity_claim_key])
-
-
-def jwt_required(fn):
+def jwt_required(optional=False, fresh=False, refresh=False):
     """
     A decorator to protect a Flask endpoint.
 
@@ -102,72 +85,24 @@ def jwt_required(fn):
 
     See also: :func:`~flask_jwt_extended.fresh_jwt_required`
     """
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        verify_jwt_in_request()
-        return fn(*args, **kwargs)
-    return wrapper
-
-
-def jwt_optional(fn):
-    """
-    A decorator to optionally protect a Flask endpoint
-
-    If an access token in present in the request, this will call the endpoint
-    with :func:`~flask_jwt_extended.get_jwt_identity` having the identity
-    of the access token. If no access token is present in the request,
-    this endpoint will still be called, but
-    :func:`~flask_jwt_extended.get_jwt_identity` will return `None` instead.
-
-    If there is an invalid access token in the request (expired, tampered with,
-    etc), this will still call the appropriate error handler instead of allowing
-    the endpoint to be called as if there is no access token in the request.
-    """
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        verify_jwt_in_request_optional()
-        return fn(*args, **kwargs)
-    return wrapper
-
-
-def fresh_jwt_required(fn):
-    """
-    A decorator to protect a Flask endpoint.
-
-    If you decorate an endpoint with this, it will ensure that the requester
-    has a valid and fresh access token before allowing the endpoint to be
-    called.
-
-    See also: :func:`~flask_jwt_extended.jwt_required`
-    """
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        verify_fresh_jwt_in_request()
-        return fn(*args, **kwargs)
-    return wrapper
-
-
-def jwt_refresh_token_required(fn):
-    """
-    A decorator to protect a Flask endpoint.
-
-    If you decorate an endpoint with this, it will ensure that the requester
-    has a valid refresh token before allowing the endpoint to be called.
-    """
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        verify_jwt_refresh_token_in_request()
-        return fn(*args, **kwargs)
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            verify_jwt_in_request(optional, fresh, refresh)
+            return fn(*args, **kwargs)
+        return decorator
     return wrapper
 
 
 def _load_user(identity):
-    if has_user_loader():
-        user = user_loader(identity)
-        if user is None:
-            raise UserLoadError("user_loader returned None for {}".format(identity))
-        else:
-            ctx_stack.top.jwt_user = user
+    if not has_user_loader():
+        return
+
+    user = user_loader(identity)
+    if user is None:
+        raise UserLoadError("user_loader returned None for {}".format(identity))
+    else:
+        ctx_stack.top.jwt_user = user
 
 
 def _decode_jwt_from_headers():
@@ -210,8 +145,8 @@ def _decode_jwt_from_headers():
     return encoded_token, None
 
 
-def _decode_jwt_from_cookies(request_type):
-    if request_type == 'access':
+def _decode_jwt_from_cookies(token_type):
+    if token_type == 'access':
         cookie_key = config.access_cookie_name
         csrf_header_key = config.access_csrf_header_name
         csrf_field_key = config.access_csrf_field_name
@@ -245,11 +180,11 @@ def _decode_jwt_from_query_string():
     return encoded_token, None
 
 
-def _decode_jwt_from_json(request_type):
+def _decode_jwt_from_json(token_type):
     if request.content_type != 'application/json':
         raise NoAuthorizationError('Invalid content-type. Must be application/json.')
 
-    if request_type == 'access':
+    if token_type == 'access':
         token_key = config.json_key
     else:
         token_key = config.refresh_json_key
@@ -264,7 +199,7 @@ def _decode_jwt_from_json(request_type):
     return encoded_token, None
 
 
-def _decode_jwt_from_request(request_type):
+def _decode_jwt_from_request(token_type):
     # All the places we can get a JWT from in this request
     get_encoded_token_functions = []
 
@@ -274,14 +209,14 @@ def _decode_jwt_from_request(request_type):
     for location in locations:
         if location == 'cookies':
             get_encoded_token_functions.append(
-                lambda: _decode_jwt_from_cookies(request_type))
+                lambda: _decode_jwt_from_cookies(token_type))
         if location == 'query_string':
             get_encoded_token_functions.append(_decode_jwt_from_query_string)
         if location == 'headers':
             get_encoded_token_functions.append(_decode_jwt_from_headers)
         if location == 'json':
             get_encoded_token_functions.append(
-                lambda: _decode_jwt_from_json(request_type))
+                lambda: _decode_jwt_from_json(token_type))
 
     # Try to find the token from one of these locations. It only needs to exist
     # in one place to be valid (not every location).
@@ -313,6 +248,6 @@ def _decode_jwt_from_request(request_type):
         else:
             raise NoAuthorizationError(errors[0])
 
-    verify_token_type(decoded_token, expected_type=request_type)
-    verify_token_not_blacklisted(decoded_token, request_type)
+    verify_token_type(decoded_token, expected_type=token_type)
+    verify_token_not_blacklisted(decoded_token, token_type)
     return decoded_token, jwt_header

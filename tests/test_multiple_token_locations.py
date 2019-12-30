@@ -21,7 +21,7 @@ def app():
         return resp
 
     @app.route('/protected', methods=['GET', 'POST'])
-    @jwt_required
+    @jwt_required()
     def access_protected():
         return jsonify(foo='bar')
 

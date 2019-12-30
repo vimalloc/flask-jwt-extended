@@ -2,8 +2,7 @@ import pytest
 from flask import Flask, jsonify
 
 from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token, get_jwt_identity,
-    fresh_jwt_required, jwt_optional
+    JWTManager, jwt_required, create_access_token, get_jwt_identity
 )
 from tests.utils import get_jwt_manager, make_headers
 
@@ -19,17 +18,17 @@ def app():
         return {'foo': 'bar'}
 
     @app.route('/protected1', methods=['GET'])
-    @jwt_required
+    @jwt_required()
     def protected1():
         return jsonify(foo='bar')
 
     @app.route('/protected2', methods=['GET'])
-    @fresh_jwt_required
+    @jwt_required(fresh=True)
     def protected2():
         return jsonify(foo='bar')
 
     @app.route('/protected3', methods=['GET'])
-    @jwt_optional
+    @jwt_required(optional=True)
     def protected3():
         return jsonify(foo='bar')
 
@@ -80,7 +79,6 @@ def test_claims_validation_custom_error(app, url):
 
     @jwt.claims_verification_failed_loader
     def custom_error():
-        # Make sure that we can get the jwt identity in here if we need it.
         user = get_jwt_identity()
         return jsonify(msg='claims failed for {}'.format(user)), 404
 
@@ -94,11 +92,11 @@ def test_claims_validation_custom_error(app, url):
 
 
 @pytest.mark.parametrize("url", ['/protected1', '/protected2', '/protected3'])
-def test_get_jwt_identity_in_verification_method(app, url):
+def test_get_token_identity_in_verification_method(app, url):
     jwt = get_jwt_manager(app)
 
     @jwt.claims_verification_loader
-    def user_load_callback(user_claims):
+    def user_load_callback(token):
         # Make sure that we can get the jwt identity in here if we need it.
         user = get_jwt_identity()
         return user == 'username'

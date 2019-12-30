@@ -23,19 +23,21 @@
 # raw performance. In this case a database solution (such as postgres) is
 # probably a better fit for your blacklist. Check out the "database_blacklist"
 # example for how that might work.
-import redis
 from datetime import timedelta
-from flask import Flask, request, jsonify
-from flask_jwt_extended import (
-    JWTManager,
-    create_access_token,
-    create_refresh_token,
-    get_jti,
-    jwt_refresh_token_required,
-    get_jwt_identity,
-    jwt_required,
-    get_raw_jwt,
-)
+
+import redis
+from flask import Flask
+from flask import jsonify
+from flask import request
+
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import get_jti
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_raw_jwt
+from flask_jwt_extended import jwt_refresh_token_required
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
 app.secret_key = "ChangeMe!"

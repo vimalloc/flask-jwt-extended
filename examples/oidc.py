@@ -1,16 +1,17 @@
-from flask import Flask, jsonify
-from flask_restful import Api
-import requests
 import json
-from jwt.algorithms import RSAAlgorithm
 from functools import wraps
-from flask_jwt_extended import (
-    JWTManager,
-    verify_jwt_in_request,
-    get_raw_jwt,
-    current_user,
-)
+
 import config
+import requests
+from flask import Flask
+from flask import jsonify
+from flask_restful import Api
+from jwt.algorithms import RSAAlgorithm
+
+from flask_jwt_extended import current_user
+from flask_jwt_extended import get_raw_jwt
+from flask_jwt_extended import JWTManager
+from flask_jwt_extended import verify_jwt_in_request
 
 
 # Setup Flask Server

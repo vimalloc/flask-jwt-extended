@@ -1,14 +1,14 @@
-from flask import Flask, request, jsonify
+from flask import Flask
+from flask import jsonify
+from flask import request
 
-from flask_jwt_extended import (
-    JWTManager,
-    jwt_required,
-    get_jwt_identity,
-    create_access_token,
-    create_refresh_token,
-    jwt_refresh_token_required,
-    get_raw_jwt,
-)
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_raw_jwt
+from flask_jwt_extended import jwt_refresh_token_required
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 
 
 # Setup flask

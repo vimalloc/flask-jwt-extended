@@ -1,21 +1,20 @@
-from flask import Flask, request, jsonify
-
-from extensions import jwt, db
+from blacklist_helpers import add_token_to_database
+from blacklist_helpers import get_user_tokens
+from blacklist_helpers import is_token_revoked
+from blacklist_helpers import revoke_token
+from blacklist_helpers import unrevoke_token
 from exceptions import TokenNotFound
-from flask_jwt_extended import (
-    jwt_refresh_token_required,
-    get_jwt_identity,
-    create_access_token,
-    create_refresh_token,
-    jwt_required,
-)
-from blacklist_helpers import (
-    is_token_revoked,
-    add_token_to_database,
-    get_user_tokens,
-    revoke_token,
-    unrevoke_token,
-)
+from extensions import db
+from extensions import jwt
+from flask import Flask
+from flask import jsonify
+from flask import request
+
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_refresh_token_required
+from flask_jwt_extended import jwt_required
 
 
 # We will use an in memory sqlite database for this example. In production,

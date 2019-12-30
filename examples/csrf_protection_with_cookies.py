@@ -1,16 +1,16 @@
-from flask import Flask, jsonify, request
+from flask import Flask
+from flask import jsonify
+from flask import request
 
-from flask_jwt_extended import (
-    JWTManager,
-    jwt_required,
-    create_access_token,
-    jwt_refresh_token_required,
-    create_refresh_token,
-    get_jwt_identity,
-    set_access_cookies,
-    set_refresh_cookies,
-    unset_jwt_cookies,
-)
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_refresh_token_required
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
+from flask_jwt_extended import set_access_cookies
+from flask_jwt_extended import set_refresh_cookies
+from flask_jwt_extended import unset_jwt_cookies
 
 app = Flask(__name__)
 

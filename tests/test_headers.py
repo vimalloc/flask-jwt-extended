@@ -1,7 +1,10 @@
 import pytest
-from flask import Flask, jsonify
+from flask import Flask
+from flask import jsonify
 
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 from tests.utils import get_jwt_manager
 
 
@@ -152,7 +155,6 @@ def test_missing_headers(app):
 
 
 def test_header_without_jwt(app):
-    jwtM = get_jwt_manager(app)
     test_client = app.test_client()
 
     access_headers = {"Authorization": "Bearer "}

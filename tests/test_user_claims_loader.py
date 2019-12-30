@@ -1,15 +1,15 @@
 import pytest
-from flask import Flask, jsonify
+from flask import Flask
+from flask import jsonify
 
-from flask_jwt_extended import (
-    JWTManager,
-    create_access_token,
-    jwt_required,
-    get_jwt_claims,
-    decode_token,
-    create_refresh_token,
-)
-from tests.utils import get_jwt_manager, make_headers
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import decode_token
+from flask_jwt_extended import get_jwt_claims
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
+from tests.utils import get_jwt_manager
+from tests.utils import make_headers
 
 
 @pytest.fixture(scope="function")
@@ -60,7 +60,7 @@ def test_non_serializable_user_claims(app):
 
 
 def test_token_from_complex_object(app):
-    class TestObject:
+    class TestObject:  # noqa: B903
         def __init__(self, username):
             self.username = username
 
@@ -71,7 +71,7 @@ def test_token_from_complex_object(app):
         return {"username": test_obj.username}
 
     @jwt.user_identity_loader
-    def add_claims(test_obj):
+    def add_identity(test_obj):
         return test_obj.username
 
     with app.test_request_context():

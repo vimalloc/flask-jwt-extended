@@ -16,4 +16,3 @@ Here is an example of how you could utilize refresh tokens with the
 fresh token pattern:
 
 .. literalinclude:: ../examples/token_freshness.py
-

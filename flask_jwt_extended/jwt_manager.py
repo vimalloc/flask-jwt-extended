@@ -1,12 +1,10 @@
 import datetime
 
-from jwt import (
-    ExpiredSignatureError,
-    InvalidTokenError,
-    InvalidAudienceError,
-    InvalidIssuerError,
-    DecodeError,
-)
+from jwt import DecodeError
+from jwt import ExpiredSignatureError
+from jwt import InvalidAudienceError
+from jwt import InvalidIssuerError
+from jwt import InvalidTokenError
 
 try:
     from flask import _app_ctx_stack as ctx_stack
@@ -122,7 +120,7 @@ class JWTManager(object):
             return self._invalid_token_callback(str(e))
 
         @app.errorhandler(DecodeError)
-        def handle_invalid_header_error(e):
+        def handle_decode_error(e):
             return self._invalid_token_callback(str(e))
 
         @app.errorhandler(InvalidTokenError)

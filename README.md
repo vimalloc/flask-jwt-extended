@@ -28,18 +28,19 @@ This project follows [semantic versioning](https://semver.org/).
 Come chat with the community or ask questions at https://discord.gg/EJBsbFd
 
 ### Contributing
+Before making any changes, make sure to install the development requirements
+and setup the git hooks which will automatically lint and format your changes.
+```
+$ pip install -r requirements.txt
+$ pre-commit install
+```
+
 We require 100% code coverage in our unit tests. You can run the tests locally
 with `tox` which will print out a code coverage report and verify the code
 format looks good.
 ```
-$ tox
-```
-
-We use [black](https://github.com/psf/black) to format all our code. Any code
-not formatted will be treated as an error on on a `tox` run. To automatically
-format code, run:
-```
-$ black --target-version py35 setup.py flask_jwt_extended/ tests/
+# Replace py37 with whatever version of python is installed on your system
+$ tox -e py37
 ```
 
 We also require features to be well documented.  You can generate a local copy

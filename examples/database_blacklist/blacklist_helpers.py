@@ -22,10 +22,10 @@ def add_token_to_database(encoded_token, identity_claim):
     :param identity_claim:
     """
     decoded_token = decode_token(encoded_token)
-    jti = decoded_token['jti']
-    token_type = decoded_token['type']
+    jti = decoded_token["jti"]
+    token_type = decoded_token["type"]
     user_identity = decoded_token[identity_claim]
-    expires = _epoch_utc_to_datetime(decoded_token['exp'])
+    expires = _epoch_utc_to_datetime(decoded_token["exp"])
     revoked = False
 
     db_token = TokenBlacklist(
@@ -46,7 +46,7 @@ def is_token_revoked(decoded_token):
     in the database we are going to consider it revoked, as we don't know where
     it was created.
     """
-    jti = decoded_token['jti']
+    jti = decoded_token["jti"]
     try:
         token = TokenBlacklist.query.filter_by(jti=jti).one()
         return token.revoked

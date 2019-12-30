@@ -1,7 +1,6 @@
-import warnings
+from datetime import timedelta
 
 import pytest
-from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from flask import Flask
 from flask.json import JSONEncoder

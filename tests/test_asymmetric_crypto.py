@@ -1,7 +1,10 @@
 import pytest
-from flask import Flask, jsonify
+from flask import Flask
+from flask import jsonify
 
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 
 RSA_PRIVATE = """
 -----BEGIN RSA PRIVATE KEY-----

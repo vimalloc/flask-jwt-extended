@@ -1,14 +1,14 @@
 import pytest
-from flask import Flask, jsonify
+from flask import Flask
+from flask import jsonify
 
-from flask_jwt_extended import (
-    JWTManager,
-    create_access_token,
-    jwt_required,
-    create_refresh_token,
-    get_raw_jwt_header,
-)
-from tests.utils import get_jwt_manager, make_headers
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import get_raw_jwt_header
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
+from tests.utils import get_jwt_manager
+from tests.utils import make_headers
 
 
 @pytest.fixture(scope="function")

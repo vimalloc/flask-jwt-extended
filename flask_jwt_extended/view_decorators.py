@@ -3,26 +3,23 @@ from datetime import datetime
 from functools import wraps
 from re import split
 
-from flask import request, _app_ctx_stack
+from flask import _app_ctx_stack
+from flask import request
 from werkzeug.exceptions import BadRequest
 
 from flask_jwt_extended.config import config
-from flask_jwt_extended.exceptions import (
-    CSRFError,
-    FreshTokenRequired,
-    InvalidHeaderError,
-    NoAuthorizationError,
-    UserLoadError,
-)
-from flask_jwt_extended.utils import (
-    decode_token,
-    has_user_loader,
-    user_loader,
-    verify_token_claims,
-    verify_token_not_blacklisted,
-    verify_token_type,
-    get_unverified_jwt_headers,
-)
+from flask_jwt_extended.exceptions import CSRFError
+from flask_jwt_extended.exceptions import FreshTokenRequired
+from flask_jwt_extended.exceptions import InvalidHeaderError
+from flask_jwt_extended.exceptions import NoAuthorizationError
+from flask_jwt_extended.exceptions import UserLoadError
+from flask_jwt_extended.utils import decode_token
+from flask_jwt_extended.utils import get_unverified_jwt_headers
+from flask_jwt_extended.utils import has_user_loader
+from flask_jwt_extended.utils import user_loader
+from flask_jwt_extended.utils import verify_token_claims
+from flask_jwt_extended.utils import verify_token_not_blacklisted
+from flask_jwt_extended.utils import verify_token_type
 
 
 def _verify_token_is_fresh(jwt_data):
@@ -197,10 +194,8 @@ def _decode_jwt_from_request(token_type):
     # All the places we can get a JWT from in this request
     get_encoded_token_functions = []
 
-    locations = config.token_location
-
     # add the functions in the order specified in JWT_TOKEN_LOCATION
-    for location in locations:
+    for location in config.token_location:
         if location == "cookies":
             get_encoded_token_functions.append(
                 lambda: _decode_jwt_from_cookies(token_type)

@@ -11,10 +11,10 @@ class TokenBlacklist(db.Model):
 
     def to_dict(self):
         return {
-            'token_id': self.id,
-            'jti': self.jti,
-            'token_type': self.token_type,
-            'user_identity': self.user_identity,
-            'revoked': self.revoked,
-            'expires': self.expires
+            "token_id": self.id,
+            "jti": self.jti,
+            "token_type": self.token_type,
+            "user_identity": self.user_identity,
+            "revoked": self.revoked,
+            "expires": self.expires,
         }

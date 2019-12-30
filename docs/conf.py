@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 #
-import sys, os, io, re
+import io
+import os
+import re
+import sys
+
 # flask-jwt-extended documentation build configuration file, created by
 # sphinx-quickstart on Thu Oct  6 13:07:36 2016.
 #
@@ -19,10 +23,10 @@ import sys, os, io, re
 #
 
 
-sys.path.insert(0, os.path.abspath('../../..'))
-sys.path.insert(0, os.path.abspath('..'))
-sys.path.insert(0, os.path.abspath('../flask_jwt_extended/'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '_themes'))
+sys.path.insert(0, os.path.abspath("../../.."))
+sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("../flask_jwt_extended/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "_themes"))
 
 # -- General configuration ------------------------------------------------
 
@@ -34,38 +38,38 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '_themes'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'pallets_sphinx_themes',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autosummary'
+    "pallets_sphinx_themes",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.autosummary",
 ]
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The encoding of source files.
 #
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = u'flask-jwt-extended'
-author = u'Landon Gilbert-Bland'
+project = u"flask-jwt-extended"
+author = u"Landon Gilbert-Bland"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-with io.open('../flask_jwt_extended/__init__.py', encoding='utf-8') as f:
+with io.open("../flask_jwt_extended/__init__.py", encoding="utf-8") as f:
     package_version = re.search(r"__version__ = '(.+)'", f.read()).group(1)
 version = package_version
 release = package_version
@@ -128,8 +132,8 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'sphinx_rtd_theme'
-html_theme = 'flask'
+# html_theme = 'sphinx_rtd_theme'
+html_theme = "flask"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -138,7 +142,7 @@ html_theme = 'flask'
 # html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ["_themes", ]
+html_theme_path = ["_themes"]
 
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
@@ -163,7 +167,7 @@ html_theme_path = ["_themes", ]
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-#html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -243,34 +247,36 @@ html_theme_path = ["_themes", ]
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'flask-jwt-extendeddoc'
+htmlhelp_basename = "flask-jwt-extendeddoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-     # The paper size ('letterpaper' or 'a4paper').
-     #
-     # 'papersize': 'letterpaper',
-
-     # The font size ('10pt', '11pt' or '12pt').
-     #
-     # 'pointsize': '10pt',
-
-     # Additional stuff for the LaTeX preamble.
-     #
-     # 'preamble': '',
-
-     # Latex figure (float) alignment
-     #
-     # 'figure_align': 'htbp',
+    # The paper size ('letterpaper' or 'a4paper').
+    #
+    # 'papersize': 'letterpaper',
+    # The font size ('10pt', '11pt' or '12pt').
+    #
+    # 'pointsize': '10pt',
+    # Additional stuff for the LaTeX preamble.
+    #
+    # 'preamble': '',
+    # Latex figure (float) alignment
+    #
+    # 'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'flask-jwt-extended.tex', u'flask-jwt-extended Documentation',
-     u'vimalloc rlam3', 'manual'),
+    (
+        master_doc,
+        "flask-jwt-extended.tex",
+        u"flask-jwt-extended Documentation",
+        u"vimalloc rlam3",
+        "manual",
+    )
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -311,8 +317,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'flask-jwt-extended', u'flask-jwt-extended Documentation',
-     [author], 1)
+    (master_doc, "flask-jwt-extended", u"flask-jwt-extended Documentation", [author], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -326,9 +331,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'flask-jwt-extended', u'flask-jwt-extended Documentation',
-     author, 'flask-jwt-extended', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        "flask-jwt-extended",
+        u"flask-jwt-extended Documentation",
+        author,
+        "flask-jwt-extended",
+        "One line description of project.",
+        "Miscellaneous",
+    )
 ]
 
 # Documents to append as an appendix to all manuals.

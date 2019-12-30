@@ -3,4 +3,3 @@ from flask_sqlalchemy import SQLAlchemy
 
 jwt = JWTManager()
 db = SQLAlchemy()
-

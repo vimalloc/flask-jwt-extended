@@ -18,4 +18,3 @@ using the fresh token pattern, discussed in the next section.
 Here is an example of using access and refresh tokens:
 
 .. literalinclude:: ../examples/refresh_tokens.py
-

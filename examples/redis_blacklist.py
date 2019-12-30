@@ -27,25 +27,32 @@ import redis
 from datetime import timedelta
 from flask import Flask, request, jsonify
 from flask_jwt_extended import (
-    JWTManager, create_access_token, create_refresh_token, get_jti,
-    jwt_refresh_token_required, get_jwt_identity, jwt_required, get_raw_jwt
+    JWTManager,
+    create_access_token,
+    create_refresh_token,
+    get_jti,
+    jwt_refresh_token_required,
+    get_jwt_identity,
+    jwt_required,
+    get_raw_jwt,
 )
 
 app = Flask(__name__)
-app.secret_key = 'ChangeMe!'
+app.secret_key = "ChangeMe!"
 
 # Setup the flask-jwt-extended extension. See:
 ACCESS_EXPIRES = timedelta(minutes=15)
 REFRESH_EXPIRES = timedelta(days=30)
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = ACCESS_EXPIRES
-app.config['JWT_REFRESH_TOKEN_EXPIRES'] = REFRESH_EXPIRES
-app.config['JWT_BLACKLIST_ENABLED'] = True
-app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = ACCESS_EXPIRES
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = REFRESH_EXPIRES
+app.config["JWT_BLACKLIST_ENABLED"] = True
+app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
 jwt = JWTManager(app)
 
 # Setup our redis connection for storing the blacklisted tokens
-revoked_store = redis.StrictRedis(host='localhost', port=6379, db=0,
-                                  decode_responses=True)
+revoked_store = redis.StrictRedis(
+    host="localhost", port=6379, db=0, decode_responses=True
+)
 
 
 # Create our function to check if a token has been blacklisted. In this simple
@@ -57,18 +64,18 @@ revoked_store = redis.StrictRedis(host='localhost', port=6379, db=0,
 # we will consider the token to be revoked, for safety purposes.
 @jwt.token_in_blacklist_loader
 def check_if_token_is_revoked(decrypted_token):
-    jti = decrypted_token['jti']
+    jti = decrypted_token["jti"]
     entry = revoked_store.get(jti)
     if entry is None:
         return True
-    return entry == 'true'
+    return entry == "true"
 
 
-@app.route('/auth/login', methods=['POST'])
+@app.route("/auth/login", methods=["POST"])
 def login():
-    username = request.json.get('username', None)
-    password = request.json.get('password', None)
-    if username != 'test' or password != 'test':
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
+    if username != "test" or password != "test":
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Create our JWTs
@@ -82,52 +89,50 @@ def login():
     # everything to be automatically removed shortly after the token expires
     access_jti = get_jti(encoded_token=access_token)
     refresh_jti = get_jti(encoded_token=refresh_token)
-    revoked_store.set(access_jti, 'false', ACCESS_EXPIRES * 1.2)
-    revoked_store.set(refresh_jti, 'false', REFRESH_EXPIRES * 1.2)
+    revoked_store.set(access_jti, "false", ACCESS_EXPIRES * 1.2)
+    revoked_store.set(refresh_jti, "false", REFRESH_EXPIRES * 1.2)
 
-    ret = {
-        'access_token': access_token,
-        'refresh_token': refresh_token
-    }
+    ret = {"access_token": access_token, "refresh_token": refresh_token}
     return jsonify(ret), 201
 
 
 # A blacklisted refresh tokens will not be able to access this endpoint
-@app.route('/auth/refresh', methods=['POST'])
+@app.route("/auth/refresh", methods=["POST"])
 @jwt_refresh_token_required
 def refresh():
     # Do the same thing that we did in the login endpoint here
     current_user = get_jwt_identity()
     access_token = create_access_token(identity=current_user)
     access_jti = get_jti(encoded_token=access_token)
-    revoked_store.set(access_jti, 'false', ACCESS_EXPIRES * 1.2)
-    ret = {'access_token': access_token}
+    revoked_store.set(access_jti, "false", ACCESS_EXPIRES * 1.2)
+    ret = {"access_token": access_token}
     return jsonify(ret), 201
 
 
 # Endpoint for revoking the current users access token
-@app.route('/auth/access_revoke', methods=['DELETE'])
+@app.route("/auth/access_revoke", methods=["DELETE"])
 @jwt_required
 def logout():
-    jti = get_raw_jwt()['jti']
-    revoked_store.set(jti, 'true', ACCESS_EXPIRES * 1.2)
+    jti = get_raw_jwt()["jti"]
+    revoked_store.set(jti, "true", ACCESS_EXPIRES * 1.2)
     return jsonify({"msg": "Access token revoked"}), 200
 
 
 # Endpoint for revoking the current users refresh token
-@app.route('/auth/refresh_revoke', methods=['DELETE'])
+@app.route("/auth/refresh_revoke", methods=["DELETE"])
 @jwt_refresh_token_required
 def logout2():
-    jti = get_raw_jwt()['jti']
-    revoked_store.set(jti, 'true', REFRESH_EXPIRES * 1.2)
+    jti = get_raw_jwt()["jti"]
+    revoked_store.set(jti, "true", REFRESH_EXPIRES * 1.2)
     return jsonify({"msg": "Refresh token revoked"}), 200
 
 
 # A blacklisted access token will not be able to access this any more
-@app.route('/protected', methods=['GET'])
+@app.route("/protected", methods=["GET"])
 @jwt_required
 def protected():
-    return jsonify({'hello': 'world'})
+    return jsonify({"hello": "world"})
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run()

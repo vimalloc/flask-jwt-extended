@@ -1,6 +1,6 @@
 import datetime
-
-from collections.abc import Sequence, Set
+from collections.abc import Sequence
+from collections.abc import Set
 
 from flask import current_app
 

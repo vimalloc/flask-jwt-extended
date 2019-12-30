@@ -1,12 +1,15 @@
 from flask import Flask, jsonify, request
 from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token,
-    get_jwt_identity, get_jwt_claims
+    JWTManager,
+    jwt_required,
+    create_access_token,
+    get_jwt_identity,
+    get_jwt_claims,
 )
 
 app = Flask(__name__)
 
-app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
+app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
 jwt = JWTManager(app)
 
 
@@ -25,7 +28,7 @@ class UserObject:
 # should be added to the access token.
 @jwt.user_claims_loader
 def add_claims_to_access_token(user):
-    return {'roles': user.roles}
+    return {"roles": user.roles}
 
 
 # Create a function that will be called whenever create_access_token
@@ -37,15 +40,15 @@ def user_identity_lookup(user):
     return user.username
 
 
-@app.route('/login', methods=['POST'])
+@app.route("/login", methods=["POST"])
 def login():
-    username = request.json.get('username', None)
-    password = request.json.get('password', None)
-    if username != 'test' or password != 'test':
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
+    if username != "test" or password != "test":
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Create an example UserObject
-    user = UserObject(username='test', roles=['foo', 'bar'])
+    user = UserObject(username="test", roles=["foo", "bar"])
 
     # We can now pass this complex object directly to the
     # create_access_token method. This will allow us to access
@@ -53,19 +56,19 @@ def login():
     # function, and get the identity of this object from the
     # user_identity_loader function.
     access_token = create_access_token(identity=user)
-    ret = {'access_token': access_token}
+    ret = {"access_token": access_token}
     return jsonify(ret), 200
 
 
-@app.route('/protected', methods=['GET'])
+@app.route("/protected", methods=["GET"])
 @jwt_required
 def protected():
     ret = {
-        'current_identity': get_jwt_identity(),  # test
-        'current_roles': get_jwt_claims()['roles']  # ['foo', 'bar']
+        "current_identity": get_jwt_identity(),  # test
+        "current_roles": get_jwt_claims()["roles"],  # ['foo', 'bar']
     }
     return jsonify(ret), 200
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()

@@ -1,6 +1,8 @@
-from flask import Flask
-from flask_jwt_extended import JWTManager, jwt_required
 import pytest
+from flask import Flask
+
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 
 
 @pytest.fixture(scope="function")

@@ -5,7 +5,8 @@ from calendar import timegm
 import jwt
 from werkzeug.security import safe_str_cmp
 
-from flask_jwt_extended.exceptions import JWTDecodeError, CSRFError
+from flask_jwt_extended.exceptions import CSRFError
+from flask_jwt_extended.exceptions import JWTDecodeError
 
 
 def _create_csrf_token():
@@ -22,11 +23,7 @@ def _encode_jwt(
 ):
     uid = _create_csrf_token()
     now = datetime.datetime.utcnow()
-    token_data = {
-        "iat": now,
-        "nbf": now,
-        "jti": uid,
-    }
+    token_data = {"iat": now, "nbf": now, "jti": uid}
     # If expires_delta is False, the JWT should never expire
     # and the 'exp' claim is not set.
     if expires_delta:
@@ -78,11 +75,7 @@ def encode_access_token(
         now = datetime.datetime.utcnow()
         fresh = timegm((now + fresh).utctimetuple())
 
-    token_data = {
-        identity_claim_key: identity,
-        "fresh": fresh,
-        "type": "access",
-    }
+    token_data = {identity_claim_key: identity, "fresh": fresh, "type": "access"}
 
     # Don't add extra data to the token if user_claims is empty.
     if user_claims:
@@ -130,10 +123,7 @@ def encode_refresh_token(
     :param headers: valid dict for specifying additional headers in JWT header section
     :return: Encoded refresh token
     """
-    token_data = {
-        identity_claim_key: identity,
-        "type": "refresh",
-    }
+    token_data = {identity_claim_key: identity, "type": "refresh"}
 
     # Don't add extra data to the token if user_claims is empty.
     if user_claims:

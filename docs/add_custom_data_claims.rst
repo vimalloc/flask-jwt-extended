@@ -14,4 +14,3 @@ token. Any data in the access token can be trivially viewed by anyone who can
 read the token. **Do not** store sensitive information in access tokens!
 
 .. literalinclude:: ../examples/additional_data_in_access_token.py
-

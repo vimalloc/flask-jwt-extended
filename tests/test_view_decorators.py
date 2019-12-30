@@ -1,18 +1,19 @@
-import pytest
-import warnings
 from datetime import timedelta
-from dateutil.relativedelta import relativedelta
-from flask import Flask, jsonify
 
-from flask_jwt_extended import (
-    jwt_required,
-    JWTManager,
-    create_access_token,
-    create_refresh_token,
-    get_jwt_identity,
-    decode_token,
-)
-from tests.utils import make_headers, encode_token, get_jwt_manager
+import pytest
+from dateutil.relativedelta import relativedelta
+from flask import Flask
+from flask import jsonify
+
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import decode_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
+from tests.utils import encode_token
+from tests.utils import get_jwt_manager
+from tests.utils import make_headers
 
 
 @pytest.fixture(scope="function")

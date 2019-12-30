@@ -20,4 +20,3 @@ application if it handles high traffic.
 Here's an example of how this feature might look:
 
 .. literalinclude:: ../examples/complex_objects_from_tokens.py
-

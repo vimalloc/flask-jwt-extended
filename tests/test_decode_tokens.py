@@ -1,31 +1,27 @@
+from datetime import datetime
+from datetime import timedelta
+
 import jwt
 import pytest
-from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-import warnings
-
 from flask import Flask
+from jwt import DecodeError
+from jwt import ExpiredSignatureError
+from jwt import ImmatureSignatureError
+from jwt import InvalidAudienceError
+from jwt import InvalidIssuerError
+from jwt import InvalidSignatureError
 
-from jwt import (
-    ExpiredSignatureError,
-    InvalidSignatureError,
-    InvalidAudienceError,
-    ImmatureSignatureError,
-    InvalidIssuerError,
-    DecodeError,
-)
-
-from flask_jwt_extended import (
-    JWTManager,
-    create_access_token,
-    decode_token,
-    create_refresh_token,
-    get_jti,
-    get_unverified_jwt_headers,
-)
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import decode_token
+from flask_jwt_extended import get_jti
+from flask_jwt_extended import get_unverified_jwt_headers
+from flask_jwt_extended import JWTManager
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import JWTDecodeError
-from tests.utils import get_jwt_manager, encode_token
+from tests.utils import encode_token
+from tests.utils import get_jwt_manager
 
 
 @pytest.fixture(scope="function")

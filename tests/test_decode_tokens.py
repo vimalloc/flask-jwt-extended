@@ -1,7 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
 
-import jwt
 import pytest
 from dateutil.relativedelta import relativedelta
 from flask import Flask
@@ -57,26 +56,6 @@ def patch_datetime_now(monkeypatch):
 
     monkeypatch.setattr(__name__ + ".datetime", mydatetime)
     monkeypatch.setattr("datetime.datetime", mydatetime)
-
-
-@pytest.mark.parametrize("user_loader_return", [{}, None])
-def test_no_user_claims(app, user_loader_return):
-    jwtM = get_jwt_manager(app)
-
-    @jwtM.user_claims_loader
-    def empty_user_loader_return(identity):
-        return user_loader_return
-
-    # Identity should not be in the actual token, but should be in the data
-    # returned via the decode_token call
-    with app.test_request_context():
-        token = create_access_token("username")
-        pure_decoded = jwt.decode(
-            token, config.decode_key, algorithms=[config.algorithm]
-        )
-        assert config.user_claims_key not in pure_decoded
-        extension_decoded = decode_token(token)
-        assert config.user_claims_key in extension_decoded
 
 
 @pytest.mark.parametrize("missing_claims", ["sub", "csrf"])

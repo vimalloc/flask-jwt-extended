@@ -1,20 +1,12 @@
+import jwt
+from flask import _app_ctx_stack
 from flask import current_app
-from jwt import ExpiredSignatureError
 from werkzeug.local import LocalProxy
 
-try:
-    from flask import _app_ctx_stack as ctx_stack
-except ImportError:  # pragma: no cover
-    from flask import _request_ctx_stack as ctx_stack
-
 from flask_jwt_extended.config import config
-from flask_jwt_extended.exceptions import (
-    RevokedTokenError,
-    UserClaimsVerificationError,
-    WrongTokenError,
-)
-from flask_jwt_extended.tokens import decode_jwt
-import jwt
+from flask_jwt_extended.exceptions import RevokedTokenError
+from flask_jwt_extended.exceptions import UserClaimsVerificationError
+from flask_jwt_extended.exceptions import WrongTokenError
 
 
 # Proxy to access the current user
@@ -27,7 +19,7 @@ def get_raw_jwt():
     all of the claims of the JWT that is accessing the endpoint. If no
     JWT is currently present, an empty dict is returned instead.
     """
-    return getattr(ctx_stack.top, "jwt", {})
+    return getattr(_app_ctx_stack.top, "jwt", {})
 
 
 def get_raw_jwt_header():
@@ -36,7 +28,7 @@ def get_raw_jwt_header():
     the JWT headers values. If no
     JWT is currently present, an empty dict is returned instead.
     """
-    return getattr(ctx_stack.top, "jwt_header", {})
+    return getattr(_app_ctx_stack.top, "jwt_header", {})
 
 
 def get_jwt_identity():
@@ -47,13 +39,14 @@ def get_jwt_identity():
     return get_raw_jwt().get(config.identity_claim_key, None)
 
 
+# TODO: Remove this, should basically be get_raw_jwt() now. Re-work these methods
 def get_jwt_claims():
     """
     In a protected endpoint, this will return the dictionary of custom claims
     in the JWT that is accessing the endpoint. If no custom user claims are
     present, an empty dict is returned instead.
     """
-    return get_raw_jwt().get(config.user_claims_key, {})
+    return get_raw_jwt()
 
 
 def get_current_user():
@@ -64,7 +57,7 @@ def get_current_user():
     being used. If the user loader callback is not being used, this will
     return `None`.
     """
-    return getattr(ctx_stack.top, "jwt_user", None)
+    return getattr(_app_ctx_stack.top, "jwt_user", None)
 
 
 def get_jti(encoded_token):
@@ -87,40 +80,7 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
     :return: Dictionary containing contents of the JWT
     """
     jwt_manager = _get_jwt_manager()
-    unverified_claims = jwt.decode(
-        encoded_token, verify=False, algorithms=config.decode_algorithms
-    )
-    unverified_headers = jwt.get_unverified_header(encoded_token)
-    secret = jwt_manager._decode_key_callback(unverified_claims, unverified_headers)
-
-    try:
-        return decode_jwt(
-            encoded_token=encoded_token,
-            secret=secret,
-            algorithms=config.decode_algorithms,
-            identity_claim_key=config.identity_claim_key,
-            user_claims_key=config.user_claims_key,
-            csrf_value=csrf_value,
-            audience=config.audience,
-            issuer=config.issuer,
-            leeway=config.leeway,
-            allow_expired=allow_expired,
-        )
-    except ExpiredSignatureError:
-        expired_token = decode_jwt(
-            encoded_token=encoded_token,
-            secret=secret,
-            algorithms=config.decode_algorithms,
-            identity_claim_key=config.identity_claim_key,
-            user_claims_key=config.user_claims_key,
-            csrf_value=csrf_value,
-            audience=config.audience,
-            issuer=config.issuer,
-            leeway=config.leeway,
-            allow_expired=True,
-        )
-        ctx_stack.top.expired_jwt = expired_token
-        raise
+    return jwt_manager._decode_jwt_from_config(encoded_token, csrf_value, allow_expired)
 
 
 def _get_jwt_manager():
@@ -161,8 +121,13 @@ def create_access_token(
     :return: An encoded access token
     """
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._create_access_token(
-        identity, fresh, expires_delta, user_claims, headers=headers
+    return jwt_manager._encode_jwt_from_config(
+        claims=user_claims,
+        expires_delta=expires_delta,
+        fresh=fresh,
+        headers=headers,
+        identity=identity,
+        token_type="access",
     )
 
 
@@ -187,8 +152,13 @@ def create_refresh_token(identity, expires_delta=None, user_claims=None, headers
     :return: An encoded refresh token
     """
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._create_refresh_token(
-        identity, expires_delta, user_claims, headers=headers
+    return jwt_manager._encode_jwt_from_config(
+        claims=user_claims,
+        expires_delta=expires_delta,
+        fresh=False,
+        headers=headers,
+        identity=identity,
+        token_type="refresh",
     )
 
 
@@ -236,8 +206,8 @@ def verify_token_not_blacklisted(decoded_token, request_type):
 
 def verify_token_claims(jwt_data):
     jwt_manager = _get_jwt_manager()
-    user_claims = jwt_data[config.user_claims_key]
-    if not jwt_manager._claims_verification_callback(user_claims):
+    claims = get_raw_jwt()
+    if not jwt_manager._claims_verification_callback(claims):
         raise UserClaimsVerificationError("User claims verification failed")
 
 

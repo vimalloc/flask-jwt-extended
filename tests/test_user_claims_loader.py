@@ -43,7 +43,7 @@ def test_user_claim_in_access_token(app):
 
     test_client = app.test_client()
     response = test_client.get("/protected", headers=make_headers(access_token))
-    assert response.get_json() == {"foo": "bar"}
+    assert response.get_json()["foo"] == "bar"
     assert response.status_code == 200
 
 
@@ -80,33 +80,11 @@ def test_token_from_complex_object(app):
         # Make sure the changes appear in the token
         decoded_token = decode_token(access_token)
         assert decoded_token["sub"] == "username"
-        assert decoded_token["user_claims"] == {"username": "username"}
+        assert decoded_token["username"] == "username"
 
     test_client = app.test_client()
     response = test_client.get("/protected", headers=make_headers(access_token))
-    assert response.get_json() == {"username": "username"}
-    assert response.status_code == 200
-
-
-def test_user_claims_with_different_name(app):
-    jwt = get_jwt_manager(app)
-    app.config["JWT_USER_CLAIMS"] = "banana"
-
-    @jwt.user_claims_loader
-    def add_claims(identity):
-        return {"foo": "bar"}
-
-    with app.test_request_context():
-        access_token = create_access_token("username")
-
-        # Make sure the name is actually different in the token
-        decoded_token = decode_token(access_token)
-        assert decoded_token["banana"] == {"foo": "bar"}
-
-    # Make sure the correct data is returned to us from the full call
-    test_client = app.test_client()
-    response = test_client.get("/protected", headers=make_headers(access_token))
-    assert response.get_json() == {"foo": "bar"}
+    assert response.get_json()["username"] == "username"
     assert response.status_code == 200
 
 
@@ -122,7 +100,7 @@ def test_user_claim_not_in_refresh_token(app):
 
     test_client = app.test_client()
     response = test_client.get("/protected2", headers=make_headers(refresh_token))
-    assert response.get_json() == {}
+    assert "foo" not in response.get_json()
     assert response.status_code == 200
 
 
@@ -139,7 +117,7 @@ def test_user_claim_in_refresh_token(app):
 
     test_client = app.test_client()
     response = test_client.get("/protected2", headers=make_headers(refresh_token))
-    assert response.get_json() == {"foo": "bar"}
+    assert response.get_json()["foo"] == "bar"
     assert response.status_code == 200
 
 
@@ -151,7 +129,7 @@ def test_user_claim_in_refresh_token_specified_at_creation(app):
 
     test_client = app.test_client()
     response = test_client.get("/protected2", headers=make_headers(refresh_token))
-    assert response.get_json() == {"foo": "bar"}
+    assert response.get_json()["foo"] == "bar"
     assert response.status_code == 200
 
 
@@ -161,7 +139,7 @@ def test_user_claims_in_access_token_specified_at_creation(app):
 
     test_client = app.test_client()
     response = test_client.get("/protected", headers=make_headers(access_token))
-    assert response.get_json() == {"foo": "bar"}
+    assert response.get_json()["foo"] == "bar"
     assert response.status_code == 200
 
 
@@ -177,5 +155,5 @@ def test_user_claims_in_access_token_specified_at_creation_override(app):
 
     test_client = app.test_client()
     response = test_client.get("/protected", headers=make_headers(access_token))
-    assert response.get_json() == {"foo": "bar"}
+    assert response.get_json()["foo"] == "bar"
     assert response.status_code == 200

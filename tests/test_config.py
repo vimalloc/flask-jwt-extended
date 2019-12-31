@@ -64,7 +64,6 @@ def test_default_configs(app):
         assert config.cookie_max_age is None
 
         assert config.identity_claim_key == "sub"
-        assert config.user_claims_key == "user_claims"
 
         assert config.user_claims_in_refresh_token is False
 
@@ -111,7 +110,6 @@ def test_override_configs(app, delta_func):
     app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ("refresh",)
 
     app.config["JWT_IDENTITY_CLAIM"] = "foo"
-    app.config["JWT_USER_CLAIMS"] = "bar"
 
     app.config["JWT_CLAIMS_IN_REFRESH_TOKEN"] = True
 
@@ -167,7 +165,6 @@ def test_override_configs(app, delta_func):
         assert config.cookie_max_age == 31540000
 
         assert config.identity_claim_key == "foo"
-        assert config.user_claims_key == "bar"
 
         assert config.user_claims_in_refresh_token is True
 

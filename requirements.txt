@@ -17,7 +17,7 @@ itsdangerous==1.1.0
 Jinja2==2.10.3
 MarkupSafe==1.1.1
 packaging==19.2
-Pallets-Sphinx-Themes==1.2.2
+Pallets-Sphinx-Themes==1.2.3
 pluggy==0.13.0
 py==1.8.0
 pycparser==2.19

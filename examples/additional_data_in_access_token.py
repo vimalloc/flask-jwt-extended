@@ -3,7 +3,7 @@ from flask import jsonify
 from flask import request
 
 from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_raw_jwt
+from flask_jwt_extended import get_jwt
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 
@@ -34,11 +34,11 @@ def login():
 
 
 # In a protected view, get the claims you added to the jwt with the
-# get_raw_jwt() method
+# get_jwt() method
 @app.route("/protected", methods=["GET"])
 @jwt_required
 def protected():
-    claims = get_raw_jwt()
+    claims = get_jwt()
     return jsonify({"hello_is": claims["hello"], "foo_is": claims["foo"]}), 200
 
 

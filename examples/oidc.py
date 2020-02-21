@@ -9,7 +9,7 @@ from flask_restful import Api
 from jwt.algorithms import RSAAlgorithm
 
 from flask_jwt_extended import current_user
-from flask_jwt_extended import get_raw_jwt
+from flask_jwt_extended import get_jwt
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended import verify_jwt_in_request
 
@@ -75,7 +75,7 @@ def group_required(group=""):
             verify_jwt_in_request()
 
             # custom group membership verification
-            groups = get_raw_jwt()[OIDC_GROUPS_CLAIM]
+            groups = get_jwt()[OIDC_GROUPS_CLAIM]
             if group not in groups:
                 return (
                     jsonify(

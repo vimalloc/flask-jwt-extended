@@ -4,8 +4,8 @@ from flask import request
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import get_jwt
 from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import get_raw_jwt
 from flask_jwt_extended import jwt_refresh_token_required
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
@@ -77,7 +77,7 @@ def refresh():
 @app.route("/logout", methods=["DELETE"])
 @jwt_required
 def logout():
-    jti = get_raw_jwt()["jti"]
+    jti = get_jwt()["jti"]
     blacklist.add(jti)
     return jsonify({"msg": "Successfully logged out"}), 200
 
@@ -86,7 +86,7 @@ def logout():
 @app.route("/logout2", methods=["DELETE"])
 @jwt_refresh_token_required
 def logout2():
-    jti = get_raw_jwt()["jti"]
+    jti = get_jwt()["jti"]
     blacklist.add(jti)
     return jsonify({"msg": "Successfully logged out"}), 200
 

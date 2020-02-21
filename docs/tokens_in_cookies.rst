@@ -98,7 +98,7 @@ directly into your HTML template:
   def protected():
     if request.method == "GET":
         return render_template(
-            "form.html", csrf_token=(get_raw_jwt() or {}).get("csrf")
+            "form.html", csrf_token=(get_jwt() or {}).get("csrf")
         )
     else:
       # handle POST request

@@ -66,9 +66,9 @@ Utilities
 .. autofunction:: get_current_user
 .. autofunction:: get_csrf_token
 .. autofunction:: get_jti
-.. autofunction:: get_raw_jwt
 .. autofunction:: get_jwt_identity
-.. autofunction:: get_raw_jwt
+.. autofunction:: get_jwt
+.. autofunction:: get_jwt_header
 .. autofunction:: set_access_cookies
 .. autofunction:: set_refresh_cookies
 .. autofunction:: unset_jwt_cookies

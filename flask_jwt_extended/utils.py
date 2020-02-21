@@ -13,8 +13,7 @@ from flask_jwt_extended.exceptions import WrongTokenError
 current_user = LocalProxy(lambda: get_current_user())
 
 
-# TODO: Rename this to get_jwt
-def get_raw_jwt():
+def get_jwt():
     """
     In a protected endpoint, this will return the python dictionary which has
     all of the claims of the JWT that is accessing the endpoint. If no
@@ -24,7 +23,7 @@ def get_raw_jwt():
 
 
 # TODO: Rename this to get_jwt_header
-def get_raw_jwt_header():
+def get_jwt_header():
     """
     In a protected endpoint, this will return the python dictionary which has
     the JWT headers values. If no
@@ -38,7 +37,7 @@ def get_jwt_identity():
     In a protected endpoint, this will return the identity of the JWT that is
     accessing this endpoint. If no JWT is present,`None` is returned instead.
     """
-    return get_raw_jwt().get(config.identity_claim_key, None)
+    return get_jwt().get(config.identity_claim_key, None)
 
 
 def get_current_user():
@@ -198,7 +197,7 @@ def verify_token_not_blacklisted(decoded_token, request_type):
 
 def verify_token_claims(jwt_data):
     jwt_manager = _get_jwt_manager()
-    claims = get_raw_jwt()
+    claims = get_jwt()
     if not jwt_manager._claims_verification_callback(claims):
         raise UserClaimsVerificationError("User claims verification failed")
 

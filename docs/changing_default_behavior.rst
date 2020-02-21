@@ -43,10 +43,10 @@ and what the return values of your callback functions need to be.
       - Function that is called to check if a token has been revoked
     * - :meth:`~flask_jwt_extended.JWTManager.unauthorized_loader`
       - Function to call when a request with no JWT accesses a protected endpoint
-    * - :meth:`~flask_jwt_extended.JWTManager.user_loader_callback_loader`
+    * - :meth:`~flask_jwt_extended.JWTManager.user_lookup_loader`
       - Function to call to load a user object when token accesses a protected endpoint
-    * - :meth:`~flask_jwt_extended.JWTManager.user_loader_error_loader`
-      - Function that is called when the user_loader callback function returns `None`
+    * - :meth:`~flask_jwt_extended.JWTManager.user_lookup_error_loader`
+      - Function that is called when the user_lookup callback function returns `None`
 
 Dynamic token expires time
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -20,7 +20,7 @@ from flask_jwt_extended.default_callbacks import default_revoked_token_callback
 from flask_jwt_extended.default_callbacks import default_unauthorized_callback
 from flask_jwt_extended.default_callbacks import default_user_claims_callback
 from flask_jwt_extended.default_callbacks import default_user_identity_callback
-from flask_jwt_extended.default_callbacks import default_user_loader_error_callback
+from flask_jwt_extended.default_callbacks import default_user_lookup_error_callback
 from flask_jwt_extended.default_callbacks import default_verify_claims_failed_callback
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import FreshTokenRequired
@@ -29,7 +29,7 @@ from flask_jwt_extended.exceptions import JWTDecodeError
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_jwt_extended.exceptions import RevokedTokenError
 from flask_jwt_extended.exceptions import UserClaimsVerificationError
-from flask_jwt_extended.exceptions import UserLoadError
+from flask_jwt_extended.exceptions import UserLookupError
 from flask_jwt_extended.exceptions import WrongTokenError
 from flask_jwt_extended.tokens import _decode_jwt
 from flask_jwt_extended.tokens import _encode_jwt
@@ -68,8 +68,8 @@ class JWTManager(object):
         self._unauthorized_callback = default_unauthorized_callback
         self._user_claims_callback = default_user_claims_callback
         self._user_identity_callback = default_user_identity_callback
-        self._user_loader_callback = None
-        self._user_loader_error_callback = default_user_loader_error_callback
+        self._user_lookup_callback = None
+        self._user_lookup_error_callback = default_user_lookup_error_callback
         self._verify_claims_failed_callback = default_verify_claims_failed_callback
 
         # Register this extension with the flask app now (if it is provided)
@@ -145,13 +145,13 @@ class JWTManager(object):
         def handle_failed_user_claims_verification(e):
             return self._verify_claims_failed_callback()
 
-        @app.errorhandler(UserLoadError)
-        def handler_user_load_error(e):
+        @app.errorhandler(UserLookupError)
+        def handler_user_lookup_error(e):
             # The identity is already saved before this exception was raised,
             # otherwise a different exception would be raised, which is why we
             # can safely call get_jwt_identity() here
             identity = get_jwt_identity()
-            return self._user_loader_error_callback(identity)
+            return self._user_lookup_error_callback(identity)
 
         @app.errorhandler(WrongTokenError)
         def handle_wrong_token_error(e):
@@ -408,7 +408,7 @@ class JWTManager(object):
         self._user_identity_callback = callback
         return callback
 
-    def user_loader_callback_loader(self, callback):
+    def user_lookup_loader(self, callback):
         """
         This decorator sets the callback function that will be called to
         automatically load an object when a protected endpoint is accessed.
@@ -419,18 +419,18 @@ class JWTManager(object):
         then be accessed via the :attr:`~flask_jwt_extended.current_user` LocalProxy
         in the protected endpoint), or `None` in the case of a user not being
         able to be loaded for any reason. If this callback function returns
-        `None`, the :meth:`~flask_jwt_extended.JWTManager.user_loader_error_loader`
+        `None`, the :meth:`~flask_jwt_extended.JWTManager.user_lookup_error_loader`
         will be called.
         """
-        self._user_loader_callback = callback
+        self._user_lookup_callback = callback
         return callback
 
-    def user_loader_error_loader(self, callback):
+    def user_lookup_error_loader(self, callback):
         """
         This decorator sets the callback function that will be called if `None`
         is returned from the
-        :meth:`~flask_jwt_extended.JWTManager.user_loader_callback_loader`
-        callback function. The default implementation will return
+        :meth:`~flask_jwt_extended.JWTManager.user_lookup_loader` callback
+        function. The default implementation will return
         a 401 status code with the JSON:
 
         {"msg": "Error loading the user <identity>"}
@@ -438,7 +438,7 @@ class JWTManager(object):
         *HINT*: The callback must be a function that takes **one** argument, which is the
         identity of the user who failed to load, and must return a *Flask response*.
         """
-        self._user_loader_error_callback = callback
+        self._user_lookup_error_callback = callback
         return callback
 
     def _encode_jwt_from_config(

@@ -43,7 +43,7 @@ def test_successful_claims_validation(app, url):
     jwt = get_jwt_manager(app)
 
     @jwt.claims_verification_loader
-    def user_load_callback(token):
+    def claims_verification_callback(token):
         return token["foo"] == "bar"
 
     test_client = app.test_client()
@@ -60,7 +60,7 @@ def test_unsuccessful_claims_validation(app, url):
     jwt = get_jwt_manager(app)
 
     @jwt.claims_verification_loader
-    def user_load_callback(user_claims):
+    def claim_verification_callback(user_claims):
         return False
 
     test_client = app.test_client()
@@ -77,7 +77,7 @@ def test_claims_validation_custom_error(app, url):
     jwt = get_jwt_manager(app)
 
     @jwt.claims_verification_loader
-    def user_load_callback(user_claims):
+    def claims_verification_callback(user_claims):
         return False
 
     @jwt.claims_verification_failed_loader
@@ -99,7 +99,7 @@ def test_get_token_identity_in_verification_method(app, url):
     jwt = get_jwt_manager(app)
 
     @jwt.claims_verification_loader
-    def user_load_callback(token):
+    def claim_verification_callback(token):
         # Make sure that we can get the jwt identity in here if we need it.
         user = get_jwt_identity()
         return user == "username"

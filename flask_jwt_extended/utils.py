@@ -53,7 +53,7 @@ def get_current_user():
     """
     In a protected endpoint, this will return the user object for the JWT that
     is accessing this endpoint. This is only present if the
-    :meth:`~flask_jwt_extended.JWTManager.user_loader_callback_loader` is
+    :meth:`~flask_jwt_extended.JWTManager.user_lookup_loader` is
     being used. If the user loader callback is not being used, this will
     return `None`.
     """
@@ -162,14 +162,14 @@ def create_refresh_token(identity, expires_delta=None, user_claims=None, headers
     )
 
 
-def has_user_loader():
+def has_user_lookup():
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._user_loader_callback is not None
+    return jwt_manager._user_lookup_callback is not None
 
 
-def user_loader(*args, **kwargs):
+def user_lookup(*args, **kwargs):
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._user_loader_callback(*args, **kwargs)
+    return jwt_manager._user_lookup_callback(*args, **kwargs)
 
 
 def has_token_in_blacklist_callback():

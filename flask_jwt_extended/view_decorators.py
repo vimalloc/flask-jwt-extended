@@ -12,11 +12,11 @@ from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import FreshTokenRequired
 from flask_jwt_extended.exceptions import InvalidHeaderError
 from flask_jwt_extended.exceptions import NoAuthorizationError
-from flask_jwt_extended.exceptions import UserLoadError
+from flask_jwt_extended.exceptions import UserLookupError
 from flask_jwt_extended.utils import decode_token
 from flask_jwt_extended.utils import get_unverified_jwt_headers
-from flask_jwt_extended.utils import has_user_loader
-from flask_jwt_extended.utils import user_loader
+from flask_jwt_extended.utils import has_user_lookup
+from flask_jwt_extended.utils import user_lookup
 from flask_jwt_extended.utils import verify_token_claims
 from flask_jwt_extended.utils import verify_token_not_blacklisted
 from flask_jwt_extended.utils import verify_token_type
@@ -87,12 +87,12 @@ def jwt_required(optional=False, fresh=False, refresh=False):
 
 
 def _load_user(identity):
-    if not has_user_loader():
+    if not has_user_lookup():
         return
 
-    user = user_loader(identity)
+    user = user_lookup(identity)
     if user is None:
-        raise UserLoadError("user_loader returned None for {}".format(identity))
+        raise UserLookupError("user_lookup returned None for {}".format(identity))
     else:
         _app_ctx_stack.top.jwt_user = user
 

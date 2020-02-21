@@ -34,8 +34,8 @@ def app():
 def test_load_valid_user(app, url):
     jwt = get_jwt_manager(app)
 
-    @jwt.user_loader_callback_loader
-    def user_load_callback(identity):
+    @jwt.user_lookup_loader
+    def user_lookup_callback(identity):
         return {"username": identity}
 
     test_client = app.test_client()
@@ -51,8 +51,8 @@ def test_load_valid_user(app, url):
 def test_load_invalid_user(app, url):
     jwt = get_jwt_manager(app)
 
-    @jwt.user_loader_callback_loader
-    def user_load_callback(identity):
+    @jwt.user_lookup_loader
+    def user_lookup_callback(identity):
         return None
 
     test_client = app.test_client()
@@ -65,15 +65,15 @@ def test_load_invalid_user(app, url):
 
 
 @pytest.mark.parametrize("url", ["/get_user1", "/get_user2"])
-def test_custom_user_loader_errors(app, url):
+def test_custom_user_lookup_errors(app, url):
     jwt = get_jwt_manager(app)
 
-    @jwt.user_loader_callback_loader
-    def user_load_callback(identity):
+    @jwt.user_lookup_loader
+    def user_lookup_callback(identity):
         return None
 
-    @jwt.user_loader_error_loader
-    def user_loader_error(identity):
+    @jwt.user_lookup_error_loader
+    def user_lookup_error(identity):
         return jsonify(foo="bar"), 201
 
     test_client = app.test_client()

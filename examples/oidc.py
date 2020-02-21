@@ -155,8 +155,8 @@ class User:
 # Identity holds whatever variable in token you point at JWT_IDENTITY_CLAIM
 # good place to construct identity from token and other places, it is then
 # available in method through current_user.<property>
-@jwt.user_loader_callback_loader
-def user_loader_callback(identity):
+@jwt.user_lookup_loader
+def user_lookup_callback(identity):
     u = User()
     u.username = identity
     return u

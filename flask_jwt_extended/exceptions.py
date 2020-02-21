@@ -64,9 +64,9 @@ class FreshTokenRequired(JWTExtendedException):
     pass
 
 
-class UserLoadError(JWTExtendedException):
+class UserLookupError(JWTExtendedException):
     """
-    Error raised when a user_loader callback function returns None, indicating
+    Error raised when a user_lookup callback function returns None, indicating
     that it cannot or will not load a user for the given identity.
     """
 

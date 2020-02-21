@@ -6,7 +6,6 @@ from .utils import decode_token
 from .utils import get_csrf_token
 from .utils import get_current_user
 from .utils import get_jti
-from .utils import get_jwt_claims
 from .utils import get_jwt_identity
 from .utils import get_raw_jwt
 from .utils import get_raw_jwt_header

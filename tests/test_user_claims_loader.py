@@ -5,7 +5,7 @@ from flask import jsonify
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import create_refresh_token
 from flask_jwt_extended import decode_token
-from flask_jwt_extended import get_jwt_claims
+from flask_jwt_extended import get_raw_jwt
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 from tests.utils import get_jwt_manager
@@ -21,12 +21,12 @@ def app():
     @app.route("/protected", methods=["GET"])
     @jwt_required()
     def get_claims():
-        return jsonify(get_jwt_claims())
+        return jsonify(get_raw_jwt())
 
     @app.route("/protected2", methods=["GET"])
     @jwt_required(refresh=True)
     def get_refresh_claims():
-        return jsonify(get_jwt_claims())
+        return jsonify(get_raw_jwt())
 
     return app
 

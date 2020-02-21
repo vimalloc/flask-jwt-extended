@@ -5,7 +5,7 @@ from flask import jsonify
 from flask import request
 
 from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_claims
+from flask_jwt_extended import get_raw_jwt
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended import verify_jwt_in_request
 
@@ -22,7 +22,7 @@ def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
-        claims = get_jwt_claims()
+        claims = get_raw_jwt()
         if claims["roles"] != "admin":
             return jsonify(msg="Admins only!"), 403
         else:

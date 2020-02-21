@@ -13,6 +13,7 @@ from flask_jwt_extended.exceptions import WrongTokenError
 current_user = LocalProxy(lambda: get_current_user())
 
 
+# TODO: Rename this to get_jwt
 def get_raw_jwt():
     """
     In a protected endpoint, this will return the python dictionary which has
@@ -22,6 +23,7 @@ def get_raw_jwt():
     return getattr(_app_ctx_stack.top, "jwt", {})
 
 
+# TODO: Rename this to get_jwt_header
 def get_raw_jwt_header():
     """
     In a protected endpoint, this will return the python dictionary which has
@@ -37,16 +39,6 @@ def get_jwt_identity():
     accessing this endpoint. If no JWT is present,`None` is returned instead.
     """
     return get_raw_jwt().get(config.identity_claim_key, None)
-
-
-# TODO: Remove this, should basically be get_raw_jwt() now. Re-work these methods
-def get_jwt_claims():
-    """
-    In a protected endpoint, this will return the dictionary of custom claims
-    in the JWT that is accessing the endpoint. If no custom user claims are
-    present, an empty dict is returned instead.
-    """
-    return get_raw_jwt()
 
 
 def get_current_user():

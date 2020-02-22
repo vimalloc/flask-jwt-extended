@@ -19,10 +19,15 @@ def get_jwt():
     all of the claims of the JWT that is accessing the endpoint. If no
     JWT is currently present, an empty dict is returned instead.
     """
-    return getattr(_app_ctx_stack.top, "jwt", {})
+    decoded_jwt = getattr(_app_ctx_stack.top, "jwt", None)
+    if decoded_jwt is None:
+        raise RuntimeError(
+            "You must call `@jwt_required()` or `verify_jwt_in_request` "
+            "before using this method"
+        )
+    return decoded_jwt
 
 
-# TODO: Rename this to get_jwt_header
 def get_jwt_header():
     """
     In a protected endpoint, this will return the python dictionary which has
@@ -48,7 +53,13 @@ def get_current_user():
     being used. If the user loader callback is not being used, this will
     return `None`.
     """
-    return getattr(_app_ctx_stack.top, "jwt_user", None)
+    user = getattr(_app_ctx_stack.top, "jwt_user", None)
+    if user is None:
+        raise RuntimeError(
+            "You must provide a `@jwt.user_lookup_loader` callback to use "
+            "this method"
+        )
+    return user
 
 
 def get_jti(encoded_token):

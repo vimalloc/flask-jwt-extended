@@ -49,6 +49,8 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
             jwt_data, jwt_header = _decode_jwt_from_request("access")
     except (NoAuthorizationError, InvalidHeaderError):
         if optional:
+            _app_ctx_stack.top.jwt = {}
+            _app_ctx_stack.top.jwt_header = {}
             return
         else:
             raise

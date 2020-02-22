@@ -34,7 +34,13 @@ def get_jwt_header():
     the JWT headers values. If no
     JWT is currently present, an empty dict is returned instead.
     """
-    return getattr(_app_ctx_stack.top, "jwt_header", {})
+    decoded_header = getattr(_app_ctx_stack.top, "jwt_header", None)
+    if decoded_header is None:
+        raise RuntimeError(
+            "You must call `@jwt_required()` or `verify_jwt_in_request` "
+            "before using this method"
+        )
+    return decoded_header
 
 
 def get_jwt_identity():

@@ -30,16 +30,21 @@ def get_jwt_from_request(request_type='access'):
     return jwt_data
 
 
-def verify_jwt_in_request():
+def verify_jwt_in_request(optional=False):
     """
     Ensure that the requester has a valid access token. This does not check the
     freshness of the access token. Raises an appropiate exception there is
     no token or if the token is invalid.
     """
-    if request.method not in config.exempt_methods:
-        jwt_data = get_jwt_from_request()
-        verify_token_claims(jwt_data)
-        _load_user(jwt_data[config.identity_claim_key])
+    try:
+        if request.method not in config.exempt_methods:
+            jwt_data = get_jwt_from_request()
+            verify_token_claims(jwt_data)
+            _load_user(jwt_data[config.identity_claim_key])
+            return jwt_data
+    except (NoAuthorizationError, InvalidHeaderError) as e:
+        if not optional:
+            raise e
 
 
 def verify_jwt_in_request_optional():
@@ -53,13 +58,7 @@ def verify_jwt_in_request_optional():
     If there is an invalid access token in the request (expired, tampered with,
     etc), this will still raise the appropiate exception.
     """
-    try:
-        if request.method not in config.exempt_methods:
-            jwt_data = get_jwt_from_request()
-            verify_token_claims(jwt_data)
-            _load_user(jwt_data[config.identity_claim_key])
-    except (NoAuthorizationError, InvalidHeaderError):
-        pass
+    return verify_jwt_in_request(optional=True)
 
 
 def verify_fresh_jwt_in_request():

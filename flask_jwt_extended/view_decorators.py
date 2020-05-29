@@ -30,6 +30,21 @@ def get_jwt_from_request(request_type='access'):
     return jwt_data
 
 
+def check_token_freshness(jwt_data):
+    """Check whether a token is fresh.
+
+    Raises a :class:`FreshTokenRequired` exception if the token is not fresh.
+    """
+    fresh = jwt_data['fresh']
+    if isinstance(fresh, bool):
+        if not fresh:
+            raise FreshTokenRequired('Fresh token required')
+    else:
+        now = timegm(datetime.utcnow().utctimetuple())
+        if fresh < now:
+            raise FreshTokenRequired('Fresh token required')
+
+
 def verify_jwt_in_request(optional=False):
     """
     Ensure that the requester has a valid access token. This does not check the
@@ -69,16 +84,10 @@ def verify_fresh_jwt_in_request():
     """
     if request.method not in config.exempt_methods:
         jwt_data = get_jwt_from_request()
-        fresh = jwt_data['fresh']
-        if isinstance(fresh, bool):
-            if not fresh:
-                raise FreshTokenRequired('Fresh token required')
-        else:
-            now = timegm(datetime.utcnow().utctimetuple())
-            if fresh < now:
-                raise FreshTokenRequired('Fresh token required')
+        check_token_freshness(jwt_data)
         verify_token_claims(jwt_data)
         _load_user(jwt_data[config.identity_claim_key])
+    return jwt_data
 
 
 def verify_jwt_refresh_token_in_request():

@@ -82,11 +82,9 @@ def verify_fresh_jwt_in_request():
     appropiate exception if there is no token, the token is invalid, or the
     token is not marked as fresh.
     """
-    if request.method not in config.exempt_methods:
-        jwt_data = get_jwt_from_request()
+    jwt_data = verify_jwt_in_request()
+    if jwt_data:
         check_token_freshness(jwt_data)
-        verify_token_claims(jwt_data)
-        _load_user(jwt_data[config.identity_claim_key])
     return jwt_data
 
 

@@ -22,6 +22,14 @@ from flask_jwt_extended.utils import (
 )
 
 
+def get_jwt_from_request(request_type='access'):
+    """Load a JWT from the request and put it in the request context."""
+    jwt_data, jwt_header = _decode_jwt_from_request(request_type=request_type)
+    ctx_stack.top.jwt = jwt_data
+    ctx_stack.top.jwt_header = jwt_header
+    return jwt_data
+
+
 def verify_jwt_in_request():
     """
     Ensure that the requester has a valid access token. This does not check the
@@ -29,9 +37,7 @@ def verify_jwt_in_request():
     no token or if the token is invalid.
     """
     if request.method not in config.exempt_methods:
-        jwt_data, jwt_header = _decode_jwt_from_request(request_type='access')
-        ctx_stack.top.jwt = jwt_data
-        ctx_stack.top.jwt_header = jwt_header
+        jwt_data = get_jwt_from_request()
         verify_token_claims(jwt_data)
         _load_user(jwt_data[config.identity_claim_key])
 
@@ -49,9 +55,7 @@ def verify_jwt_in_request_optional():
     """
     try:
         if request.method not in config.exempt_methods:
-            jwt_data, jwt_header = _decode_jwt_from_request(request_type='access')
-            ctx_stack.top.jwt = jwt_data
-            ctx_stack.top.jwt_header = jwt_header
+            jwt_data = get_jwt_from_request()
             verify_token_claims(jwt_data)
             _load_user(jwt_data[config.identity_claim_key])
     except (NoAuthorizationError, InvalidHeaderError):
@@ -65,9 +69,7 @@ def verify_fresh_jwt_in_request():
     token is not marked as fresh.
     """
     if request.method not in config.exempt_methods:
-        jwt_data, jwt_header = _decode_jwt_from_request(request_type='access')
-        ctx_stack.top.jwt = jwt_data
-        ctx_stack.top.jwt_header = jwt_header
+        jwt_data = get_jwt_from_request()
         fresh = jwt_data['fresh']
         if isinstance(fresh, bool):
             if not fresh:
@@ -86,9 +88,7 @@ def verify_jwt_refresh_token_in_request():
     exception if there is no token or the token is invalid.
     """
     if request.method not in config.exempt_methods:
-        jwt_data, jwt_header = _decode_jwt_from_request(request_type='refresh')
-        ctx_stack.top.jwt = jwt_data
-        ctx_stack.top.jwt_header = jwt_header
+        jwt_data = get_jwt_from_request('refresh')
         _load_user(jwt_data[config.identity_claim_key])
 
 

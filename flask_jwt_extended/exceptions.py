@@ -61,7 +61,10 @@ class FreshTokenRequired(JWTExtendedException):
     protected by fresh_jwt_required
     """
 
-    pass
+    def __init__(self, message, jwt_header, jwt_data):
+        super().__init__(message)
+        self.jwt_header = jwt_header
+        self.jwt_data = jwt_data
 
 
 class UserLookupError(JWTExtendedException):

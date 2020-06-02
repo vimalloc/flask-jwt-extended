@@ -111,7 +111,7 @@ class JWTManager(object):
 
         @app.errorhandler(FreshTokenRequired)
         def handle_fresh_token_required(e):
-            return self._needs_fresh_token_callback()
+            return self._needs_fresh_token_callback(e.jwt_header, e.jwt_data)
 
         @app.errorhandler(InvalidAudienceError)
         def handle_invalid_audience_error(e):

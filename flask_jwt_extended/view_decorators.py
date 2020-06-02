@@ -22,15 +22,15 @@ from flask_jwt_extended.utils import verify_token_not_blacklisted
 from flask_jwt_extended.utils import verify_token_type
 
 
-def _verify_token_is_fresh(jwt_data):
+def _verify_token_is_fresh(jwt_header, jwt_data):
     fresh = jwt_data["fresh"]
     if isinstance(fresh, bool):
         if not fresh:
-            raise FreshTokenRequired("Fresh token required")
+            raise FreshTokenRequired("Fresh token required", jwt_header, jwt_data)
     else:
         now = timegm(datetime.utcnow().utctimetuple())
         if fresh < now:
-            raise FreshTokenRequired("Fresh token required")
+            raise FreshTokenRequired("Fresh token required", jwt_header, jwt_data)
 
 
 def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
@@ -48,19 +48,18 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
         else:
             jwt_data, jwt_header = _decode_jwt_from_request("access")
     except (NoAuthorizationError, InvalidHeaderError):
-        if optional:
-            _app_ctx_stack.top.jwt = {}
-            _app_ctx_stack.top.jwt_header = {}
-            return
-        else:
+        if not optional:
             raise
+        _app_ctx_stack.top.jwt = {}
+        _app_ctx_stack.top.jwt_header = {}
+        return
 
     # TODO: Move storing data in the ctx at the very end after everything has
     #       been validated. Pass in invalid tokens directly to exceptions
     _app_ctx_stack.top.jwt = jwt_data
     _app_ctx_stack.top.jwt_header = jwt_header
     if fresh:
-        _verify_token_is_fresh(jwt_data)
+        _verify_token_is_fresh(jwt_header, jwt_data)
     if not refresh or config.user_claims_in_refresh_token:
         verify_token_claims(jwt_data)
     _load_user(jwt_data[config.identity_claim_key])

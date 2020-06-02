@@ -116,7 +116,9 @@ def test_fresh_jwt_required(app):
 
     # Test with custom response
     @jwtM.needs_fresh_token_loader
-    def custom_response():
+    def custom_response(jwt_header, jwt_data):
+        assert jwt_header["alg"] == "HS256"
+        assert jwt_data["sub"] == "username"
         return jsonify(msg="foobar"), 201
 
     response = test_client.get(url, headers=make_headers(access_token))

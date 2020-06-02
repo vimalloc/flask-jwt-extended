@@ -73,7 +73,7 @@ def default_unauthorized_callback(error_string):
     return jsonify({config.error_msg_key: error_string}), 401
 
 
-def default_needs_fresh_token_callback():
+def default_needs_fresh_token_callback(jwt_header, jwt_data):
     """
     By default, if a non-fresh jwt is used to access a ```fresh_jwt_required```
     endpoint, we return a general error message with a 401 status code

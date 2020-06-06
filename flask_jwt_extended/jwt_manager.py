@@ -33,7 +33,6 @@ from flask_jwt_extended.exceptions import UserLookupError
 from flask_jwt_extended.exceptions import WrongTokenError
 from flask_jwt_extended.tokens import _decode_jwt
 from flask_jwt_extended.tokens import _encode_jwt
-from flask_jwt_extended.utils import get_jwt_identity
 
 
 class JWTManager(object):
@@ -147,11 +146,7 @@ class JWTManager(object):
 
         @app.errorhandler(UserLookupError)
         def handler_user_lookup_error(e):
-            # The identity is already saved before this exception was raised,
-            # otherwise a different exception would be raised, which is why we
-            # can safely call get_jwt_identity() here
-            identity = get_jwt_identity()
-            return self._user_lookup_error_callback(identity)
+            return self._user_lookup_error_callback(e.jwt_header, e.jwt_data)
 
         @app.errorhandler(WrongTokenError)
         def handle_wrong_token_error(e):

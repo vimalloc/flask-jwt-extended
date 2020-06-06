@@ -73,7 +73,9 @@ def test_custom_user_lookup_errors(app, url):
         return None
 
     @jwt.user_lookup_error_loader
-    def user_lookup_error(identity):
+    def user_lookup_error(jwt_header, jwt_data):
+        assert jwt_header["alg"] == "HS256"
+        assert jwt_data["sub"] == "username"
         return jsonify(foo="bar"), 201
 
     test_client = app.test_client()

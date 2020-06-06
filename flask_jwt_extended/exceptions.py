@@ -73,7 +73,10 @@ class UserLookupError(JWTExtendedException):
     that it cannot or will not load a user for the given identity.
     """
 
-    pass
+    def __init__(self, message, jwt_header, jwt_data):
+        super().__init__(message)
+        self.jwt_header = jwt_header
+        self.jwt_data = jwt_data
 
 
 class UserClaimsVerificationError(JWTExtendedException):

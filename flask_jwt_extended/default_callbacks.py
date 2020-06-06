@@ -89,16 +89,18 @@ def default_revoked_token_callback():
     return jsonify({config.error_msg_key: "Token has been revoked"}), 401
 
 
-def default_user_lookup_error_callback(identity):
+def default_user_lookup_error_callback(_jwt_header, jwt_data):
     """
     By default, if a user_lookup callback is defined and the callback
     function returns None, we return a general error message with a 401
     status code
     """
+    identity = jwt_data[config.identity_claim_key]
     result = {config.error_msg_key: "Error loading the user {}".format(identity)}
     return jsonify(result), 401
 
 
+# TODO: Change this to default_token_verification_callback, pass in header and data.
 def default_claims_verification_callback(user_claims):
     """
     By default, we do not do any verification of the user claims.

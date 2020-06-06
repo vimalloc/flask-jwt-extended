@@ -13,11 +13,11 @@ from flask_jwt_extended.exceptions import FreshTokenRequired
 from flask_jwt_extended.exceptions import InvalidHeaderError
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_jwt_extended.exceptions import UserLookupError
+from flask_jwt_extended.utils import _verify_token_claims
 from flask_jwt_extended.utils import decode_token
 from flask_jwt_extended.utils import get_unverified_jwt_headers
 from flask_jwt_extended.utils import has_user_lookup
 from flask_jwt_extended.utils import user_lookup
-from flask_jwt_extended.utils import verify_token_claims
 from flask_jwt_extended.utils import verify_token_not_blacklisted
 from flask_jwt_extended.utils import verify_token_type
 
@@ -54,15 +54,16 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
         _request_ctx_stack.top.jwt_header = {}
         return
 
-    # TODO: Move storing data in the ctx at the very end after everything has
-    #       been validated. Pass in invalid tokens directly to exceptions
-    _request_ctx_stack.top.jwt = jwt_data
-    _request_ctx_stack.top.jwt_header = jwt_header
     if fresh:
         _verify_token_is_fresh(jwt_header, jwt_data)
     if not refresh or config.user_claims_in_refresh_token:
-        verify_token_claims(jwt_header, jwt_data)
-    _load_user(jwt_data[config.identity_claim_key])
+        _verify_token_claims(jwt_header, jwt_data)
+
+    # Save these at the very end so that they are only saved in the requet
+    # context if the token is valid and all callbacks succeed
+    _request_ctx_stack.top.jwt_user = _load_user(jwt_header, jwt_data)
+    _request_ctx_stack.top.jwt_header = jwt_header
+    _request_ctx_stack.top.jwt = jwt_data
 
 
 def jwt_required(optional=False, fresh=False, refresh=False):
@@ -87,15 +88,16 @@ def jwt_required(optional=False, fresh=False, refresh=False):
     return wrapper
 
 
-def _load_user(identity):
+def _load_user(jwt_header, jwt_data):
     if not has_user_lookup():
-        return
+        return None
 
+    identity = jwt_data[config.identity_claim_key]
     user = user_lookup(identity)
     if user is None:
-        raise UserLookupError("user_lookup returned None for {}".format(identity))
-    else:
-        _request_ctx_stack.top.jwt_user = user
+        error_msg = "user_lookup returned None for {}".format(identity)
+        raise UserLookupError(error_msg, jwt_header, jwt_data)
+    return user
 
 
 def _decode_jwt_from_headers():

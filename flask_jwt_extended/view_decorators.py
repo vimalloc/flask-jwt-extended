@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import wraps
 from re import split
 
-from flask import _app_ctx_stack
+from flask import _request_ctx_stack
 from flask import request
 from werkzeug.exceptions import BadRequest
 
@@ -50,14 +50,14 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
     except (NoAuthorizationError, InvalidHeaderError):
         if not optional:
             raise
-        _app_ctx_stack.top.jwt = {}
-        _app_ctx_stack.top.jwt_header = {}
+        _request_ctx_stack.top.jwt = {}
+        _request_ctx_stack.top.jwt_header = {}
         return
 
     # TODO: Move storing data in the ctx at the very end after everything has
     #       been validated. Pass in invalid tokens directly to exceptions
-    _app_ctx_stack.top.jwt = jwt_data
-    _app_ctx_stack.top.jwt_header = jwt_header
+    _request_ctx_stack.top.jwt = jwt_data
+    _request_ctx_stack.top.jwt_header = jwt_header
     if fresh:
         _verify_token_is_fresh(jwt_header, jwt_data)
     if not refresh or config.user_claims_in_refresh_token:
@@ -95,7 +95,7 @@ def _load_user(identity):
     if user is None:
         raise UserLookupError("user_lookup returned None for {}".format(identity))
     else:
-        _app_ctx_stack.top.jwt_user = user
+        _request_ctx_stack.top.jwt_user = user
 
 
 def _decode_jwt_from_headers():

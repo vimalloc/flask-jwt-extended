@@ -1,7 +1,7 @@
 import datetime
 
 import jwt
-from flask import _app_ctx_stack
+from flask import _request_ctx_stack
 from jwt import DecodeError
 from jwt import ExpiredSignatureError
 from jwt import InvalidAudienceError
@@ -106,7 +106,7 @@ class JWTManager(object):
 
         @app.errorhandler(ExpiredSignatureError)
         def handle_expired_error(e):
-            token = _app_ctx_stack.top.expired_jwt
+            token = _request_ctx_stack.top.expired_jwt
             return self._expired_token_callback(token)
 
         @app.errorhandler(FreshTokenRequired)
@@ -502,5 +502,5 @@ class JWTManager(object):
             return _decode_jwt(**kwargs, allow_expired=allow_expired)
         except ExpiredSignatureError:
             expired_token = _decode_jwt(**kwargs, allow_expired=True)
-            _app_ctx_stack.top.expired_jwt = expired_token
+            _request_ctx_stack.top.expired_jwt = expired_token
             raise

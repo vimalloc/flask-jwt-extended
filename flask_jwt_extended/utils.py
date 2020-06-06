@@ -1,5 +1,5 @@
 import jwt
-from flask import _app_ctx_stack
+from flask import _request_ctx_stack
 from flask import current_app
 from werkzeug.local import LocalProxy
 
@@ -19,7 +19,7 @@ def get_jwt():
     all of the claims of the JWT that is accessing the endpoint. If no
     JWT is currently present, an empty dict is returned instead.
     """
-    decoded_jwt = getattr(_app_ctx_stack.top, "jwt", None)
+    decoded_jwt = getattr(_request_ctx_stack.top, "jwt", None)
     if decoded_jwt is None:
         raise RuntimeError(
             "You must call `@jwt_required()` or `verify_jwt_in_request` "
@@ -34,7 +34,7 @@ def get_jwt_header():
     the JWT headers values. If no
     JWT is currently present, an empty dict is returned instead.
     """
-    decoded_header = getattr(_app_ctx_stack.top, "jwt_header", None)
+    decoded_header = getattr(_request_ctx_stack.top, "jwt_header", None)
     if decoded_header is None:
         raise RuntimeError(
             "You must call `@jwt_required()` or `verify_jwt_in_request` "
@@ -59,7 +59,7 @@ def get_current_user():
     being used. If the user loader callback is not being used, this will
     return `None`.
     """
-    user = getattr(_app_ctx_stack.top, "jwt_user", None)
+    user = getattr(_request_ctx_stack.top, "jwt_user", None)
     if user is None:
         raise RuntimeError(
             "You must provide a `@jwt.user_lookup_loader` callback to use "

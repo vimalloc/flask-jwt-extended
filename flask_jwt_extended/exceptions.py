@@ -82,4 +82,7 @@ class UserClaimsVerificationError(JWTExtendedException):
     indicating that the expected user claims are invalid
     """
 
-    pass
+    def __init__(self, message, jwt_header, jwt_data):
+        super().__init__(message)
+        self.jwt_header = jwt_header
+        self.jwt_data = jwt_data

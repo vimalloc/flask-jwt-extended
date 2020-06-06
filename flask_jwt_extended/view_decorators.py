@@ -61,7 +61,7 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
     if fresh:
         _verify_token_is_fresh(jwt_header, jwt_data)
     if not refresh or config.user_claims_in_refresh_token:
-        verify_token_claims(jwt_data)
+        verify_token_claims(jwt_header, jwt_data)
     _load_user(jwt_data[config.identity_claim_key])
 
 

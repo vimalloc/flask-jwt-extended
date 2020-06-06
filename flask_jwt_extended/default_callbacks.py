@@ -106,7 +106,7 @@ def default_claims_verification_callback(user_claims):
     return True
 
 
-def default_verify_claims_failed_callback():
+def default_verify_claims_failed_callback(_jwt_header, _jwt_data):
     """
     By default, if the user claims verification failed, we return a generic
     error message with a 400 status code

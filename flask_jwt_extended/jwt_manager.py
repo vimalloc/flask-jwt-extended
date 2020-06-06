@@ -143,7 +143,7 @@ class JWTManager(object):
 
         @app.errorhandler(UserClaimsVerificationError)
         def handle_failed_user_claims_verification(e):
-            return self._verify_claims_failed_callback()
+            return self._verify_claims_failed_callback(e.jwt_header, e.jwt_data)
 
         @app.errorhandler(UserLookupError)
         def handler_user_lookup_error(e):

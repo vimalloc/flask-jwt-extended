@@ -81,7 +81,9 @@ def test_claims_validation_custom_error(app, url):
         return False
 
     @jwt.claims_verification_failed_loader
-    def custom_error():
+    def custom_error(jwt_header, jwt_data):
+        assert jwt_header["alg"] == "HS256"
+        assert jwt_data["sub"] == "username"
         user = get_jwt_identity()
         return jsonify(msg="claims failed for {}".format(user)), 404
 

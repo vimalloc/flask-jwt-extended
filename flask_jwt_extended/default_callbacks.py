@@ -45,7 +45,7 @@ def default_user_identity_callback(userdata):
     return userdata
 
 
-def default_expired_token_callback(expired_token):
+def default_expired_token_callback(_expired_jwt_header, _expired_jwt_data):
     """
     By default, if an expired token attempts to access a protected endpoint,
     we return a generic error message with a 401 status

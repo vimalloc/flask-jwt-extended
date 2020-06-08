@@ -288,9 +288,10 @@ def test_expired_token(app, delta_func):
 
     # Test new custom response
     @jwtM.expired_token_loader
-    def custom_response(token):
-        assert token["sub"] == "username"
-        assert token["type"] == "access"
+    def custom_response(expired_jwt_header, expired_jwt_data):
+        assert expired_jwt_header["alg"] == "HS256"
+        assert expired_jwt_data["sub"] == "username"
+        assert expired_jwt_data["type"] == "access"
         return jsonify(msg="foobar"), 201
 
     response = test_client.get(url, headers=make_headers(token))
@@ -302,8 +303,9 @@ def test_expired_token_via_decode_token(app):
     jwtM = get_jwt_manager(app)
 
     @jwtM.expired_token_loader
-    def depreciated_custom_response(expired_token):
-        assert expired_token["sub"] == "username"
+    def depreciated_custom_response(expired_jwt_header, expired_jwt_data):
+        assert expired_jwt_header["alg"] == "HS256"
+        assert expired_jwt_data["sub"] == "username"
         return jsonify(msg="foobar"), 401
 
     @app.route("/test")

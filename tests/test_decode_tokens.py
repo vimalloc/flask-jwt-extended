@@ -262,7 +262,27 @@ def test_invalid_aud(app, default_access_token, token_aud):
         with app.test_request_context():
             decode_token(invalid_token)
 
-def test_valid_iss(app, default_access_token):
+
+def test_encode_iss(app, default_access_token):
+    app.config['JWT_ENCODE_ISSUER'] = 'foobar'
+
+    with app.test_request_context():
+        access_token = create_access_token('username')
+        decoded = decode_token(access_token)
+        assert decoded['iss'] == 'foobar'
+
+
+def test_mismatch_iss(app, default_access_token):
+    app.config['JWT_ENCODE_ISSUER'] = 'foobar'
+    app.config['JWT_DECODE_ISSUER'] = 'baz'
+
+    with pytest.raises(InvalidIssuerError):
+        with app.test_request_context():
+            invalid_token = create_access_token('username')
+            decode_token(invalid_token)
+
+
+def test_valid_decode_iss(app, default_access_token):
     app.config['JWT_DECODE_ISSUER'] = 'foobar'
 
     default_access_token['iss'] = 'foobar'
@@ -271,7 +291,9 @@ def test_valid_iss(app, default_access_token):
         decoded = decode_token(valid_token)
         assert decoded['iss'] == 'foobar'
 
-def test_invalid_iss(app, default_access_token):
+
+def test_invalid_decode_iss(app, default_access_token):
+
     app.config['JWT_DECODE_ISSUER'] = 'baz'
 
     default_access_token['iss'] = 'foobar'

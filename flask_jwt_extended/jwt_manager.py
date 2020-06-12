@@ -230,6 +230,7 @@ class JWTManager(object):
         app.config.setdefault('JWT_IDENTITY_CLAIM', 'identity')
         app.config.setdefault('JWT_USER_CLAIMS', 'user_claims')
         app.config.setdefault('JWT_DECODE_AUDIENCE', None)
+        app.config.setdefault('JWT_ENCODE_ISSUER', None)
         app.config.setdefault('JWT_DECODE_ISSUER', None)
         app.config.setdefault('JWT_DECODE_LEEWAY', 0)
 
@@ -519,6 +520,7 @@ class JWTManager(object):
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
             json_encoder=config.json_encoder,
-            headers=headers
+            headers=headers,
+            issuer=config.encode_issuer,
         )
         return access_token

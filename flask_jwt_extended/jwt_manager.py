@@ -44,6 +44,24 @@ class JWTManager(object):
     to your app in a factory function.
     """
 
+    # register the default error handler callback methods. these can be
+    # overridden with the appropriate loader decorators
+    _claims_verification_callback = staticmethod(default_claims_verification_callback)
+    _decode_key_callback = staticmethod(default_decode_key_callback)
+    _encode_key_callback = staticmethod(default_encode_key_callback)
+    _expired_token_callback = staticmethod(default_expired_token_callback)
+    _invalid_token_callback = staticmethod(default_invalid_token_callback)
+    _jwt_additional_header_callback = staticmethod(default_jwt_headers_callback)
+    _needs_fresh_token_callback = staticmethod(default_needs_fresh_token_callback)
+    _revoked_token_callback = staticmethod(default_revoked_token_callback)
+    _token_in_blacklist_callback = None
+    _unauthorized_callback = staticmethod(default_unauthorized_callback)
+    _user_claims_callback = staticmethod(default_user_claims_callback)
+    _user_identity_callback = staticmethod(default_user_identity_callback)
+    _user_lookup_callback = None
+    _user_lookup_error_callback = staticmethod(default_user_lookup_error_callback)
+    _verify_claims_failed_callback = staticmethod(default_verify_claims_failed_callback)
+
     def __init__(self, app=None):
         """
         Create the JWTManager instance. You can either pass a flask application
@@ -52,24 +70,6 @@ class JWTManager(object):
 
         :param app: A flask application
         """
-        # Register the default error handler callback methods. These can be
-        # overridden with the appropriate loader decorators
-        self._claims_verification_callback = default_claims_verification_callback
-        self._decode_key_callback = default_decode_key_callback
-        self._encode_key_callback = default_encode_key_callback
-        self._expired_token_callback = default_expired_token_callback
-        self._invalid_token_callback = default_invalid_token_callback
-        self._jwt_additional_header_callback = default_jwt_headers_callback
-        self._needs_fresh_token_callback = default_needs_fresh_token_callback
-        self._revoked_token_callback = default_revoked_token_callback
-        self._token_in_blacklist_callback = None
-        self._unauthorized_callback = default_unauthorized_callback
-        self._user_claims_callback = default_user_claims_callback
-        self._user_identity_callback = default_user_identity_callback
-        self._user_lookup_callback = None
-        self._user_lookup_error_callback = default_user_lookup_error_callback
-        self._verify_claims_failed_callback = default_verify_claims_failed_callback
-
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
             self.init_app(app)

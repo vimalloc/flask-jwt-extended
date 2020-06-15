@@ -172,22 +172,22 @@ def create_refresh_token(identity, expires_delta=None, user_claims=None, headers
 
 def has_user_lookup():
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._user_lookup_callback is not None
+    return jwt_manager.lookup_user is not None
 
 
 def user_lookup(*args, **kwargs):
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._user_lookup_callback(*args, **kwargs)
+    return jwt_manager.lookup_user(*args, **kwargs)
 
 
 def has_token_in_blacklist_callback():
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._token_in_blacklist_callback is not None
+    return jwt_manager.token_is_blacklisted is not None
 
 
 def token_in_blacklist(*args, **kwargs):
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._token_in_blacklist_callback(*args, **kwargs)
+    return jwt_manager.token_is_blacklisted(*args, **kwargs)
 
 
 def verify_token_type(decoded_token, expected_type):
@@ -214,7 +214,7 @@ def verify_token_not_blacklisted(decoded_token, request_type):
 
 def _verify_token_claims(jwt_header, jwt_data):
     jwt_manager = _get_jwt_manager()
-    if not jwt_manager._claims_verification_callback(jwt_data):
+    if not jwt_manager.verify_claims(jwt_data):
         error_msg = "User claims verification failed"
         raise UserClaimsVerificationError(error_msg, jwt_header, jwt_data)
 

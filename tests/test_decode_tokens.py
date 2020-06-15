@@ -165,20 +165,20 @@ def test_encode_decode_callback_values(app, default_access_token):
     jwtM = get_jwt_manager(app)
     app.config["JWT_SECRET_KEY"] = "foobarbaz"
     with app.test_request_context():
-        assert jwtM._decode_key_callback({}, {}) == "foobarbaz"
-        assert jwtM._encode_key_callback({}) == "foobarbaz"
+        assert jwtM.decode_key({}, {}) == "foobarbaz"
+        assert jwtM.encode_key({}) == "foobarbaz"
 
     @jwtM.encode_key_loader
     def get_encode_key_1(identity):
         return "different secret"
 
-    assert jwtM._encode_key_callback("") == "different secret"
+    assert jwtM.encode_key("") == "different secret"
 
     @jwtM.decode_key_loader
     def get_decode_key_1(claims, headers):
         return "different secret"
 
-    assert jwtM._decode_key_callback({}, {}) == "different secret"
+    assert jwtM.decode_key({}, {}) == "different secret"
 
 
 def test_custom_encode_decode_key_callbacks(app, default_access_token):

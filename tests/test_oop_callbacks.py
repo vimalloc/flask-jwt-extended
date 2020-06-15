@@ -10,7 +10,7 @@ from tests.utils import make_headers
 
 
 class JWTManager(JWTManager_):
-    def _user_claims_callback(self, identity):
+    def user_claims(self, identity):
         return {"foo": "bar"}
 
 

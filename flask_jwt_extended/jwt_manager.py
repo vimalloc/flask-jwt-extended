@@ -8,19 +8,7 @@ from jwt import InvalidIssuerError
 from jwt import InvalidTokenError
 
 from flask_jwt_extended.config import config
-from flask_jwt_extended.default_callbacks import default_claims_verification_callback
-from flask_jwt_extended.default_callbacks import default_decode_key_callback
-from flask_jwt_extended.default_callbacks import default_encode_key_callback
-from flask_jwt_extended.default_callbacks import default_expired_token_callback
-from flask_jwt_extended.default_callbacks import default_invalid_token_callback
-from flask_jwt_extended.default_callbacks import default_jwt_headers_callback
-from flask_jwt_extended.default_callbacks import default_needs_fresh_token_callback
-from flask_jwt_extended.default_callbacks import default_revoked_token_callback
-from flask_jwt_extended.default_callbacks import default_unauthorized_callback
-from flask_jwt_extended.default_callbacks import default_user_claims_callback
-from flask_jwt_extended.default_callbacks import default_user_identity_callback
-from flask_jwt_extended.default_callbacks import default_user_lookup_error_callback
-from flask_jwt_extended.default_callbacks import default_verify_claims_failed_callback
+from flask_jwt_extended.default_callbacks import DefaultCallbacks
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import FreshTokenRequired
 from flask_jwt_extended.exceptions import InvalidHeaderError
@@ -34,7 +22,7 @@ from flask_jwt_extended.tokens import _decode_jwt
 from flask_jwt_extended.tokens import _encode_jwt
 
 
-class JWTManager(object):
+class JWTManager(DefaultCallbacks):
     """
     An object used to hold JWT settings and callback functions for the
     Flask-JWT-Extended extension.
@@ -46,21 +34,8 @@ class JWTManager(object):
 
     # register the default error handler callback methods. these can be
     # overridden with the appropriate loader decorators
-    _claims_verification_callback = staticmethod(default_claims_verification_callback)
-    _decode_key_callback = staticmethod(default_decode_key_callback)
-    _encode_key_callback = staticmethod(default_encode_key_callback)
-    _expired_token_callback = staticmethod(default_expired_token_callback)
-    _invalid_token_callback = staticmethod(default_invalid_token_callback)
-    _jwt_additional_header_callback = staticmethod(default_jwt_headers_callback)
-    _needs_fresh_token_callback = staticmethod(default_needs_fresh_token_callback)
-    _revoked_token_callback = staticmethod(default_revoked_token_callback)
-    _token_in_blacklist_callback = None
-    _unauthorized_callback = staticmethod(default_unauthorized_callback)
-    _user_claims_callback = staticmethod(default_user_claims_callback)
-    _user_identity_callback = staticmethod(default_user_identity_callback)
-    _user_lookup_callback = None
-    _user_lookup_error_callback = staticmethod(default_user_lookup_error_callback)
-    _verify_claims_failed_callback = staticmethod(default_verify_claims_failed_callback)
+    token_is_blacklisted = None
+    lookup_user = None
 
     def __init__(self, app=None):
         """
@@ -96,59 +71,59 @@ class JWTManager(object):
 
         @app.errorhandler(CSRFError)
         def handle_csrf_error(e):
-            return self._unauthorized_callback(str(e))
+            return self.unauthorized_response(str(e))
 
         @app.errorhandler(DecodeError)
         def handle_decode_error(e):
-            return self._invalid_token_callback(str(e))
+            return self.invalid_token_response(str(e))
 
         @app.errorhandler(ExpiredSignatureError)
         def handle_expired_error(e):
-            return self._expired_token_callback(e.jwt_header, e.jwt_data)
+            return self.expired_token_response(e.jwt_header, e.jwt_data)
 
         @app.errorhandler(FreshTokenRequired)
         def handle_fresh_token_required(e):
-            return self._needs_fresh_token_callback(e.jwt_header, e.jwt_data)
+            return self.needs_fresh_token_response(e.jwt_header, e.jwt_data)
 
         @app.errorhandler(InvalidAudienceError)
         def handle_invalid_audience_error(e):
-            return self._invalid_token_callback(str(e))
+            return self.invalid_token_response(str(e))
 
         @app.errorhandler(InvalidIssuerError)
         def handle_invalid_issuer_error(e):
-            return self._invalid_token_callback(str(e))
+            return self.invalid_token_response(str(e))
 
         @app.errorhandler(InvalidHeaderError)
         def handle_invalid_header_error(e):
-            return self._invalid_token_callback(str(e))
+            return self.invalid_token_response(str(e))
 
         @app.errorhandler(InvalidTokenError)
         def handle_invalid_token_error(e):
-            return self._invalid_token_callback(str(e))
+            return self.invalid_token_response(str(e))
 
         @app.errorhandler(JWTDecodeError)
         def handle_jwt_decode_error(e):
-            return self._invalid_token_callback(str(e))
+            return self.invalid_token_response(str(e))
 
         @app.errorhandler(NoAuthorizationError)
         def handle_auth_error(e):
-            return self._unauthorized_callback(str(e))
+            return self.unauthorized_response(str(e))
 
         @app.errorhandler(RevokedTokenError)
         def handle_revoked_token_error(e):
-            return self._revoked_token_callback()
+            return self.revoked_token_response()
 
         @app.errorhandler(UserClaimsVerificationError)
         def handle_failed_user_claims_verification(e):
-            return self._verify_claims_failed_callback(e.jwt_header, e.jwt_data)
+            return self.invalid_claims_response(e.jwt_header, e.jwt_data)
 
         @app.errorhandler(UserLookupError)
         def handler_user_lookup_error(e):
-            return self._user_lookup_error_callback(e.jwt_header, e.jwt_data)
+            return self.user_lookup_error_response(e.jwt_header, e.jwt_data)
 
         @app.errorhandler(WrongTokenError)
         def handle_wrong_token_error(e):
-            return self._invalid_token_callback(str(e))
+            return self.invalid_token_response(str(e))
 
     @staticmethod
     def _set_default_configuration_options(app):
@@ -212,7 +187,7 @@ class JWTManager(object):
         claims you want included in the access tokens. This returned claims
         must be *JSON serializable*.
         """
-        self._jwt_additional_header_callback = callback
+        self.jwt_headers = callback
         return callback
 
     def claims_verification_failed_loader(self, callback):
@@ -227,7 +202,7 @@ class JWTManager(object):
         *HINT*: This callback must be a function that takes **no** arguments, and returns
         a *Flask response*.
         """
-        self._verify_claims_failed_callback = callback
+        self.invalid_claims_response = callback
         return callback
 
     def claims_verification_loader(self, callback):
@@ -243,7 +218,7 @@ class JWTManager(object):
         custom claims (python dict) present in the JWT, and returns *`True`* if the
         claims are valid, or *`False`* otherwise.
         """
-        self._claims_verification_callback = callback
+        self.verify_claims = callback
         return callback
 
     def decode_key_loader(self, callback):
@@ -260,7 +235,7 @@ class JWTManager(object):
         (dictionaries). The function must return a *string* which is the decode key
         in PEM format to verify the token.
         """
-        self._decode_key_callback = callback
+        self.decode_key = callback
         return callback
 
     def encode_key_loader(self, callback):
@@ -277,7 +252,7 @@ class JWTManager(object):
         or create_refresh_token functions, and must return a *string* which is
         the decode key to verify the token.
         """
-        self._encode_key_callback = callback
+        self.encode_key = callback
         return callback
 
     def expired_token_loader(self, callback):
@@ -292,7 +267,7 @@ class JWTManager(object):
         which is a dictionary containing the data for the expired token, and
         and returns a *Flask response*.
         """
-        self._expired_token_callback = callback
+        self.expired_token_response = callback
         return callback
 
     def invalid_token_loader(self, callback):
@@ -307,7 +282,7 @@ class JWTManager(object):
         a string which contains the reason why a token is invalid, and returns
         a *Flask response*.
         """
-        self._invalid_token_callback = callback
+        self.invalid_token_response = callback
         return callback
 
     def needs_fresh_token_loader(self, callback):
@@ -322,7 +297,7 @@ class JWTManager(object):
         *HINT*: The callback must be a function that takes **no** arguments, and returns
         a *Flask response*.
         """
-        self._needs_fresh_token_callback = callback
+        self.needs_fresh_token_response = callback
         return callback
 
     def revoked_token_loader(self, callback):
@@ -336,7 +311,7 @@ class JWTManager(object):
         *HINT*: The callback must be a function that takes **no** arguments, and returns
         a *Flask response*.
         """
-        self._revoked_token_callback = callback
+        self.revoked_token_response = callback
         return callback
 
     def token_in_blacklist_loader(self, callback):
@@ -350,7 +325,7 @@ class JWTManager(object):
         has been blacklisted (or is otherwise considered revoked), or *`False`*
         otherwise.
         """
-        self._token_in_blacklist_callback = callback
+        self.token_is_blacklisted = callback
         return callback
 
     def unauthorized_loader(self, callback):
@@ -365,7 +340,7 @@ class JWTManager(object):
         a string which contains the reason why a JWT could not be found, and
         returns a *Flask response*.
         """
-        self._unauthorized_callback = callback
+        self.unauthorized_response = callback
         return callback
 
     def user_claims_loader(self, callback):
@@ -380,7 +355,7 @@ class JWTManager(object):
         claims you want included in the access tokens. This returned claims
         must be *JSON serializable*.
         """
-        self._user_claims_callback = callback
+        self.user_claims = callback
         return callback
 
     def user_identity_loader(self, callback):
@@ -398,7 +373,7 @@ class JWTManager(object):
         :func:`~flask_jwt_extended.create_refresh_token`, and returns the
         *JSON serializable* identity of this token.
         """
-        self._user_identity_callback = callback
+        self.user_identity = callback
         return callback
 
     def user_lookup_loader(self, callback):
@@ -415,7 +390,7 @@ class JWTManager(object):
         `None`, the :meth:`~flask_jwt_extended.JWTManager.user_lookup_error_loader`
         will be called.
         """
-        self._user_lookup_callback = callback
+        self.lookup_user = callback
         return callback
 
     def user_lookup_error_loader(self, callback):
@@ -431,7 +406,7 @@ class JWTManager(object):
         *HINT*: The callback must be a function that takes **one** argument, which is the
         identity of the user who failed to load, and must return a *Flask response*.
         """
-        self._user_lookup_error_callback = callback
+        self.user_lookup_error_response = callback
         return callback
 
     def _encode_jwt_from_config(
@@ -447,10 +422,10 @@ class JWTManager(object):
             expires_delta = config.refresh_expires
 
         if headers is None:
-            headers = self._jwt_additional_header_callback(identity)
+            headers = self.jwt_headers(identity)
 
         if token_type == "access" or config.user_claims_in_refresh_token:
-            claim_overrides = self._user_claims_callback(identity)
+            claim_overrides = self.user_claims(identity)
         else:
             claim_overrides = {}
 
@@ -464,10 +439,10 @@ class JWTManager(object):
             expires_delta=expires_delta,
             fresh=fresh,
             headers=headers,
-            identity=self._user_identity_callback(identity),
+            identity=self.user_identity(identity),
             identity_claim_key=config.identity_claim_key,
             json_encoder=config.json_encoder,
-            secret=self._encode_key_callback(identity),
+            secret=self.encode_key(identity),
             token_type=token_type,
         )
 
@@ -478,7 +453,7 @@ class JWTManager(object):
             encoded_token, verify=False, algorithms=config.decode_algorithms
         )
         unverified_headers = jwt.get_unverified_header(encoded_token)
-        secret = self._decode_key_callback(unverified_claims, unverified_headers)
+        secret = self.decode_key(unverified_claims, unverified_headers)
 
         kwargs = {
             "algorithms": config.decode_algorithms,

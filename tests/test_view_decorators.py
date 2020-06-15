@@ -11,6 +11,7 @@ from flask_jwt_extended import decode_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
+from flask_jwt_extended import verify_jwt_in_request
 from tests.utils import encode_token
 from tests.utils import get_jwt_manager
 from tests.utils import make_headers
@@ -351,3 +352,21 @@ def test_different_token_algorightm(app):
     response = test_client.get(url, headers=make_headers(token))
     assert response.status_code == 422
     assert response.get_json() == {"msg": "The specified alg value is not allowed"}
+
+
+def test_verify_jwt_in_request_returns_decoded_token(app):
+    @app.route("/custom", methods=["GET"])
+    def custom():
+        jwt_header, jwt_data = verify_jwt_in_request()
+        assert jwt_header["alg"] == "HS256"
+        assert jwt_data["sub"] == "username"
+        return jsonify(foo="bar")
+
+    url = "/custom"
+    test_client = app.test_client()
+    with app.test_request_context():
+        token = create_access_token("username")
+
+    response = test_client.get(url, headers=make_headers(token))
+    assert response.status_code == 200
+    assert response.get_json() == {"foo": "bar"}

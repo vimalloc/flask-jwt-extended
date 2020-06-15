@@ -65,6 +65,8 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
     _request_ctx_stack.top.jwt_header = jwt_header
     _request_ctx_stack.top.jwt = jwt_data
 
+    return jwt_header, jwt_data
+
 
 def jwt_required(optional=False, fresh=False, refresh=False):
     """

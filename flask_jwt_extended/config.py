@@ -331,5 +331,9 @@ class _Config(object):
     def leeway(self):
         return current_app.config["JWT_DECODE_LEEWAY"]
 
+    @property
+    def verify_audience(self):
+        return current_app.config["JWT_VERIFY_AUDIENCE"]
+
 
 config = _Config()

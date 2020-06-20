@@ -198,6 +198,7 @@ class JWTManager(object):
         app.config.setdefault("JWT_SECRET_KEY", None)
         app.config.setdefault("JWT_SESSION_COOKIE", True)
         app.config.setdefault("JWT_TOKEN_LOCATION", ("headers",))
+        app.config.setdefault("JWT_VERIFY_AUDIENCE", True)
 
     def additional_headers_loader(self, callback):
         """
@@ -489,6 +490,7 @@ class JWTManager(object):
             "issuer": config.issuer,
             "leeway": config.leeway,
             "secret": secret,
+            "verify_aud": config.verify_audience,
         }
 
         try:

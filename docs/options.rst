@@ -58,6 +58,10 @@ General Options:
                                   not very far. This leeway is used for `nbf` (“not before”) and `exp`
                                   (“expiration time”).
                                   Defaults to ``0``
+``JWT_VERIFY_AUDIENCE``           Whether audience should be verified when decoding.  Use when you need
+                                  to skip verification regardless of the value in the token.  If you
+                                  need to explicitly verify that ``aud`` is not set, use ``JWT_DECODE_AUDIENCE=None``.
+                                  Defaults to ``True``.
 ================================= =========================================
 
 

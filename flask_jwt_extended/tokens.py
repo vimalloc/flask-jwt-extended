@@ -61,12 +61,14 @@ def _decode_jwt(
     issuer,
     leeway,
     secret,
+    verify_aud,
 ):
-    options = {}
+    options = {"verify_aud": verify_aud}
     if allow_expired:
         options["verify_exp"] = False
 
-    # This call verifies the ext, iat, nbf, and aud claims
+    # This call verifies the ext, iat, and nbf claims
+    # This optionally verifies the exp and aud claims if enabled
     decoded_token = jwt.decode(
         encoded_token,
         secret,

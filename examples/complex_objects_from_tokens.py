@@ -27,12 +27,13 @@ users_to_roles = {"foo": ["admin"], "bar": ["peasant"], "baz": ["peasant"]}
 
 # This function is called whenever a protected endpoint is accessed,
 # and must return an object based on the tokens identity.
-# This is called after the token is verified, so you can use
-# get_jwt() in here if desired. Note that this needs to
+# This is called after the token is verified, so you can safely
+# use the claims passed in. Note that this needs to
 # return None if the user could not be loaded for any reason,
 # such as not being found in the underlying data store
 @jwt.user_lookup_loader
-def user_lookup_callback(identity):
+def user_lookup_callback(_jwt_header, jwt_data):
+    identity = jwt_data["sub"]
     if identity not in users_to_roles:
         return None
 
@@ -43,11 +44,10 @@ def user_lookup_callback(identity):
 # user_lookup_callback returns None. If you don't override
 # this, # it will return a 401 status code with the JSON:
 # {"msg": "Error loading the user <identity>"}.
-# You can use # get_jwt() here too if desired
 @jwt.user_lookup_error_loader
-def custom_user_lookup_error(identity):
-    ret = {"msg": "User {} not found".format(identity)}
-    return jsonify(ret), 404
+def custom_user_lookup_error(_jwt_header, jwt_data):
+    identity = jwt_data["sub"]
+    return jsonify(msg="{} not found".format(identity)), 401
 
 
 # Create a token for any user, so this can be tested out

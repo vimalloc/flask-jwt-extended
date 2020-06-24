@@ -35,8 +35,8 @@ def test_load_valid_user(app, url):
     jwt = get_jwt_manager(app)
 
     @jwt.user_lookup_loader
-    def user_lookup_callback(identity):
-        return {"username": identity}
+    def user_lookup_callback(_jwt_header, jwt_data):
+        return {"username": jwt_data["sub"]}
 
     test_client = app.test_client()
     with app.test_request_context():
@@ -52,7 +52,7 @@ def test_load_invalid_user(app, url):
     jwt = get_jwt_manager(app)
 
     @jwt.user_lookup_loader
-    def user_lookup_callback(identity):
+    def user_lookup_callback(_jwt_header, jwt_data):
         return None
 
     test_client = app.test_client()
@@ -69,7 +69,7 @@ def test_custom_user_lookup_errors(app, url):
     jwt = get_jwt_manager(app)
 
     @jwt.user_lookup_loader
-    def user_lookup_callback(identity):
+    def user_lookup_callback(_jwt_header, jwt_data):
         return None
 
     @jwt.user_lookup_error_loader

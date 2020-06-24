@@ -95,7 +95,7 @@ def _load_user(jwt_header, jwt_data):
         return None
 
     identity = jwt_data[config.identity_claim_key]
-    user = user_lookup(identity)
+    user = user_lookup(jwt_header, jwt_data)
     if user is None:
         error_msg = "user_lookup returned None for {}".format(identity)
         raise UserLookupError(error_msg, jwt_header, jwt_data)

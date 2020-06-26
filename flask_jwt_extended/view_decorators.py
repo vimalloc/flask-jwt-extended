@@ -177,7 +177,8 @@ def _decode_jwt_from_query_string():
 
 
 def _decode_jwt_from_json(token_type):
-    if request.content_type != "application/json":
+    content_type = request.content_type or ""
+    if not content_type.startswith("application/json"):
         raise NoAuthorizationError("Invalid content-type. Must be application/json.")
 
     if token_type == "access":

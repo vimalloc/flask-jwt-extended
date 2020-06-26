@@ -117,3 +117,22 @@ def test_defaults(app):
     response = test_client.post("/refresh", json=data)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
+
+
+def test_custom_content_type(app):
+    test_client = app.test_client()
+    content_type = "application/json;charset=UTF-8"
+
+    with app.test_request_context():
+        access_token = create_access_token("username")
+        refresh_token = create_refresh_token("username")
+
+    data = {"access_token": access_token}
+    response = test_client.post("/protected", json=data, content_type=content_type)
+    assert response.status_code == 200
+    assert response.get_json() == {"foo": "bar"}
+
+    data = {"refresh_token": refresh_token}
+    response = test_client.post("/refresh", json=data, content_type=content_type)
+    assert response.status_code == 200
+    assert response.get_json() == {"foo": "bar"}

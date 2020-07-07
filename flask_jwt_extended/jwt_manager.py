@@ -8,7 +8,6 @@ from jwt import InvalidIssuerError
 from jwt import InvalidTokenError
 
 from flask_jwt_extended.config import config
-from flask_jwt_extended.default_callbacks import default_claims_verification_callback
 from flask_jwt_extended.default_callbacks import default_decode_key_callback
 from flask_jwt_extended.default_callbacks import default_encode_key_callback
 from flask_jwt_extended.default_callbacks import default_expired_token_callback
@@ -16,11 +15,14 @@ from flask_jwt_extended.default_callbacks import default_invalid_token_callback
 from flask_jwt_extended.default_callbacks import default_jwt_headers_callback
 from flask_jwt_extended.default_callbacks import default_needs_fresh_token_callback
 from flask_jwt_extended.default_callbacks import default_revoked_token_callback
+from flask_jwt_extended.default_callbacks import default_token_verification_callback
+from flask_jwt_extended.default_callbacks import (
+    default_token_verification_failed_callback,
+)
 from flask_jwt_extended.default_callbacks import default_unauthorized_callback
 from flask_jwt_extended.default_callbacks import default_user_claims_callback
 from flask_jwt_extended.default_callbacks import default_user_identity_callback
 from flask_jwt_extended.default_callbacks import default_user_lookup_error_callback
-from flask_jwt_extended.default_callbacks import default_verify_claims_failed_callback
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import FreshTokenRequired
 from flask_jwt_extended.exceptions import InvalidHeaderError
@@ -54,7 +56,6 @@ class JWTManager(object):
         """
         # Register the default error handler callback methods. These can be
         # overridden with the appropriate loader decorators
-        self._claims_verification_callback = default_claims_verification_callback
         self._decode_key_callback = default_decode_key_callback
         self._encode_key_callback = default_encode_key_callback
         self._expired_token_callback = default_expired_token_callback
@@ -63,12 +64,15 @@ class JWTManager(object):
         self._needs_fresh_token_callback = default_needs_fresh_token_callback
         self._revoked_token_callback = default_revoked_token_callback
         self._token_in_blacklist_callback = None
+        self._token_verification_callback = default_token_verification_callback
         self._unauthorized_callback = default_unauthorized_callback
         self._user_claims_callback = default_user_claims_callback
         self._user_identity_callback = default_user_identity_callback
         self._user_lookup_callback = None
         self._user_lookup_error_callback = default_user_lookup_error_callback
-        self._verify_claims_failed_callback = default_verify_claims_failed_callback
+        self._token_verification_failed_callback = (
+            default_token_verification_failed_callback
+        )
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
@@ -139,8 +143,8 @@ class JWTManager(object):
             return self._revoked_token_callback()
 
         @app.errorhandler(UserClaimsVerificationError)
-        def handle_failed_user_claims_verification(e):
-            return self._verify_claims_failed_callback(e.jwt_header, e.jwt_data)
+        def handle_failed_token_verification(e):
+            return self._token_verification_failed_callback(e.jwt_header, e.jwt_data)
 
         @app.errorhandler(UserLookupError)
         def handler_user_lookup_error(e):
@@ -214,37 +218,6 @@ class JWTManager(object):
         must be *JSON serializable*.
         """
         self._jwt_additional_header_callback = callback
-        return callback
-
-    def claims_verification_failed_loader(self, callback):
-        """
-        This decorator sets the callback function that will be called if
-        the :meth:`~flask_jwt_extended.JWTManager.claims_verification_loader`
-        callback returns False, indicating that the user claims are not valid.
-        The default implementation will return a 400 status code with the JSON:
-
-        {"msg": "User claims verification failed"}
-
-        *HINT*: This callback must be a function that takes **no** arguments, and returns
-        a *Flask response*.
-        """
-        self._verify_claims_failed_callback = callback
-        return callback
-
-    def claims_verification_loader(self, callback):
-        """
-        This decorator sets the callback function that will be called when
-        a protected endpoint is accessed, and will check if the custom claims
-        in the JWT are valid. By default, this callback is not used. The
-        error returned if the claims are invalid can be controlled via the
-        :meth:`~flask_jwt_extended.JWTManager.claims_verification_failed_loader`
-        decorator.
-
-        *HINT*: This callback must be a function that takes **one** argument, which is the
-        custom claims (python dict) present in the JWT, and returns *`True`* if the
-        claims are valid, or *`False`* otherwise.
-        """
-        self._claims_verification_callback = callback
         return callback
 
     def decode_key_loader(self, callback):
@@ -352,6 +325,37 @@ class JWTManager(object):
         otherwise.
         """
         self._token_in_blacklist_callback = callback
+        return callback
+
+    def token_verification_failed_loader(self, callback):
+        """
+        This decorator sets the callback function that will be called if
+        the :meth:`~flask_jwt_extended.JWTManager.claims_verification_loader`
+        callback returns False, indicating that the user claims are not valid.
+        The default implementation will return a 400 status code with the JSON:
+
+        {"msg": "User claims verification failed"}
+
+        *HINT*: This callback must be a function that takes **no** arguments, and returns
+        a *Flask response*.
+        """
+        self._token_verification_failed_callback = callback
+        return callback
+
+    def token_verification_loader(self, callback):
+        """
+        This decorator sets the callback function that will be called when
+        a protected endpoint is accessed, and will check if the custom claims
+        in the JWT are valid. By default, this callback is not used. The
+        error returned if the claims are invalid can be controlled via the
+        :meth:`~flask_jwt_extended.JWTManager.claims_verification_failed_loader`
+        decorator.
+
+        *HINT*: This callback must be a function that takes **two** argument, which is the
+        the jwt header and the jwt data, and returns *`True`* if the claims are valid,
+        or *`False`* otherwise.
+        """
+        self._token_verification_callback = callback
         return callback
 
     def unauthorized_loader(self, callback):

@@ -212,9 +212,9 @@ def verify_token_not_blacklisted(decoded_token, request_type):
             raise RevokedTokenError("Token has been revoked")
 
 
-def _verify_token_claims(jwt_header, jwt_data):
+def _custom_verification_for_token(jwt_header, jwt_data):
     jwt_manager = _get_jwt_manager()
-    if not jwt_manager._claims_verification_callback(jwt_data):
+    if not jwt_manager._token_verification_callback(jwt_header, jwt_data):
         error_msg = "User claims verification failed"
         raise UserClaimsVerificationError(error_msg, jwt_header, jwt_data)
 

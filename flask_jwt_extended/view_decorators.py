@@ -13,7 +13,7 @@ from flask_jwt_extended.exceptions import FreshTokenRequired
 from flask_jwt_extended.exceptions import InvalidHeaderError
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_jwt_extended.exceptions import UserLookupError
-from flask_jwt_extended.utils import _verify_token_claims
+from flask_jwt_extended.utils import _custom_verification_for_token
 from flask_jwt_extended.utils import decode_token
 from flask_jwt_extended.utils import get_unverified_jwt_headers
 from flask_jwt_extended.utils import has_user_lookup
@@ -57,7 +57,7 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
     if fresh:
         _verify_token_is_fresh(jwt_header, jwt_data)
     if not refresh or config.user_claims_in_refresh_token:
-        _verify_token_claims(jwt_header, jwt_data)
+        _custom_verification_for_token(jwt_header, jwt_data)
 
     # Save these at the very end so that they are only saved in the requet
     # context if the token is valid and all callbacks succeed

@@ -100,15 +100,14 @@ def default_user_lookup_error_callback(_jwt_header, jwt_data):
     return jsonify(result), 401
 
 
-# TODO: Change this to default_token_verification_callback, pass in header and data.
-def default_claims_verification_callback(user_claims):
+def default_token_verification_callback(_jwt_header, _jwt_data):
     """
     By default, we do not do any verification of the user claims.
     """
     return True
 
 
-def default_verify_claims_failed_callback(_jwt_header, _jwt_data):
+def default_token_verification_failed_callback(_jwt_header, _jwt_data):
     """
     By default, if the user claims verification failed, we return a generic
     error message with a 400 status code

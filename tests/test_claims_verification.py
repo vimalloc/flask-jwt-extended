@@ -41,9 +41,11 @@ def app():
 def test_successful_claims_validation(app, url):
     jwt = get_jwt_manager(app)
 
-    @jwt.claims_verification_loader
-    def claims_verification_callback(token):
-        return token["foo"] == "bar"
+    @jwt.token_verification_loader
+    def claims_verification_callback(jwt_header, jwt_data):
+        assert jwt_header["alg"] == "HS256"
+        assert jwt_data["sub"] == "username"
+        return True
 
     test_client = app.test_client()
     with app.test_request_context():
@@ -58,8 +60,10 @@ def test_successful_claims_validation(app, url):
 def test_unsuccessful_claims_validation(app, url):
     jwt = get_jwt_manager(app)
 
-    @jwt.claims_verification_loader
-    def claim_verification_callback(user_claims):
+    @jwt.token_verification_loader
+    def claims_verification_callback(jwt_header, jwt_data):
+        assert jwt_header["alg"] == "HS256"
+        assert jwt_data["sub"] == "username"
         return False
 
     test_client = app.test_client()
@@ -75,11 +79,11 @@ def test_unsuccessful_claims_validation(app, url):
 def test_claims_validation_custom_error(app, url):
     jwt = get_jwt_manager(app)
 
-    @jwt.claims_verification_loader
-    def claims_verification_callback(user_claims):
+    @jwt.token_verification_loader
+    def claims_verification_callback(jwt_header, jwt_data):
         return False
 
-    @jwt.claims_verification_failed_loader
+    @jwt.token_verification_failed_loader
     def custom_error(jwt_header, jwt_data):
         assert jwt_header["alg"] == "HS256"
         assert jwt_data["sub"] == "username"

@@ -200,8 +200,9 @@ def test_custom_encode_decode_key_callbacks(app, default_access_token):
             decode_token(token)
 
     @jwtM.decode_key_loader
-    def get_decode_key_1(claims, headers):
-        assert claims["sub"] == "username"
+    def get_decode_key_1(jwt_header, jwt_data):
+        assert jwt_header["alg"] == "HS256"
+        assert jwt_data["sub"] == "username"
         return "different secret"
 
     with app.test_request_context():

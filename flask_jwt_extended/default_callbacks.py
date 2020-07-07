@@ -115,7 +115,7 @@ def default_token_verification_failed_callback(_jwt_header, _jwt_data):
     return jsonify({config.error_msg_key: "User claims verification failed"}), 400
 
 
-def default_decode_key_callback(claims, headers):
+def default_decode_key_callback(jwt_header, jwt_data):
     """
     By default, the decode key specified via the JWT_SECRET_KEY or
     JWT_PUBLIC_KEY settings will be used to decode all tokens

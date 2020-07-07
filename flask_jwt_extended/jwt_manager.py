@@ -483,7 +483,7 @@ class JWTManager(object):
             encoded_token, verify=False, algorithms=config.decode_algorithms
         )
         unverified_headers = jwt.get_unverified_header(encoded_token)
-        secret = self._decode_key_callback(unverified_claims, unverified_headers)
+        secret = self._decode_key_callback(unverified_headers, unverified_claims)
 
         kwargs = {
             "algorithms": config.decode_algorithms,

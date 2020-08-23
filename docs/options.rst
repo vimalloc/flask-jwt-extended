@@ -108,14 +108,18 @@ These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use cookies.
                                   for only the paths that need the refresh cookie
 ``JWT_COOKIE_SECURE``             If the secure flag should be set on your JWT cookies. This will only allow
                                   the cookies to be sent over https. Defaults to ``False``, but in production
-                                  this should likely be set to ``True``.
+                                  this should likely be set to ``True``. To set ``SameSite=None``, this option must be set to ``True``.
 ``JWT_COOKIE_DOMAIN``             Value to use for cross domain cookies. Defaults to ``None`` which sets
                                   this cookie to only be readable by the domain that set it.
 ``JWT_SESSION_COOKIE``            If the cookies should be session cookies (deleted when the
                                   browser is closed) or persistent cookies (never expire).
                                   Defaults to ``True`` (session cookies).
 ``JWT_COOKIE_SAMESITE``           If the cookies should be sent in a cross-site browsing context.
-                                  Defaults to ``None``, which means cookies are always sent.
+                                  Defaults to ``None``, which means cookies will be treated as ``SameSite=Lax``.
+                                  For more detail of default behavior of SameSite,
+                                  check the `IETF proposal <https://tools.ietf.org/html/draft-west-cookie-incrementalism-00>`_
+                                  and `MDN docs <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite>`_.
+                                  If you want to set ``SameSite=None``, this option must be set to ``'None'`` explicitly (as string) with ``JWT_COOKIE_SECURE=True``.
 ``JWT_COOKIE_CSRF_PROTECT``       Enable/disable CSRF protection when using cookies. Defaults to ``True``.
 ================================= =========================================
 

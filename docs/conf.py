@@ -70,7 +70,7 @@ author = u"Landon Gilbert-Bland"
 # built documents.
 #
 with io.open("../flask_jwt_extended/__init__.py", encoding="utf-8") as f:
-    package_version = re.search(r"__version__ = '(.+)'", f.read()).group(1)
+    package_version = re.search(r"__version__ = \"(.+)\"", f.read()).group(1)
 version = package_version
 release = package_version
 

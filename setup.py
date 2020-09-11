@@ -30,7 +30,7 @@ setup(name='Flask-JWT-Extended',
       platforms='any',
       install_requires=[
           'Werkzeug>=0.14',  # Needed for SameSite cookie functionality
-          'Flask',
+          'Flask>=1.0',
           'PyJWT>=1.6.4',
           'six',
       ],
@@ -46,9 +46,10 @@ setup(name='Flask-JWT-Extended',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules'
       ])

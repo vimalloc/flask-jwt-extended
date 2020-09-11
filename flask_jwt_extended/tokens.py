@@ -1,6 +1,5 @@
 import datetime
 import uuid
-
 from calendar import timegm
 
 import jwt
@@ -14,7 +13,7 @@ def _create_csrf_token():
 
 
 def _encode_jwt(additional_token_data, expires_delta, secret, algorithm,
-                json_encoder=None):
+                json_encoder=None, headers=None):
     uid = _create_csrf_token()
     now = datetime.datetime.utcnow()
     token_data = {
@@ -28,13 +27,13 @@ def _encode_jwt(additional_token_data, expires_delta, secret, algorithm,
         token_data['exp'] = now + expires_delta
     token_data.update(additional_token_data)
     encoded_token = jwt.encode(token_data, secret, algorithm,
-                               json_encoder=json_encoder).decode('utf-8')
+                               json_encoder=json_encoder, headers=headers).decode('utf-8')
     return encoded_token
 
 
 def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
                         user_claims, csrf, identity_claim_key, user_claims_key,
-                        json_encoder=None):
+                        json_encoder=None, headers=None, issuer=None):
     """
     Creates a new encoded (utf-8) access token.
 
@@ -54,6 +53,8 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
                  (boolean)
     :param identity_claim_key: Which key should be used to store the identity
     :param user_claims_key: Which key should be used to store the user claims
+    :param headers: valid dict for specifying additional headers in JWT header section
+    :param issuer: Issuer value configured as JWT_ENCODE_ISSUER
     :return: Encoded access token
     """
 
@@ -73,13 +74,15 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
 
     if csrf:
         token_data['csrf'] = _create_csrf_token()
+    if issuer is not None:
+        token_data['iss'] = issuer
     return _encode_jwt(token_data, expires_delta, secret, algorithm,
-                       json_encoder=json_encoder)
+                       json_encoder=json_encoder, headers=headers)
 
 
 def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims,
                          csrf, identity_claim_key, user_claims_key,
-                         json_encoder=None):
+                         json_encoder=None, headers=None):
     """
     Creates a new encoded (utf-8) refresh token.
 
@@ -95,6 +98,7 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
                  (boolean)
     :param identity_claim_key: Which key should be used to store the identity
     :param user_claims_key: Which key should be used to store the user claims
+    :param headers: valid dict for specifying additional headers in JWT header section
     :return: Encoded refresh token
     """
     token_data = {
@@ -109,12 +113,12 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
     if csrf:
         token_data['csrf'] = _create_csrf_token()
     return _encode_jwt(token_data, expires_delta, secret, algorithm,
-                       json_encoder=json_encoder)
+                       json_encoder=json_encoder, headers=headers)
 
 
 def decode_jwt(encoded_token, secret, algorithms, identity_claim_key,
                user_claims_key, csrf_value=None, audience=None,
-               leeway=0, allow_expired=False):
+               leeway=0, allow_expired=False, issuer=None):
     """
     Decodes an encoded JWT
 
@@ -125,6 +129,7 @@ def decode_jwt(encoded_token, secret, algorithms, identity_claim_key,
     :param user_claims_key: expected key that contains the user claims
     :param csrf_value: Expected double submit csrf value
     :param audience: expected audience in the JWT
+    :param issuer: expected issuer in the JWT
     :param leeway: optional leeway to add some margin around expiration times
     :param allow_expired: Options to ignore exp claim validation in token
     :return: Dictionary containing contents of the JWT
@@ -135,7 +140,7 @@ def decode_jwt(encoded_token, secret, algorithms, identity_claim_key,
 
     # This call verifies the ext, iat, nbf, and aud claims
     data = jwt.decode(encoded_token, secret, algorithms=algorithms, audience=audience,
-                      leeway=leeway, options=options)
+                      leeway=leeway, options=options, issuer=issuer)
 
     # Make sure that any custom claims we expect in the token are present
     if 'jti' not in data:

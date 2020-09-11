@@ -22,6 +22,17 @@ def default_user_claims_callback(userdata):
     return {}
 
 
+def default_jwt_headers_callback(default_headers):
+    """
+    By default header typically consists of two parts: the type of the token,
+    which is JWT, and the signing algorithm being used, such as HMAC SHA256
+    or RSA. But we don't set the default header here we set it as empty which
+    further by default set while encoding the token
+    :return: default we set None here
+    """
+    return None
+
+
 def default_user_identity_callback(userdata):
     """
     By default, we use the passed in object directly as the jwt identity.

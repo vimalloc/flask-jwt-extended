@@ -72,6 +72,8 @@ def test_default_configs(app):
         assert config.json_encoder is app.json_encoder
 
         assert config.error_msg_key == 'msg'
+        assert config.encode_issuer is None
+        assert config.decode_issuer is None
 
 
 @pytest.mark.parametrize("delta_func", [timedelta, relativedelta])
@@ -117,6 +119,8 @@ def test_override_configs(app, delta_func):
     app.config['JWT_CLAIMS_IN_REFRESH_TOKEN'] = True
 
     app.config['JWT_ERROR_MESSAGE_KEY'] = 'message'
+    app.config['JWT_ENCODE_ISSUER'] = 'fje'
+    app.config['JWT_DECODE_ISSUER'] = 'fje'
 
     class CustomJSONEncoder(JSONEncoder):
         pass
@@ -175,6 +179,8 @@ def test_override_configs(app, delta_func):
         assert config.json_encoder is CustomJSONEncoder
 
         assert config.error_msg_key == 'message'
+        assert config.encode_issuer == 'fje'
+        assert config.decode_issuer == 'fje'
 
 
 def test_tokens_never_expire(app):

@@ -215,10 +215,12 @@ def _decode_jwt_from_cookies(request_type):
         cookie_key = config.access_cookie_name
         csrf_header_key = config.access_csrf_header_name
         csrf_field_key = config.access_csrf_field_name
+        csrf_cookie_name = config.access_csrf_cookie_name
     else:
         cookie_key = config.refresh_cookie_name
         csrf_header_key = config.refresh_csrf_header_name
         csrf_field_key = config.refresh_csrf_field_name
+        csrf_cookie_name = config.refresh_csrf_cookie_name
 
     encoded_token = request.cookies.get(cookie_key)
     if not encoded_token:
@@ -226,6 +228,8 @@ def _decode_jwt_from_cookies(request_type):
 
     if config.csrf_protect and request.method in config.csrf_request_methods:
         csrf_value = request.headers.get(csrf_header_key, None)
+        if not csrf_value and config.csrf_check_cookies:
+            csrf_value = request.cookies.get(csrf_cookie_name, None)
         if not csrf_value and config.csrf_check_form:
             csrf_value = request.form.get(csrf_field_key, None)
         if not csrf_value:

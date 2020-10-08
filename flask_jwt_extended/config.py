@@ -185,6 +185,10 @@ class _Config(object):
                current_app.config['JWT_REFRESH_CSRF_HEADER_NAME']
 
     @property
+    def csrf_check_cookies(self):
+        return current_app.config['JWT_CSRF_CHECK_COOKIES']
+
+    @property
     def csrf_check_form(self):
         return current_app.config['JWT_CSRF_CHECK_FORM']
 

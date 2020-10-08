@@ -244,6 +244,26 @@ def test_csrf_with_custom_form_field(app, options):
 
 
 @pytest.mark.parametrize("options", [
+    ('/refresh_token', 'csrf_refresh_token', '/post_refresh_protected'),
+    ('/access_token', 'csrf_access_token', '/post_protected')
+])
+def test_csrf_with_default_cookie_field(app, options):
+    app.config['JWT_CSRF_CHECK_COOKIES'] = True
+    test_client = app.test_client()
+    auth_url, csrf_cookie_name, post_url = options
+
+    # Get the jwt cookies and csrf double submit tokens
+    response = test_client.get(auth_url)
+    csrf_token = _get_cookie_from_response(response, csrf_cookie_name)[csrf_cookie_name]
+
+    # Test that you can post with the csrf double submit value
+    test_client.set_cookie(csrf_cookie_name, csrf_token)
+    response = test_client.post(post_url)
+    assert response.status_code == 200
+    assert response.get_json() == {'foo': 'bar'}
+
+
+@pytest.mark.parametrize("options", [
     ('/refresh_token', 'csrf_refresh_token', '/refresh_protected', '/post_refresh_protected'),  # nopep8
     ('/access_token', 'csrf_access_token', '/protected', '/post_protected')
 ])

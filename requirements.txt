@@ -54,6 +54,6 @@ tox==3.14.0
 typed-ast==1.4.0
 urllib3==1.25.7
 virtualenv==16.7.7
-Werkzeug==0.16.0
+Werkzeug==1.0.1
 wrapt==1.11.2
 zipp==0.6.0

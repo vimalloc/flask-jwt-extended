@@ -52,7 +52,10 @@ class RevokedTokenError(JWTExtendedException):
     Error raised when a revoked token attempt to access a protected endpoint
     """
 
-    pass
+    def __init__(self, jwt_header, jwt_data):
+        super().__init__("Token has been revoked")
+        self.jwt_header = jwt_header
+        self.jwt_data = jwt_data
 
 
 class FreshTokenRequired(JWTExtendedException):

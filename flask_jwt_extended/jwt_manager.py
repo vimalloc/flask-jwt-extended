@@ -140,7 +140,7 @@ class JWTManager(object):
 
         @app.errorhandler(RevokedTokenError)
         def handle_revoked_token_error(e):
-            return self._revoked_token_callback()
+            return self._revoked_token_callback(e.jwt_header, e.jwt_data)
 
         @app.errorhandler(UserClaimsVerificationError)
         def handle_failed_token_verification(e):

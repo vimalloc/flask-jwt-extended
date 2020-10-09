@@ -246,5 +246,5 @@ def _decode_jwt_from_request(token_type):
             raise NoAuthorizationError(errors[0])
 
     verify_token_type(decoded_token, expected_type=token_type)
-    verify_token_not_blacklisted(decoded_token, token_type)
+    verify_token_not_blacklisted(jwt_header, decoded_token, token_type)
     return decoded_token, jwt_header

@@ -150,7 +150,9 @@ def test_custom_blacklisted_message(app):
         return True
 
     @jwt.revoked_token_loader
-    def custom_error():
+    def custom_error(jwt_header, jwt_data):
+        assert jwt_header["alg"] == "HS256"
+        assert jwt_data["sub"] == "username"
         return jsonify(baz="foo"), 404
 
     with app.test_request_context():

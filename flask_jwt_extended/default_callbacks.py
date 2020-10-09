@@ -81,7 +81,7 @@ def default_needs_fresh_token_callback(jwt_header, jwt_data):
     return jsonify({config.error_msg_key: "Fresh token required"}), 401
 
 
-def default_revoked_token_callback():
+def default_revoked_token_callback(jwt_header, jwt_data):
     """
     By default, if a revoked token is used to access a protected endpoint, we
     return a general error message with a 401 status code

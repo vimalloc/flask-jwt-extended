@@ -195,7 +195,7 @@ def verify_token_type(decoded_token, expected_type):
         raise WrongTokenError("Only {} tokens are allowed".format(expected_type))
 
 
-def verify_token_not_blacklisted(decoded_token, request_type):
+def verify_token_not_blacklisted(jwt_header, jwt_data, request_type):
     if not config.blacklist_enabled:
         return
     if not has_token_in_blacklist_callback():
@@ -205,11 +205,11 @@ def verify_token_not_blacklisted(decoded_token, request_type):
             "JWT_BLACKLIST_ENABLED is True"
         )
     if config.blacklist_access_tokens and request_type == "access":
-        if token_in_blacklist(decoded_token):
-            raise RevokedTokenError("Token has been revoked")
+        if token_in_blacklist(jwt_data):
+            raise RevokedTokenError(jwt_header, jwt_data)
     if config.blacklist_refresh_tokens and request_type == "refresh":
-        if token_in_blacklist(decoded_token):
-            raise RevokedTokenError("Token has been revoked")
+        if token_in_blacklist(jwt_data):
+            raise RevokedTokenError(jwt_header, jwt_data)
 
 
 def _custom_verification_for_token(jwt_header, jwt_data):

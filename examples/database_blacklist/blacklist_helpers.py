@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.orm.exc import NoResultFound
 from flask_jwt_extended import decode_token
@@ -13,7 +13,7 @@ def _epoch_utc_to_datetime(epoch_utc):
     Helper function for converting epoch timestamps (as stored in JWTs) into
     python datetime objects (which are easier to use with sqlalchemy).
     """
-    return datetime.fromtimestamp(epoch_utc)
+    return datetime.fromtimestamp(epoch_utc, tz=timezone.utc)
 
 
 def add_token_to_database(encoded_token, identity_claim):

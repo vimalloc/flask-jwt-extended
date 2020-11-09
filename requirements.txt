@@ -6,7 +6,7 @@ certifi==2019.9.11
 cffi==1.13.2
 chardet==3.0.4
 Click==7.0
-cryptography==2.8
+cryptography==3.2
 docutils==0.15.2
 filelock==3.0.12
 Flask==1.1.1

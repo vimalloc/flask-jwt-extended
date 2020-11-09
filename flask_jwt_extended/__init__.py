@@ -12,4 +12,4 @@ from .view_decorators import (
     verify_jwt_in_request_optional, verify_jwt_refresh_token_in_request
 )
 
-__version__ = '3.24.1'
+__version__ = '3.25.0'

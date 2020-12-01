@@ -33,7 +33,7 @@ def _verify_token_is_fresh(jwt_header, jwt_data):
             raise FreshTokenRequired("Fresh token required", jwt_header, jwt_data)
 
 
-def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
+def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=None):
     """
     Ensure that the requester has a valid access token. This does not check the
     freshness of the access token. Raises an appropiate exception there is
@@ -44,9 +44,9 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
 
     try:
         if refresh:
-            jwt_data, jwt_header = _decode_jwt_from_request("refresh")
+            jwt_data, jwt_header = _decode_jwt_from_request("refresh", locations)
         else:
-            jwt_data, jwt_header = _decode_jwt_from_request("access")
+            jwt_data, jwt_header = _decode_jwt_from_request("access", locations)
     except (NoAuthorizationError, InvalidHeaderError):
         if not optional:
             raise
@@ -68,7 +68,7 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False):
     return jwt_header, jwt_data
 
 
-def jwt_required(optional=False, fresh=False, refresh=False):
+def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
     """
     A decorator to protect a Flask endpoint.
 
@@ -82,7 +82,7 @@ def jwt_required(optional=False, fresh=False, refresh=False):
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
-            verify_jwt_in_request(optional, fresh, refresh)
+            verify_jwt_in_request(optional, fresh, refresh, locations)
             return fn(*args, **kwargs)
 
         return decorator
@@ -196,12 +196,17 @@ def _decode_jwt_from_json(token_type):
     return encoded_token, None
 
 
-def _decode_jwt_from_request(token_type):
+def _decode_jwt_from_request(token_type, locations):
     # All the places we can get a JWT from in this request
     get_encoded_token_functions = []
 
-    # add the functions in the order specified in JWT_TOKEN_LOCATION
-    for location in config.token_location:
+    # Get locations in the order specified by the decorator or JWT_TOKEN_LOCATION
+    # configuration.
+    if not locations:
+        locations = config.token_location
+
+    # Add the functions in the order specified by locations.
+    for location in locations:
         if location == "cookies":
             get_encoded_token_functions.append(
                 lambda: _decode_jwt_from_cookies(token_type)
@@ -232,13 +237,10 @@ def _decode_jwt_from_request(token_type):
     # Do some work to make a helpful and human readable error message if no
     # token was found in any of the expected locations.
     if not decoded_token:
-        token_locations = config.token_location
-        multiple_jwt_locations = len(token_locations) != 1
-
-        if multiple_jwt_locations:
+        if len(locations) > 1:
             err_msg = "Missing JWT in {start_locs} or {end_locs} ({details})".format(
-                start_locs=", ".join(token_locations[:-1]),
-                end_locs=token_locations[-1],
+                start_locs=", ".join(locations[:-1]),
+                end_locs=locations[-1],
                 details="; ".join(errors),
             )
             raise NoAuthorizationError(err_msg)

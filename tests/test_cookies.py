@@ -328,6 +328,22 @@ def test_setting_cookies_wihout_cookies_enabled(app):
     assert response.status_code == 500
 
 
+def test_setting_cookies_wihout_cookies_location():
+    resp = None
+    token = None
+    locations = ["headers"]
+    with pytest.raises(RuntimeWarning):
+        set_access_cookies(resp, token, locations=locations)
+    with pytest.raises(RuntimeWarning):
+        set_refresh_cookies(resp, token, locations=locations)
+    with pytest.raises(RuntimeWarning):
+        unset_access_cookies(resp, locations=locations)
+    with pytest.raises(RuntimeWarning):
+        unset_refresh_cookies(resp, locations=locations)
+    with pytest.raises(RuntimeWarning):
+        unset_jwt_cookies(resp, locations=locations)
+
+
 def test_default_cookie_options(app):
     test_client = app.test_client()
 

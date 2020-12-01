@@ -230,7 +230,7 @@ def get_csrf_token(encoded_token):
     return token["csrf"]
 
 
-def set_access_cookies(response, encoded_access_token, max_age=None):
+def set_access_cookies(response, encoded_access_token, max_age=None, locations=None):
     """
     Takes a flask response object, and an encoded access token, and configures
     the response to set in the access token in a cookie. If `JWT_CSRF_IN_COOKIES`
@@ -245,7 +245,11 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
                     JWT_SESSION_COOKIE option will be ignored.  Values should be
                     the number of seconds (as an integer).
     """
-    if not config.jwt_in_cookies:
+    if locations and "cookies" not in locations:
+        raise RuntimeWarning(
+            "set_access_cookies() called without " "locations configured to use cookies"
+        )
+    if not locations and not config.jwt_in_cookies:
         raise RuntimeWarning(
             "set_access_cookies() called without "
             "'JWT_TOKEN_LOCATION' configured to use cookies"
@@ -277,7 +281,7 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
         )
 
 
-def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
+def set_refresh_cookies(response, encoded_refresh_token, max_age=None, locations=None):
     """
     Takes a flask response object, and an encoded refresh token, and configures
     the response to set in the refresh token in a cookie. If `JWT_CSRF_IN_COOKIES`
@@ -292,7 +296,12 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
                     JWT_SESSION_COOKIE option will be ignored.  Values should be
                     the number of seconds (as an integer).
     """
-    if not config.jwt_in_cookies:
+    if locations and "cookies" not in locations:
+        raise RuntimeWarning(
+            "set_refresh_cookies() called without "
+            "locations configured to use cookies"
+        )
+    if not locations and not config.jwt_in_cookies:
         raise RuntimeWarning(
             "set_refresh_cookies() called without "
             "'JWT_TOKEN_LOCATION' configured to use cookies"
@@ -324,18 +333,18 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
         )
 
 
-def unset_jwt_cookies(response):
+def unset_jwt_cookies(response, locations=None):
     """
     Takes a flask response object, and configures it to unset (delete) JWTs
     stored in cookies.
 
     :param response: The Flask response object to delete the JWT cookies in.
     """
-    unset_access_cookies(response)
-    unset_refresh_cookies(response)
+    unset_access_cookies(response, locations)
+    unset_refresh_cookies(response, locations)
 
 
-def unset_access_cookies(response):
+def unset_access_cookies(response, locations=None):
     """
     takes a flask response object, and configures it to unset (delete) the
     access token from the response cookies. if `jwt_csrf_in_cookies`
@@ -344,9 +353,14 @@ def unset_access_cookies(response):
 
     :param response: the flask response object to delete the jwt cookies in.
     """
-    if not config.jwt_in_cookies:
+    if locations and "cookies" not in locations:
         raise RuntimeWarning(
-            "unset_refresh_cookies() called without "
+            "unset_access_cookies() called without "
+            "locations configured to use cookies"
+        )
+    if not locations and not config.jwt_in_cookies:
+        raise RuntimeWarning(
+            "unset_access_cookies() called without "
             "'JWT_TOKEN_LOCATION' configured to use cookies"
         )
 
@@ -374,7 +388,7 @@ def unset_access_cookies(response):
         )
 
 
-def unset_refresh_cookies(response):
+def unset_refresh_cookies(response, locations=None):
     """
     takes a flask response object, and configures it to unset (delete) the
     refresh token from the response cookies. if `jwt_csrf_in_cookies`
@@ -383,7 +397,12 @@ def unset_refresh_cookies(response):
 
     :param response: the flask response object to delete the jwt cookies in.
     """
-    if not config.jwt_in_cookies:
+    if locations and "cookies" not in locations:
+        raise RuntimeWarning(
+            "unset_refresh_cookies() called without "
+            "locations configured to use cookies"
+        )
+    if not locations and not config.jwt_in_cookies:
         raise RuntimeWarning(
             "unset_refresh_cookies() called without "
             "'JWT_TOKEN_LOCATION' configured to use cookies"

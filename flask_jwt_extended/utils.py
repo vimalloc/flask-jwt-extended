@@ -245,13 +245,6 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
                     JWT_SESSION_COOKIE option will be ignored.  Values should be
                     the number of seconds (as an integer).
     """
-    if not config.jwt_in_cookies:
-        raise RuntimeWarning(
-            "set_access_cookies() called without "
-            "'JWT_TOKEN_LOCATION' configured to use cookies"
-        )
-
-    # Set the access JWT in the cookie
     response.set_cookie(
         config.access_cookie_name,
         value=encoded_access_token,
@@ -263,7 +256,6 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
         samesite=config.cookie_samesite,
     )
 
-    # If enabled, set the csrf double submit access cookie
     if config.csrf_protect and config.csrf_in_cookies:
         response.set_cookie(
             config.access_csrf_cookie_name,
@@ -292,13 +284,6 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
                     JWT_SESSION_COOKIE option will be ignored.  Values should be
                     the number of seconds (as an integer).
     """
-    if not config.jwt_in_cookies:
-        raise RuntimeWarning(
-            "set_refresh_cookies() called without "
-            "'JWT_TOKEN_LOCATION' configured to use cookies"
-        )
-
-    # Set the refresh JWT in the cookie
     response.set_cookie(
         config.refresh_cookie_name,
         value=encoded_refresh_token,
@@ -310,7 +295,6 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
         samesite=config.cookie_samesite,
     )
 
-    # If enabled, set the csrf double submit refresh cookie
     if config.csrf_protect and config.csrf_in_cookies:
         response.set_cookie(
             config.refresh_csrf_cookie_name,
@@ -344,12 +328,6 @@ def unset_access_cookies(response):
 
     :param response: the flask response object to delete the jwt cookies in.
     """
-    if not config.jwt_in_cookies:
-        raise RuntimeWarning(
-            "unset_refresh_cookies() called without "
-            "'JWT_TOKEN_LOCATION' configured to use cookies"
-        )
-
     response.set_cookie(
         config.access_cookie_name,
         value="",
@@ -383,12 +361,6 @@ def unset_refresh_cookies(response):
 
     :param response: the flask response object to delete the jwt cookies in.
     """
-    if not config.jwt_in_cookies:
-        raise RuntimeWarning(
-            "unset_refresh_cookies() called without "
-            "'JWT_TOKEN_LOCATION' configured to use cookies"
-        )
-
     response.set_cookie(
         config.refresh_cookie_name,
         value="",

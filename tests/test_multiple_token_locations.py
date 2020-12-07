@@ -30,46 +30,71 @@ def app():
     return app
 
 
-def test_header_access(app):
-    test_client = app.test_client()
-    with app.test_request_context():
+@pytest.fixture(scope="function")
+def app_with_locations():
+    app = Flask(__name__)
+    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+    locations = ["headers", "cookies", "query_string", "json"]
+    JWTManager(app)
+
+    @app.route("/cookie_login", methods=["GET"])
+    def cookie_login():
+        resp = jsonify(login=True)
         access_token = create_access_token("username")
+        set_access_cookies(resp, access_token)
+        return resp
 
-    access_headers = {"Authorization": "Bearer {}".format(access_token)}
-    response = test_client.get("/protected", headers=access_headers)
-    assert response.status_code == 200
-    assert response.get_json() == {"foo": "bar"}
+    @app.route("/protected", methods=["GET", "POST"])
+    @jwt_required(locations=locations)
+    def access_protected():
+        return jsonify(foo="bar")
 
-
-def test_cookie_access(app):
-    test_client = app.test_client()
-    test_client.get("/cookie_login")
-    response = test_client.get("/protected")
-    assert response.status_code == 200
-    assert response.get_json() == {"foo": "bar"}
+    return app
 
 
-def test_query_string_access(app):
-    test_client = app.test_client()
-    with app.test_request_context():
-        access_token = create_access_token("username")
+def test_header_access(app, app_with_locations):
+    for app in (app, app_with_locations):
+        test_client = app.test_client()
+        with app.test_request_context():
+            access_token = create_access_token("username")
 
-    url = "/protected?jwt={}".format(access_token)
-    response = test_client.get(url)
-    assert response.status_code == 200
-    assert response.get_json() == {"foo": "bar"}
+        access_headers = {"Authorization": "Bearer {}".format(access_token)}
+        response = test_client.get("/protected", headers=access_headers)
+        assert response.status_code == 200
+        assert response.get_json() == {"foo": "bar"}
 
 
-def test_json_access(app):
-    test_client = app.test_client()
+def test_cookie_access(app, app_with_locations):
+    for app in (app, app_with_locations):
+        test_client = app.test_client()
+        test_client.get("/cookie_login")
+        response = test_client.get("/protected")
+        assert response.status_code == 200
+        assert response.get_json() == {"foo": "bar"}
 
-    with app.test_request_context():
-        access_token = create_access_token("username")
 
-    data = {"access_token": access_token}
-    response = test_client.post("/protected", json=data)
-    assert response.status_code == 200
-    assert response.get_json() == {"foo": "bar"}
+def test_query_string_access(app, app_with_locations):
+    for app in (app, app_with_locations):
+        test_client = app.test_client()
+        with app.test_request_context():
+            access_token = create_access_token("username")
+
+        url = "/protected?jwt={}".format(access_token)
+        response = test_client.get(url)
+        assert response.status_code == 200
+        assert response.get_json() == {"foo": "bar"}
+
+
+def test_json_access(app, app_with_locations):
+    for app in (app, app_with_locations):
+        test_client = app.test_client()
+        with app.test_request_context():
+            access_token = create_access_token("username")
+        data = {"access_token": access_token}
+        response = test_client.post("/protected", json=data)
+        assert response.status_code == 200
+        assert response.get_json() == {"foo": "bar"}
 
 
 @pytest.mark.parametrize(

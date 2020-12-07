@@ -312,38 +312,6 @@ def test_custom_csrf_methods(app, options):
     assert response.get_json() == {"foo": "bar"}
 
 
-def test_setting_cookies_wihout_cookies_enabled(app):
-    app.config["JWT_TOKEN_LOCATION"] = ["headers"]
-    test_client = app.test_client()
-
-    response = test_client.get("/access_token")
-    assert response.status_code == 500
-    response = test_client.get("/refresh_token")
-    assert response.status_code == 500
-    response = test_client.get("/delete_tokens")
-    assert response.status_code == 500
-    response = test_client.get("/delete_access_tokens")
-    assert response.status_code == 500
-    response = test_client.get("/delete_refresh_tokens")
-    assert response.status_code == 500
-
-
-def test_setting_cookies_wihout_cookies_location():
-    resp = None
-    token = None
-    locations = ["headers"]
-    with pytest.raises(RuntimeWarning):
-        set_access_cookies(resp, token, locations=locations)
-    with pytest.raises(RuntimeWarning):
-        set_refresh_cookies(resp, token, locations=locations)
-    with pytest.raises(RuntimeWarning):
-        unset_access_cookies(resp, locations=locations)
-    with pytest.raises(RuntimeWarning):
-        unset_refresh_cookies(resp, locations=locations)
-    with pytest.raises(RuntimeWarning):
-        unset_jwt_cookies(resp, locations=locations)
-
-
 def test_default_cookie_options(app):
     test_client = app.test_client()
 

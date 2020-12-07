@@ -42,7 +42,7 @@ def app_with_locations():
     def cookie_login():
         resp = jsonify(login=True)
         access_token = create_access_token("username")
-        set_access_cookies(resp, access_token, locations=locations)
+        set_access_cookies(resp, access_token)
         return resp
 
     @app.route("/protected", methods=["GET", "POST"])

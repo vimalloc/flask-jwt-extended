@@ -34,7 +34,7 @@ from flask_jwt_extended import (
 app = Flask(__name__)
 app.secret_key = 'ChangeMe!'
 
-# Setup the flask-jwt-extended extension. See:
+# Setup the flask-jwt-extended extension.
 ACCESS_EXPIRES = timedelta(minutes=15)
 REFRESH_EXPIRES = timedelta(days=30)
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = ACCESS_EXPIRES

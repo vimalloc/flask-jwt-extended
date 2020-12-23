@@ -60,6 +60,7 @@ General Options:
                                   not very far. This leeway is used for `nbf` (“not before”) and `exp`
                                   (“expiration time”).
                                   Defaults to ``0``
+``JWT_ENCODE_ISSUER``             if set, define the `iss` (issuer) field claim.
 ================================= =========================================
 
 

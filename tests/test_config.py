@@ -24,6 +24,9 @@ def test_default_configs(app):
         assert config.jwt_in_json is False
         assert config.jwt_in_headers is True
 
+        assert config.encode_issuer is None
+        assert config.decode_issuer is None
+
         assert config.header_name == "Authorization"
         assert config.header_type == "Bearer"
 
@@ -81,6 +84,9 @@ def test_override_configs(app, delta_func):
     app.config["JWT_JSON_KEY"] = "TestKey"
     app.config["JWT_REFRESH_JSON_KEY"] = "TestRefreshKey"
 
+    app.config["JWT_DECODE_ISSUER"] = "TestDecodeIssuer"
+    app.config["JWT_ENCODE_ISSUER"] = "TestEncodeIssuer"
+
     app.config["JWT_QUERY_STRING_NAME"] = "banana"
 
     app.config["JWT_ACCESS_COOKIE_NAME"] = "new_access_cookie"
@@ -131,6 +137,9 @@ def test_override_configs(app, delta_func):
         assert config.header_type == "TestType"
         assert config.json_key == "TestKey"
         assert config.refresh_json_key == "TestRefreshKey"
+
+        assert config.decode_issuer == "TestDecodeIssuer"
+        assert config.encode_issuer == "TestEncodeIssuer"
 
         assert config.query_string_name == "banana"
 

@@ -18,6 +18,7 @@ def _encode_jwt(
     headers,
     identity,
     identity_claim_key,
+    issuer,
     json_encoder,
     secret,
     token_type,
@@ -38,6 +39,9 @@ def _encode_jwt(
 
     if csrf:
         token_data["csrf"] = str(uuid.uuid4())
+
+    if issuer:
+        token_data["iss"] = issuer
 
     if expires_delta:
         token_data["exp"] = now + expires_delta

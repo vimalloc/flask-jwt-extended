@@ -14,11 +14,11 @@ from flask_jwt_extended import JWTManager
 # Setup flask
 app = Flask(__name__)
 
-# Enable blacklisting and specify what kind of tokens to check
-# against the blacklist
+# Enable blocklisting and specify what kind of tokens to check
+# against the blocklist
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
-app.config["JWT_BLACKLIST_ENABLED"] = True
-app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
+app.config["JWT_BLOCKLIST_ENABLED"] = True
+app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
 jwt = JWTManager(app)
 
 # A storage engine to save revoked tokens. In production if
@@ -27,25 +27,25 @@ jwt = JWTManager(app)
 # great option. In this example, we will be using an in memory
 # store, just to show you how this might work. For more
 # complete examples, check out these:
-# https://github.com/vimalloc/flask-jwt-extended/blob/master/examples/redis_blacklist.py
-# https://github.com/vimalloc/flask-jwt-extended/tree/master/examples/database_blacklist
-blacklist = set()
+# https://github.com/vimalloc/flask-jwt-extended/blob/master/examples/redis_blocklist.py
+# https://github.com/vimalloc/flask-jwt-extended/tree/master/examples/database_blocklist
+blocklist = set()
 
 
 # For this example, we are just checking if the tokens jti
-# (unique identifier) is in the blacklist set. This could
+# (unique identifier) is in the blocklist set. This could
 # be made more complex, for example storing all tokens
-# into the blacklist with a revoked status when created,
+# into the blocklist with a revoked status when created,
 # and returning the revoked status in this call. This
 # would allow you to have a list of all created tokens,
-# and to consider tokens that aren't in the blacklist
+# and to consider tokens that aren't in the blocklist
 # (aka tokens you didn't create) as revoked. These are
 # just two options, and this can be tailored to whatever
 # your application needs.
-@jwt.token_in_blacklist_loader
-def check_if_token_in_blacklist(decrypted_token):
+@jwt.token_in_blocklist_loader
+def check_if_token_in_blocklist(decrypted_token):
     jti = decrypted_token["jti"]
-    return jti in blacklist
+    return jti in blocklist
 
 
 # Standard login endpoint
@@ -63,7 +63,7 @@ def login():
     return jsonify(ret), 200
 
 
-# Standard refresh endpoint. A blacklisted refresh token
+# Standard refresh endpoint. A blocklisted refresh token
 # will not be able to access this endpoint
 @app.route("/refresh", methods=["POST"])
 @jwt_refresh_token_required
@@ -78,7 +78,7 @@ def refresh():
 @jwt_required
 def logout():
     jti = get_jwt()["jti"]
-    blacklist.add(jti)
+    blocklist.add(jti)
     return jsonify({"msg": "Successfully logged out"}), 200
 
 
@@ -87,11 +87,11 @@ def logout():
 @jwt_refresh_token_required
 def logout2():
     jti = get_jwt()["jti"]
-    blacklist.add(jti)
+    blocklist.add(jti)
     return jsonify({"msg": "Successfully logged out"}), 200
 
 
-# This will now prevent users with blacklisted tokens from
+# This will now prevent users with blocklisted tokens from
 # accessing this endpoint
 @app.route("/protected", methods=["GET"])
 @jwt_required

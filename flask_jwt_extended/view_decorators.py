@@ -18,7 +18,7 @@ from flask_jwt_extended.utils import decode_token
 from flask_jwt_extended.utils import get_unverified_jwt_headers
 from flask_jwt_extended.utils import has_user_lookup
 from flask_jwt_extended.utils import user_lookup
-from flask_jwt_extended.utils import verify_token_not_blacklisted
+from flask_jwt_extended.utils import verify_token_not_blocklisted
 from flask_jwt_extended.utils import verify_token_type
 
 
@@ -248,5 +248,5 @@ def _decode_jwt_from_request(token_type, locations):
             raise NoAuthorizationError(errors[0])
 
     verify_token_type(decoded_token, expected_type=token_type)
-    verify_token_not_blacklisted(jwt_header, decoded_token, token_type)
+    verify_token_not_blocklisted(jwt_header, decoded_token, token_type)
     return decoded_token, jwt_header

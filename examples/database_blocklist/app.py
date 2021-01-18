@@ -1,8 +1,8 @@
-from blacklist_helpers import add_token_to_database
-from blacklist_helpers import get_user_tokens
-from blacklist_helpers import is_token_revoked
-from blacklist_helpers import revoke_token
-from blacklist_helpers import unrevoke_token
+from blocklist_helpers import add_token_to_database
+from blocklist_helpers import get_user_tokens
+from blocklist_helpers import is_token_revoked
+from blocklist_helpers import revoke_token
+from blocklist_helpers import unrevoke_token
 from exceptions import TokenNotFound
 from extensions import db
 from extensions import jwt
@@ -23,8 +23,8 @@ def create_app():
     app = Flask(__name__)
 
     app.secret_key = "ChangeMe!"
-    app.config["JWT_BLACKLIST_ENABLED"] = True
-    app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
+    app.config["JWT_BLOCKLIST_ENABLED"] = True
+    app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -44,7 +44,7 @@ def register_endpoints(app):
         db.create_all()
 
     # Define our callback function to check if a token has been revoked or not
-    @jwt.token_in_blacklist_loader
+    @jwt.token_in_blocklist_loader
     def check_if_token_revoked(decoded_token):
         return is_token_revoked(decoded_token)
 

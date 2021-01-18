@@ -39,7 +39,7 @@ and what the return values of your callback functions need to be.
       - Function to call when a non-fresh token accesses a :func:`~flask_jwt_extended.fresh_jwt_required` endpoint
     * - :meth:`~flask_jwt_extended.JWTManager.revoked_token_loader`
       - Function to call when a revoked token accesses a protected endpoint
-    * - :meth:`~flask_jwt_extended.JWTManager.token_in_blacklist_loader`
+    * - :meth:`~flask_jwt_extended.JWTManager.token_in_blocklist_loader`
       - Function that is called to check if a token has been revoked
     * - :meth:`~flask_jwt_extended.JWTManager.unauthorized_loader`
       - Function to call when a request with no JWT accesses a protected endpoint
@@ -84,4 +84,4 @@ You can even disable expiration by setting `expires_delta` to `False`:
       token = create_access_token(username, expires_delta=False)
       return jsonify({'token': token}), 201
 
-Note that in this case, you should enable token revoking (see :ref:`Blacklist and Token Revoking`).
+Note that in this case, you should enable token revoking (see :ref:`Blocklist and Token Revoking`).

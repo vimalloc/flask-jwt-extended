@@ -1,5 +1,5 @@
-# Blacklist with a database
-A database is a common choice for storing blacklisted tokens. It has many
+# Blocklist with a database
+A database is a common choice for storing blocklisted tokens. It has many
 benefits over an in memory store, like redis. The most obvious benefit of
 using a database is data consistency. If you add something to the database,
 you don't need to worry about it vanishing in an event like a power outage.
@@ -15,7 +15,7 @@ Databases also have some cons compared to an in memory store, namely that
 they are potentially slower, and they may grow huge over time and need to be
 manually pruned back down.
 
-This project contains example code for you to implement a blacklist
+This project contains example code for you to implement a blocklist
 using a database, with some more complex features that might benefit your
 application. For ease of use, we will use flask-sqlalchemy with an in
 memory data store, but in production I would highly recommend using postgres.

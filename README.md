@@ -14,7 +14,7 @@ easier. These include:
 * Creating tokens from complex objects or complex object from received tokens
 * [Refresh tokens](https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/)
 * Token freshness and separate view decorators to only allow fresh tokens
-* Token revoking/blacklisting
+* Token revoking/blocklisting
 * Storing tokens in cookies and CSRF protection
 
 ### Usage

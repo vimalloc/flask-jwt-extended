@@ -21,7 +21,7 @@ Flask-JWT-Extended's Documentation
    token_freshness
    changing_default_behavior
    options
-   blacklist_and_token_revoking
+   blocklist_and_token_revoking
    tokens_in_cookies
    tokens_in_query_string
    tokens_in_json_body

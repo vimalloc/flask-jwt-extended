@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from database import TokenBlacklist
+from database import TokenBlocklist
 from exceptions import TokenNotFound
 from extensions import db
 from sqlalchemy.orm.exc import NoResultFound
@@ -28,7 +28,7 @@ def add_token_to_database(encoded_token, identity_claim):
     expires = _epoch_utc_to_datetime(decoded_token["exp"])
     revoked = False
 
-    db_token = TokenBlacklist(
+    db_token = TokenBlocklist(
         jti=jti,
         token_type=token_type,
         user_identity=user_identity,
@@ -48,7 +48,7 @@ def is_token_revoked(decoded_token):
     """
     jti = decoded_token["jti"]
     try:
-        token = TokenBlacklist.query.filter_by(jti=jti).one()
+        token = TokenBlocklist.query.filter_by(jti=jti).one()
         return token.revoked
     except NoResultFound:
         return True
@@ -59,7 +59,7 @@ def get_user_tokens(user_identity):
     Returns all of the tokens, revoked and unrevoked, that are stored for the
     given user
     """
-    return TokenBlacklist.query.filter_by(user_identity=user_identity).all()
+    return TokenBlocklist.query.filter_by(user_identity=user_identity).all()
 
 
 def revoke_token(token_id, user):
@@ -68,7 +68,7 @@ def revoke_token(token_id, user):
     not exist in the database
     """
     try:
-        token = TokenBlacklist.query.filter_by(id=token_id, user_identity=user).one()
+        token = TokenBlocklist.query.filter_by(id=token_id, user_identity=user).one()
         token.revoked = True
         db.session.commit()
     except NoResultFound:
@@ -81,7 +81,7 @@ def unrevoke_token(token_id, user):
     not exist in the database
     """
     try:
-        token = TokenBlacklist.query.filter_by(id=token_id, user_identity=user).one()
+        token = TokenBlocklist.query.filter_by(id=token_id, user_identity=user).one()
         token.revoked = False
         db.session.commit()
     except NoResultFound:
@@ -97,7 +97,7 @@ def prune_database():
     set it up with flask cli, etc.
     """
     now = datetime.now()
-    expired = TokenBlacklist.query.filter(TokenBlacklist.expires < now).all()
+    expired = TokenBlocklist.query.filter(TokenBlocklist.expires < now).all()
     for token in expired:
         db.session.delete(token)
     db.session.commit()

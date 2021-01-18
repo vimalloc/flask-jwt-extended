@@ -63,7 +63,7 @@ class JWTManager(object):
         self._jwt_additional_header_callback = default_jwt_headers_callback
         self._needs_fresh_token_callback = default_needs_fresh_token_callback
         self._revoked_token_callback = default_revoked_token_callback
-        self._token_in_blacklist_callback = None
+        self._token_in_blocklist_callback = None
         self._token_verification_callback = default_token_verification_callback
         self._unauthorized_callback = default_unauthorized_callback
         self._user_claims_callback = default_user_claims_callback
@@ -169,8 +169,8 @@ class JWTManager(object):
         app.config.setdefault("JWT_ACCESS_CSRF_FIELD_NAME", "csrf_token")
         app.config.setdefault("JWT_ACCESS_CSRF_HEADER_NAME", "X-CSRF-TOKEN")
         app.config.setdefault("JWT_ALGORITHM", "HS256")
-        app.config.setdefault("JWT_BLACKLIST_ENABLED", False)
-        app.config.setdefault("JWT_BLACKLIST_TOKEN_CHECKS", ("access", "refresh"))
+        app.config.setdefault("JWT_BLOCKLIST_ENABLED", False)
+        app.config.setdefault("JWT_BLOCKLIST_TOKEN_CHECKS", ("access", "refresh"))
         app.config.setdefault("JWT_CLAIMS_IN_REFRESH_TOKEN", False)
         app.config.setdefault("JWT_COOKIE_CSRF_PROTECT", True)
         app.config.setdefault("JWT_COOKIE_DOMAIN", None)
@@ -314,7 +314,7 @@ class JWTManager(object):
         self._revoked_token_callback = callback
         return callback
 
-    def token_in_blacklist_loader(self, callback):
+    def token_in_blocklist_loader(self, callback):
         """
         This decorator sets the callback function that will be called when
         a protected endpoint is accessed and will check if the JWT has been
@@ -322,10 +322,10 @@ class JWTManager(object):
 
         *HINT*: The callback must be a function that takes **one** argument, which is the
         decoded JWT (python dictionary), and returns *`True`* if the token
-        has been blacklisted (or is otherwise considered revoked), or *`False`*
+        has been blocklisted (or is otherwise considered revoked), or *`False`*
         otherwise.
         """
-        self._token_in_blacklist_callback = callback
+        self._token_in_blocklist_callback = callback
         return callback
 
     def token_verification_failed_loader(self, callback):

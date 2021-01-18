@@ -180,14 +180,14 @@ def user_lookup(*args, **kwargs):
     return jwt_manager._user_lookup_callback(*args, **kwargs)
 
 
-def has_token_in_blacklist_callback():
+def has_token_in_blocklist_callback():
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._token_in_blacklist_callback is not None
+    return jwt_manager._token_in_blocklist_callback is not None
 
 
-def token_in_blacklist(*args, **kwargs):
+def token_in_blocklist(*args, **kwargs):
     jwt_manager = _get_jwt_manager()
-    return jwt_manager._token_in_blacklist_callback(*args, **kwargs)
+    return jwt_manager._token_in_blocklist_callback(*args, **kwargs)
 
 
 def verify_token_type(decoded_token, expected_type):
@@ -195,20 +195,20 @@ def verify_token_type(decoded_token, expected_type):
         raise WrongTokenError("Only {} tokens are allowed".format(expected_type))
 
 
-def verify_token_not_blacklisted(jwt_header, jwt_data, request_type):
-    if not config.blacklist_enabled:
+def verify_token_not_blocklisted(jwt_header, jwt_data, request_type):
+    if not config.blocklist_enabled:
         return
-    if not has_token_in_blacklist_callback():
+    if not has_token_in_blocklist_callback():
         raise RuntimeError(
-            "A token_in_blacklist_callback must be provided via "
-            "the '@token_in_blacklist_loader' if "
-            "JWT_BLACKLIST_ENABLED is True"
+            "A token_in_blocklist_callback must be provided via "
+            "the '@token_in_blocklist_loader' if "
+            "JWT_BLOCKLIST_ENABLED is True"
         )
-    if config.blacklist_access_tokens and request_type == "access":
-        if token_in_blacklist(jwt_data):
+    if config.blocklist_access_tokens and request_type == "access":
+        if token_in_blocklist(jwt_data):
             raise RevokedTokenError(jwt_header, jwt_data)
-    if config.blacklist_refresh_tokens and request_type == "refresh":
-        if token_in_blacklist(jwt_data):
+    if config.blocklist_refresh_tokens and request_type == "refresh":
+        if token_in_blocklist(jwt_data):
             raise RevokedTokenError(jwt_header, jwt_data)
 
 

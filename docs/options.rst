@@ -174,15 +174,15 @@ These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use cookies and
 ================================= =========================================
 
 
-Blacklist Options:
+Blocklist Options:
 ~~~~~~~~~~~~~~~~~~
 
 .. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
 
 ================================= =========================================
-``JWT_BLACKLIST_ENABLED``         Enable/disable token revoking. Defaults to ``False``
-``JWT_BLACKLIST_TOKEN_CHECKS``    What token types to check against the blacklist. The options are
+``JWT_BLOCKLIST_ENABLED``         Enable/disable token revoking. Defaults to ``False``
+``JWT_BLOCKLIST_TOKEN_CHECKS``    What token types to check against the blocklist. The options are
                                   ``'refresh'`` or  ``'access'``. You can pass in a sequence or a set to check
                                   more then one type. Defaults to ``('access', 'refresh')``.
-                                  Only used if blacklisting is enabled.
+                                  Only used if blocklisting is enabled.
 ================================= =========================================

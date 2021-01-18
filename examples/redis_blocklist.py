@@ -5,23 +5,23 @@
 # this case, 'forgetting' that a token was revoked), when events like
 # power outages occur.
 #
-# When does it make sense to use redis for a blacklist? If you are blacklisting
+# When does it make sense to use redis for a blocklist? If you are blocklisting
 # every token on logout, and not doing nothing besides that (such as keeping
-# track of what tokens are blacklisted, providing options to un-revoke
-# blacklisted tokens, or view tokens that are currently active for a user),
+# track of what tokens are blocklisted, providing options to un-revoke
+# blocklisted tokens, or view tokens that are currently active for a user),
 # then redis is a great choice. In the worst case, a few tokens might slip
 # between the cracks in the case of a power outage or other such event, but
-# 99.99% of the time tokens will be properly blacklisted.
+# 99.99% of the time tokens will be properly blocklisted.
 #
 # Redis also has the benefit of supporting an expires time when storing data.
 # Utilizing this, you will not need to manually prune down the stored tokens
 # to keep it from blowing up over time. This code includes how to do this.
 #
-# If you intend to use some other features in your blacklist (tracking
+# If you intend to use some other features in your blocklist (tracking
 # what tokens are currently active, option to revoke or unrevoke specific
 # tokens, etc), data integrity is probably more important to you then
 # raw performance. In this case a database solution (such as postgres) is
-# probably a better fit for your blacklist. Check out the "database_blacklist"
+# probably a better fit for your blocklist. Check out the "database_blocklist"
 # example for how that might work.
 from datetime import timedelta
 
@@ -47,24 +47,24 @@ ACCESS_EXPIRES = timedelta(minutes=15)
 REFRESH_EXPIRES = timedelta(days=30)
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = ACCESS_EXPIRES
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = REFRESH_EXPIRES
-app.config["JWT_BLACKLIST_ENABLED"] = True
-app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
+app.config["JWT_BLOCKLIST_ENABLED"] = True
+app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
 jwt = JWTManager(app)
 
-# Setup our redis connection for storing the blacklisted tokens
+# Setup our redis connection for storing the blocklisted tokens
 revoked_store = redis.StrictRedis(
     host="localhost", port=6379, db=0, decode_responses=True
 )
 
 
-# Create our function to check if a token has been blacklisted. In this simple
+# Create our function to check if a token has been blocklisted. In this simple
 # case, we will just store the tokens jti (unique identifier) in redis
 # whenever we create a new token (with the revoked status being 'false'). This
 # function will return the revoked status of a token. If a token doesn't
 # exist in this store, we don't know where it came from (as we are adding newly
 # created tokens to our store with a revoked status of 'false'). In this case
 # we will consider the token to be revoked, for safety purposes.
-@jwt.token_in_blacklist_loader
+@jwt.token_in_blocklist_loader
 def check_if_token_is_revoked(decrypted_token):
     jti = decrypted_token["jti"]
     entry = revoked_store.get(jti)
@@ -98,7 +98,7 @@ def login():
     return jsonify(ret), 201
 
 
-# A blacklisted refresh tokens will not be able to access this endpoint
+# A blocklisted refresh tokens will not be able to access this endpoint
 @app.route("/auth/refresh", methods=["POST"])
 @jwt_refresh_token_required
 def refresh():
@@ -129,7 +129,7 @@ def logout2():
     return jsonify({"msg": "Refresh token revoked"}), 200
 
 
-# A blacklisted access token will not be able to access this any more
+# A blocklisted access token will not be able to access this any more
 @app.route("/protected", methods=["GET"])
 @jwt_required
 def protected():

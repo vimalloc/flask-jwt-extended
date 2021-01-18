@@ -32,10 +32,10 @@ setup(
     platforms="any",
     install_requires=[
         "Werkzeug>=0.14",  # Needed for SameSite cookie functionality
-        "Flask>=1.0",
-        "PyJWT>=1.6.4",
+        "Flask>=1.0,<2.0",
+        "PyJWT>=2.0,<3.0",
     ],
-    extras_require={"asymmetric_crypto": ["cryptography >= 2.3"]},
+    extras_require={"asymmetric_crypto": ["cryptography >= 3.0"]},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
@@ -44,10 +44,10 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],

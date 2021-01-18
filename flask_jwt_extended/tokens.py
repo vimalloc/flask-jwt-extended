@@ -45,10 +45,9 @@ def _encode_jwt(
     if claim_overrides:
         token_data.update(claim_overrides)
 
-    encoded_token = jwt.encode(
+    return jwt.encode(
         token_data, secret, algorithm, json_encoder=json_encoder, headers=headers
     )
-    return encoded_token.decode("utf-8")
 
 
 def _decode_jwt(

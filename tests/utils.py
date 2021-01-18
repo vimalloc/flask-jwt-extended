@@ -5,14 +5,13 @@ from flask_jwt_extended.config import config
 
 def encode_token(app, token_data, headers=None):
     with app.test_request_context():
-        token = jwt.encode(
+        return jwt.encode(
             token_data,
             config.decode_key,
             algorithm=config.algorithm,
             json_encoder=config.json_encoder,
             headers=headers,
         )
-        return token.decode("utf-8")
 
 
 def get_jwt_manager(app):

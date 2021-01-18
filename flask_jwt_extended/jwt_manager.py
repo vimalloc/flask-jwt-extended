@@ -480,7 +480,9 @@ class JWTManager(object):
         self, encoded_token, csrf_value=None, allow_expired=False
     ):
         unverified_claims = jwt.decode(
-            encoded_token, verify=False, algorithms=config.decode_algorithms
+            encoded_token,
+            algorithms=config.decode_algorithms,
+            options={"verify_signature": False},
         )
         unverified_headers = jwt.get_unverified_header(encoded_token)
         secret = self._decode_key_callback(unverified_headers, unverified_claims)

@@ -12,7 +12,7 @@ def encode_token(app, token_data, headers=None):
             json_encoder=config.json_encoder,
             headers=headers,
         )
-        return token.decode("utf-8")
+        return token
 
 
 def get_jwt_manager(app):

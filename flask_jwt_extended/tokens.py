@@ -48,7 +48,7 @@ def _encode_jwt(
     encoded_token = jwt.encode(
         token_data, secret, algorithm, json_encoder=json_encoder, headers=headers
     )
-    return encoded_token.decode("utf-8")
+    return encoded_token
 
 
 def _decode_jwt(

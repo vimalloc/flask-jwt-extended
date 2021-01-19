@@ -175,7 +175,7 @@ def test_encode_decode_callback_values(app, default_access_token):
     assert jwtM._encode_key_callback("") == "different secret"
 
     @jwtM.decode_key_loader
-    def get_decode_key_1(claims, headers):
+    def get_decode_key_1(jwt_header, jwt_data):
         return "different secret"
 
     assert jwtM._decode_key_callback({}, {}) == "different secret"

@@ -94,10 +94,6 @@ class JWTManager(object):
         self._set_error_handler_callbacks(app)
 
     def _set_error_handler_callbacks(self, app):
-        """
-        Sets the error handler callbacks used by this extension
-        """
-
         @app.errorhandler(CSRFError)
         def handle_csrf_error(e):
             return self._unauthorized_callback(str(e))
@@ -156,9 +152,6 @@ class JWTManager(object):
 
     @staticmethod
     def _set_default_configuration_options(app):
-        """
-        Sets the default configuration options used by this extension
-        """
         app.config.setdefault(
             "JWT_ACCESS_TOKEN_EXPIRES", datetime.timedelta(minutes=15)
         )
@@ -207,235 +200,258 @@ class JWTManager(object):
 
     def additional_headers_loader(self, callback):
         """
-        This decorator sets the callback function for adding custom headers to an
-        access token when :func:`~flask_jwt_extended.create_access_token` is
-        called. By default, two headers will be added the type of the token, which is JWT,
-        and the signing algorithm being used, such as HMAC SHA256 or RSA.
+        This decorator sets the callback function for adding custom headers to
+        a JWT when it is created.
 
-        *HINT*: The callback function must be a function that takes **no** argument,
-        which is the object passed into
-        :func:`~flask_jwt_extended.create_access_token`, and returns the custom
-        claims you want included in the access tokens. This returned claims
-        must be *JSON serializable*.
+        This callback function is ignored when the `headers` kwarg is used in
+        :func:`~flask_jwt_extended.create_access_token` or
+        :func:`~flask_jwt_extended.create_refresh_token`
+
+        The decorated function must take **no** arguments.
+
+        The function must returns a dictionary of the addition headers you want
+        included in the JWT.
         """
         self._jwt_additional_header_callback = callback
         return callback
 
     def decode_key_loader(self, callback):
         """
-        This decorator sets the callback function for getting the JWT decode key and
-        can be used to dynamically choose the appropriate decode key based on token
-        contents.
+        This decorator sets the callback function for dynamically setting the JWT
+        decode key based on the **UNVERIFIED** contents of the token. Think
+        carefully before using this functionality, in most cases you probably
+        don't need it.
 
-        The default implementation returns the decode key specified by
-        `JWT_SECRET_KEY` or `JWT_PUBLIC_KEY`, depending on the signing algorithm.
+        The decorated function must take **two** arguments.
 
-        *HINT*: The callback function should be a function that takes
-        **two** arguments, which are the unverified claims and headers of the jwt
-        (dictionaries). The function must return a *string* which is the decode key
-        in PEM format to verify the token.
+        The first argument is a dictionary containing the header data of the
+        unverified JWT.
+
+        The second argument is a dictionary containing the payload data of the
+        unverified JWT.
+
+        The decorated function must return a *string* that is used to decode and
+        verify the token.
         """
         self._decode_key_callback = callback
         return callback
 
     def encode_key_loader(self, callback):
         """
-        This decorator sets the callback function for getting the JWT encode key and
-        can be used to dynamically choose the appropriate encode key based on the
-        token identity.
+        This decorator sets the callback function for dynamically setting the JWT
+        encode key based on the tokens identity. Think carefully before using this
+        functionality, in most cases you probably don't need it.
 
-        The default implementation returns the encode key specified by
-        `JWT_SECRET_KEY` or `JWT_PRIVATE_KEY`, depending on the signing algorithm.
+        The decorated function must take **one** argument.
 
-        *HINT*: The callback function must be a function that takes only **one**
-        argument, which is the identity as passed into the create_access_token
-        or create_refresh_token functions, and must return a *string* which is
-        the decode key to verify the token.
+        The argument is the identity used to create this JWT.
+
+        The decorated function must return a *string* which is the secrete key used to
+        encode the JWT.
         """
         self._encode_key_callback = callback
         return callback
 
     def expired_token_loader(self, callback):
         """
-        This decorator sets the callback function that will be called if an
-        expired JWT attempts to access a protected endpoint. The default
-        implementation will return a 401 status code with the JSON:
+        This decorator sets the callback function for returning a custom
+        response when an expired JWT is encountered.
 
-        {"msg": "Token has expired"}
+        The decorated function must take **two** arguments.
 
-        *HINT*: The callback must be a function that takes **one** argument,
-        which is a dictionary containing the data for the expired token, and
-        and returns a *Flask response*.
+        The first argument is a dictionary containing the header data of the JWT.
+
+        The second argument is a dictionary containing the payload data of the JWT.
+
+        The decorated function must return a Flask Response.
         """
         self._expired_token_callback = callback
         return callback
 
     def invalid_token_loader(self, callback):
         """
-        This decorator sets the callback function that will be called if an
-        invalid JWT attempts to access a protected endpoint. The default
-        implementation will return a 422 status code with the JSON:
+        This decorator sets the callback function for returning a custom
+        response when an invalid JWT is encountered.
 
-        {"msg": "<error description>"}
+        This decorator sets the callback function that will be used if an
+        invalid JWT attempts to access a protected endpoint.
 
-        *HINT*: The callback must be a function that takes only **one** argument, which is
-        a string which contains the reason why a token is invalid, and returns
-        a *Flask response*.
+        The decorated function must take **one** argument.
+
+        The argument is a string which contains the reason why a token is invalid.
+
+        The decorated function must return a Flask Response.
         """
         self._invalid_token_callback = callback
         return callback
 
     def needs_fresh_token_loader(self, callback):
         """
-        This decorator sets the callback function that will be called if a
-        valid and non-fresh token attempts to access an endpoint protected with
-        the :func:`~flask_jwt_extended.fresh_jwt_required` decorator. The
-        default implementation will return a 401 status code with the JSON:
+        This decorator sets the callback function for returning a custom
+        response when a valid and non-fresh token is used on an endpoint
+        that is marked as `fresh=True`.
 
-        {"msg": "Fresh token required"}
+        The decorated function must take **two** arguments.
 
-        *HINT*: The callback must be a function that takes **no** arguments, and returns
-        a *Flask response*.
+        The first argument is a dictionary containing the header data of the JWT.
+
+        The second argument is a dictionary containing the payload data of the JWT.
+
+        The decorated function must return a Flask Response.
         """
         self._needs_fresh_token_callback = callback
         return callback
 
     def revoked_token_loader(self, callback):
         """
-        This decorator sets the callback function that will be called if a
-        revoked token attempts to access a protected endpoint. The default
-        implementation will return a 401 status code with the JSON:
+        This decorator sets the callback function for returning a custom
+        response when a revoked token is encountered.
 
-        {"msg": "Token has been revoked"}
+        The decorated function must take **two** arguments.
 
-        *HINT*: The callback must be a function that takes **no** arguments, and returns
-        a *Flask response*.
+        The first argument is a dictionary containing the header data of the JWT.
+
+        The second argument is a dictionary containing the payload data of the JWT.
+
+        The decorated function must return a Flask Response.
         """
         self._revoked_token_callback = callback
         return callback
 
     def token_in_blocklist_loader(self, callback):
         """
-        This decorator sets the callback function that will be called when
-        a protected endpoint is accessed and will check if the JWT has been
-        been revoked. By default, this callback is not used.
+        This decorator sets the callback function used to check if a JWT has
+        been revoked.
 
-        *HINT*: The callback must be a function that takes **one** argument, which is the
-        decoded JWT (python dictionary), and returns *`True`* if the token
-        has been blocklisted (or is otherwise considered revoked), or *`False`*
-        otherwise.
+        The decorated function must take **one** argument.
+
+        The argument is a dictionary containing the jwt payload.
+
+        The decorated function must be return `True` if the token has been
+        revoked, `False` otherwise.
         """
         self._token_in_blocklist_callback = callback
         return callback
 
     def token_verification_failed_loader(self, callback):
         """
-        This decorator sets the callback function that will be called if
-        the :meth:`~flask_jwt_extended.JWTManager.claims_verification_loader`
-        callback returns False, indicating that the user claims are not valid.
-        The default implementation will return a 400 status code with the JSON:
+        This decorator sets the callback function used to return a custom
+        response when the claims verification check fails.
 
-        {"msg": "User claims verification failed"}
+        The decorated function must take **two** arguments.
 
-        *HINT*: This callback must be a function that takes **no** arguments, and returns
-        a *Flask response*.
+        The first argument is a dictionary containing the header data of the JWT.
+
+        The second argument is a dictionary containing the payload data of the JWT.
+
+        The decorated function must return a Flask Response.
         """
         self._token_verification_failed_callback = callback
         return callback
 
     def token_verification_loader(self, callback):
         """
-        This decorator sets the callback function that will be called when
-        a protected endpoint is accessed, and will check if the custom claims
-        in the JWT are valid. By default, this callback is not used. The
-        error returned if the claims are invalid can be controlled via the
-        :meth:`~flask_jwt_extended.JWTManager.claims_verification_failed_loader`
-        decorator.
+        This decorator sets the callback function used for custom verification
+        of a valid JWT.
 
-        *HINT*: This callback must be a function that takes **two** argument, which is the
-        the jwt header and the jwt data, and returns *`True`* if the claims are valid,
-        or *`False`* otherwise.
+        The decorated function must take **two** arguments.
+
+        The first argument is a dictionary containing the header data of the JWT.
+
+        The second argument is a dictionary containing the payload data of the JWT.
+
+        The decorated function must return `True` if the token is valid, or
+        `False` otherwise.
         """
         self._token_verification_callback = callback
         return callback
 
     def unauthorized_loader(self, callback):
         """
-        This decorator sets the callback function that will be called if an
-        no JWT can be found when attempting to access a protected endpoint.
-        The default implementation will return a 401 status code with the JSON:
+        This decorator sets the callback function used to return a custom
+        response when no JWT is present.
 
-        {"msg": "<error description>"}
+        The decorated function must take **one** argument.
 
-        *HINT*: The callback must be a function that takes only **one** argument, which is
-        a string which contains the reason why a JWT could not be found, and
-        returns a *Flask response*.
+        The argument is a string that explains why the JWT could not be found.
+
+        The decorated function must return a Flask Response.
         """
         self._unauthorized_callback = callback
         return callback
 
+    # TODO: headers needs to be merged or this needs to overwrite. Update docs
+    #       for whatever we end up going with to match.
+    # TODO: In the create tokens method, rename `user_claims` arg to just `claims`
     def user_claims_loader(self, callback):
         """
-        This decorator sets the callback function for adding custom claims to an
-        access token when :func:`~flask_jwt_extended.create_access_token` is
-        called. By default, no extra user claims will be added to the JWT.
+        This decorator sets the callback function used to add additional claims
+        when creating a JWT. The claims returned by this function will be merged
+        with any claims passed in via the `user_claims` argument when creating JWTs.
 
-        *HINT*: The callback function must be a function that takes only **one** argument,
-        which is the object passed into
-        :func:`~flask_jwt_extended.create_access_token`, and returns the custom
-        claims you want included in the access tokens. This returned claims
-        must be *JSON serializable*.
+        The decorated function must take **one** argument.
+
+        The argument is the identity that was used when creating a JWT.
+
+        The decorated function must return a dictionary of claims to add to the JWT.
         """
         self._user_claims_callback = callback
         return callback
 
     def user_identity_loader(self, callback):
         """
-        This decorator sets the callback function for getting the JSON
-        serializable identity out of whatever object is passed into
-        :func:`~flask_jwt_extended.create_access_token` and
-        :func:`~flask_jwt_extended.create_refresh_token`. By default, this will
-        return the unmodified object that is passed in as the `identity` kwarg
-        to the above functions.
+        This decorator sets the callback function used to convert an identity to
+        a JSON serializable format when creating JWTs. This is useful for
+        using objects (such as SQLAlchemy instances) as the identity when
+        creating your tokens.
 
-        *HINT*: The callback function must be a function that takes only **one** argument,
-        which is the object passed into
-        :func:`~flask_jwt_extended.create_access_token` or
-        :func:`~flask_jwt_extended.create_refresh_token`, and returns the
-        *JSON serializable* identity of this token.
+        The decorated function must take **one** argument.
+
+        The argument is the identity that was used when creating a JWT.
+
+        The decorated function must return JSON serializable data.
         """
         self._user_identity_callback = callback
         return callback
 
     def user_lookup_loader(self, callback):
         """
-        This decorator sets the callback function that will be called to
-        automatically load an object when a protected endpoint is accessed.
-        By default this is not used.
+        This decorator sets the callback function used to convert a JWT into
+        a python object that can be used in a protected endpoint. This is useful
+        for automatically loading a SQLAlchemy instance based on the contents
+        of the JWT.
 
-        *HINT*: The callback must take **two** arguments which are the headers and claims
-        of the JWT accessing the protected endpoint, and it must return any object (which
-        can then be accessed via the :attr:`~flask_jwt_extended.current_user` LocalProxy
-        in the protected endpoint), or `None` in the case of a user not being
-        able to be loaded for any reason. If this callback function returns
-        `None`, the :meth:`~flask_jwt_extended.JWTManager.user_lookup_error_loader`
-        will be called.
+        The object returned from this function can be accessed via
+        :attr:`~flask_jwt_extended.current_user` or
+        :meth:`~flask_jwt_extended.get_current_user`
+
+        The decorated function must take **two** arguments.
+
+        The first argument is a dictionary containing the header data of the JWT.
+
+        The second argument is a dictionary containing the payload data of the JWT.
+
+        The decorated function can return any python object, which can then be
+        accessed in a protected endpoint. If an object cannot be loaded, for
+        example if a user has been deleted from your database, `None` must be
+        returned to indicate that an error occurred loading the user.
         """
         self._user_lookup_callback = callback
         return callback
 
     def user_lookup_error_loader(self, callback):
         """
-        This decorator sets the callback function that will be called if `None`
-        is returned from the
-        :meth:`~flask_jwt_extended.JWTManager.user_lookup_loader` callback
-        function. The default implementation will return
-        a 401 status code with the JSON:
+        This decorator sets the callback function used to return a custom
+        response when loading a user via
+        :meth:`~flask_jwt_extended.JWTManager.user_lookup_loader` fails.
 
-        {"msg": "Error loading the user <identity>"}
+        The decorated function must take **two** arguments.
 
-        *HINT*: The callback must be a function that takes **one** argument, which is the
-        identity of the user who failed to load, and must return a *Flask response*.
+        The first argument is a dictionary containing the header data of the JWT.
+
+        The second argument is a dictionary containing the payload data of the JWT.
+
+        The decorated function must return a Flask Response.
         """
         self._user_lookup_error_callback = callback
         return callback
@@ -452,6 +468,8 @@ class JWTManager(object):
         if expires_delta is None:
             expires_delta = config.refresh_expires
 
+        # TODO: These should either be merged like claims, or claims should
+        #       purely overwrite like this currently does. Pick one.
         if headers is None:
             headers = self._jwt_additional_header_callback(identity)
 

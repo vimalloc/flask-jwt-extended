@@ -6,6 +6,7 @@ from flask_jwt_extended import current_user
 from flask_jwt_extended import get_current_user
 from flask_jwt_extended import get_jwt
 from flask_jwt_extended import get_jwt_header
+from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 
@@ -21,6 +22,7 @@ def app():
     def access_protected():
         assert get_jwt() == {}
         assert get_jwt_header() == {}
+        assert get_jwt_identity() == None  # noqa: E711
         assert get_current_user() == None  # noqa: E711
         assert current_user == None  # noqa: E711
         return jsonify(foo="bar")

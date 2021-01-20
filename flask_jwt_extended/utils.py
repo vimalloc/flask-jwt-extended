@@ -59,13 +59,13 @@ def get_current_user():
     being used. If the user loader callback is not being used, this will
     return `None`.
     """
-    user = getattr(_request_ctx_stack.top, "jwt_user", None)
-    if user is None:
+    jwt_user_dict = getattr(_request_ctx_stack.top, "jwt_user", None)
+    if jwt_user_dict is None:
         raise RuntimeError(
             "You must provide a `@jwt.user_lookup_loader` callback to use "
             "this method"
         )
-    return user
+    return jwt_user_dict["loaded_user"]
 
 
 def get_jti(encoded_token):

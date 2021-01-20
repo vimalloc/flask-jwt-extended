@@ -62,6 +62,7 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
             raise
         _request_ctx_stack.top.jwt = {}
         _request_ctx_stack.top.jwt_header = {}
+        _request_ctx_stack.top.jwt_user = {"loaded_user": None}
         return
 
     if fresh:
@@ -119,7 +120,7 @@ def _load_user(jwt_header, jwt_data):
     if user is None:
         error_msg = "user_lookup returned None for {}".format(identity)
         raise UserLookupError(error_msg, jwt_header, jwt_data)
-    return user
+    return {"loaded_user": user}
 
 
 def _decode_jwt_from_headers():

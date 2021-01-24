@@ -1,16 +1,36 @@
 Storing Data in Access Tokens
 =============================
-
 You may want to store additional information in the access token which you could
-later access in the protected views. This can be done with the
-:meth:`~flask_jwt_extended.JWTManager.user_claims_loader` decorator, and the data can be
-accessed later in a protected endpoint with the
-:func:`~flask_jwt_extended.get_jwt` function.
+later access in the protected views. This can be done using the `additional_claims`
+argument with the :func:`~flask_jwt_extended.create_access_token` or
+:func:`~flask_jwt_extended.create_refresh_token` functions. The claims
+can be accessed in a protected route via the :func:`~flask_jwt_extended.get_jwt`
+function.
 
-Storing data in an access token can be good for performance. If you store data
-in the token, you wont need to look it up from disk next time you need it in
-a protected endpoint. However, you should take care what data you put in the
-token. Any data in the access token can be trivially viewed by anyone who can
-read the token. **Do not** store sensitive information in access tokens!
+It is important to remember that JWTs are not encrypted and the contents of
+a JWT can be trivially decoded by anyone who has access to it. As such, you
+should never put any sensitive information in a JWT.
 
 .. literalinclude:: ../examples/additional_data_in_access_token.py
+
+
+Alternately you can use the :meth:`~flask_jwt_extended.JWTManager.user_claims_loader`
+decorator to register a callback function that will be called whenever a new JWT
+is created, and return a dictionary of claims to add to that token. In the case
+that both :meth:`~flask_jwt_extended.JWTManager.user_claims_loader` and the
+`additional_claims` argument are used, both results are merged together, with ties
+going to the data suplied by the `additional_claims` argument.
+
+.. code-block:: python
+
+  # Using the user_claims_loader, we can specify a method that will be
+  # called when creating JWTs. The decorated method must take the identity
+  # we are creating a token for and return a dictionary of additional
+  # claims to add to the JWT.
+  @jwt.user_claims_loader
+  def add_claims_to_access_token(identity):
+       return = {
+           "aud": "some_audience",
+           "foo": "bar",
+           "upcase_name": identity.upper(),
+       }

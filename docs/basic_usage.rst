@@ -30,17 +30,19 @@ We can see this in action using CURL:
   $ curl -H "Content-Type: application/json" -X POST \
     -d '{"username":"test","password":"test"}' http://localhost:5000/login
   {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwianRpIjoiZjhmNDlmMjUtNTQ4OS00NmRjLTkyOWUtZTU2Y2QxOGZhNzRlIiwidXNlcl9jbGFpbXMiOnt9LCJuYmYiOjE0NzQ0NzQ3OTEsImlhdCI6MTQ3NDQ3NDc5MSwiaWRlbnRpdHkiOiJ0ZXN0IiwiZXhwIjoxNDc0NDc1NjkxLCJ0eXBlIjoiYWNjZXNzIn0.vCy0Sec61i9prcGIRRCbG8e9NV6_wFH2ICFgUGCLKpc"
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYxMTQ2MzE4MCwianRpIjoiZTBjMzhhNDUtNGM5My00NTJmLWIzZWQtOTcyZGJiNzA5YWViIiwibmJmIjoxNjExNDYzMTgwLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoidGVzdCIsImV4cCI6MTYxNDA1NTE4MH0.Qc87HZBv_qBlzcybCMoeh0SM2oyM6Waefw_xEP0VdF8"
   }
 
-  $ export ACCESS="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwianRpIjoiZjhmNDlmMjUtNTQ4OS00NmRjLTkyOWUtZTU2Y2QxOGZhNzRlIiwidXNlcl9jbGFpbXMiOnt9LCJuYmYiOjE0NzQ0NzQ3OTEsImlhdCI6MTQ3NDQ3NDc5MSwiaWRlbnRpdHkiOiJ0ZXN0IiwiZXhwIjoxNDc0NDc1NjkxLCJ0eXBlIjoiYWNjZXNzIn0.vCy0Sec61i9prcGIRRCbG8e9NV6_wFH2ICFgUGCLKpc"
+  $ export JWT="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYxMTQ2MzE4MCwianRpIjoiZTBjMzhhNDUtNGM5My00NTJmLWIzZWQtOTcyZGJiNzA5YWViIiwibmJmIjoxNjExNDYzMTgwLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoidGVzdCIsImV4cCI6MTYxNDA1NTE4MH0.Qc87HZBv_qBlzcybCMoeh0SM2oyM6Waefw_xEP0VdF8"
 
-  $ curl -H "Authorization: Bearer $ACCESS" http://localhost:5000/protected
+  $ curl -H "Authorization: Bearer $JWT" http://localhost:5000/protected
   {
     "logged_in_as": "test"
   }
 
-NOTE: Remember to change the secret key of your application, and ensure that no
-one is able to view it. The JSON Web Tokens are signed with the secret key, so
-if someone gets that, they can create arbitrary tokens, and in essence log in
-as any user.
+**Important**
+
+Remember to change the jwt secret key in your application, and ensure that it
+is secure. The JWTs are signed with this key, and if someone gets their hands
+on it they will be able to create arbitraty tokens that are accepted by your
+web flask application.

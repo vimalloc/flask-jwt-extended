@@ -13,15 +13,6 @@ app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
 jwt = JWTManager(app)
 
 
-# Using the user_claims_loader, we can specify a method that will be
-# called when creating access tokens, and add these claims to the said
-# token. This method is passed the identity of who the token is being
-# created for, and must return data that is json serializable
-@jwt.user_claims_loader
-def add_claims_to_access_token(identity):
-    return {"hello": identity, "foo": ["bar", "baz"]}
-
-
 @app.route("/login", methods=["POST"])
 def login():
     username = request.json.get("username", None)
@@ -29,8 +20,11 @@ def login():
     if username != "test" or password != "test":
         return jsonify({"msg": "Bad username or password"}), 401
 
-    ret = {"access_token": create_access_token(username)}
-    return jsonify(ret), 200
+    # You can use the additional_claims argument to either add
+    # custom claims or override default claims in the JWT.
+    additional_claims = {"aud": "some_audience", "foo": "bar"}
+    access_token = create_access_token(username, additional_claims=additional_claims)
+    return jsonify(access_token=access_token)
 
 
 # In a protected view, get the claims you added to the jwt with the
@@ -39,7 +33,7 @@ def login():
 @jwt_required
 def protected():
     claims = get_jwt()
-    return jsonify({"hello_is": claims["hello"], "foo_is": claims["foo"]}), 200
+    return jsonify(foo=claims["foo"])
 
 
 if __name__ == "__main__":

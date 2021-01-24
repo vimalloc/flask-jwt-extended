@@ -16,8 +16,8 @@ current_user = LocalProxy(lambda: get_current_user())
 def get_jwt():
     """
     In a protected endpoint, this will return the python dictionary which has
-    all of the claims of the JWT that is accessing the endpoint. If no
-    JWT is currently present, an empty dict is returned instead.
+    the payload of the JWT that is accessing the endpoint. If no JWT is present
+    due to `jwt_required(optional=True)`, an empty dictionary is returned.
     """
     decoded_jwt = getattr(_request_ctx_stack.top, "jwt", None)
     if decoded_jwt is None:
@@ -31,8 +31,8 @@ def get_jwt():
 def get_jwt_header():
     """
     In a protected endpoint, this will return the python dictionary which has
-    the JWT headers values. If no
-    JWT is currently present, an empty dict is returned instead.
+    the header of the JWT that is accessing the endpoint. If no JWT is present
+    due to `jwt_required(optional=True)`, an empty dictionary is returned.
     """
     decoded_header = getattr(_request_ctx_stack.top, "jwt_header", None)
     if decoded_header is None:
@@ -46,7 +46,8 @@ def get_jwt_header():
 def get_jwt_identity():
     """
     In a protected endpoint, this will return the identity of the JWT that is
-    accessing this endpoint. If no JWT is present,`None` is returned instead.
+    accessing the endpoint. If no JWT is present due to
+    `jwt_required(optional=True)`, `None` is returned.
     """
     return get_jwt().get(config.identity_claim_key, None)
 
@@ -54,10 +55,13 @@ def get_jwt_identity():
 def get_current_user():
     """
     In a protected endpoint, this will return the user object for the JWT that
-    is accessing this endpoint. This is only present if the
-    :meth:`~flask_jwt_extended.JWTManager.user_lookup_loader` is
-    being used. If the user loader callback is not being used, this will
-    return `None`.
+    is accessing the endpoint.
+
+    This is only usable if :meth:`~flask_jwt_extended.JWTManager.user_lookup_loader`
+    is configured. If the user loader callback is not being used, this will
+    raise an error.
+
+    If no JWT is present due to `jwt_required(optional=True)`, `None` is returned.
     """
     jwt_user_dict = getattr(_request_ctx_stack.top, "jwt_user", None)
     if jwt_user_dict is None:
@@ -82,10 +86,15 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
     Returns the decoded token (python dict) from an encoded JWT. This does all
     the checks to insure that the decoded token is valid before returning it.
 
-    :param encoded_token: The encoded JWT to decode into a python dict.
-    :param csrf_value: Expected CSRF double submit value (optional)
-    :param allow_expired: Options to ignore exp claim validation in token
-    :return: Dictionary containing contents of the JWT
+    This will not fire the user loader callbacks, save the token for access
+    in protected endpoints, checked if a token is revoked, etc. This is puerly
+    used to insure that a JWT is valid.
+
+    :param encoded_token: The encoded JWT to decode.
+    :param csrf_value: Expected CSRF double submit value (optional).
+    :param allow_expired: If `True`, do not raise an error if the JWT is expired.
+                          Defaults to `False`
+    :return: Dictionary containing the payload of the JWT decoded JWT.
     """
     jwt_manager = _get_jwt_manager()
     return jwt_manager._decode_jwt_from_config(encoded_token, csrf_value, allow_expired)
@@ -101,31 +110,39 @@ def _get_jwt_manager():
         )
 
 
+# TODO: Rename user_claims to something like additional_claims, or just claims
 def create_access_token(
     identity, fresh=False, expires_delta=None, user_claims=None, headers=None
 ):
     """
     Create a new access token.
 
-    :param identity: The identity of this token, which can be any data that is
-                     json serializable. It can also be a python object, in which
-                     case you can use the
+    :param identity: The identity of this token. It can be any data that is json
+                     serializable. You can use
                      :meth:`~flask_jwt_extended.JWTManager.user_identity_loader`
-                     to define a callback function that will be used to pull a
-                     json serializable identity out of the object.
+                     to define a callback function to convert any object passed
+                     in into a json serializable format.
     :param fresh: If this token should be marked as fresh, and can thus access
-                  :func:`~flask_jwt_extended.fresh_jwt_required` endpoints.
-                  Defaults to `False`. This value can also be a
-                  `datetime.timedelta` in which case it will indicate how long
-                  this token will be considered fresh.
+                  endpoints protected with `@jwt_required(fresh=True)`. Defaults
+                  to `False`.
+
+                  This value can also be a `datetime.timedelta`, which indicate
+                  how long this token will be considered fresh.
     :param expires_delta: A `datetime.timedelta` for how long this token should
                           last before it expires. Set to False to disable
                           expiration. If this is None, it will use the
                           'JWT_ACCESS_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
-    :param user_claims: Optional JSON serializable to override user claims.
-    :param headers: Optional, valid dict for specifying additional headers in JWT
-                    header section
+    :param user_claims: Optional. A hash of claims to include in the access token.
+                        These claims are merged into the default claims (exp, iat, etc)
+                        and claims returned from the
+                        :meth:`~flask_jwt_extended.JWTManager.user_claims_loader`
+                        callback. On conflict, these claims take presidence.
+    :param headers: Optional. A hash of headers to include in the access token.
+                    These headers are merged into the default headers (alg, typ) and
+                    headers returned from the
+                    :meth:`~flask_jwt_extended.JWTManager.additional_headers_loader`
+                    callback. On conflict, these headers take presidence.
     :return: An encoded access token
     """
     jwt_manager = _get_jwt_manager()
@@ -139,24 +156,31 @@ def create_access_token(
     )
 
 
+# TODO: Rename user_claims to something like additional_claims, or just claims
 def create_refresh_token(identity, expires_delta=None, user_claims=None, headers=None):
     """
-    Creates a new refresh token.
+    Create a new refresh token.
 
-    :param identity: The identity of this token, which can be any data that is
-                     json serializable. It can also be a python object, in which
-                     case you can use the
+    :param identity: The identity of this token. It can be any data that is json
+                     serializable. You can use
                      :meth:`~flask_jwt_extended.JWTManager.user_identity_loader`
-                     to define a callback function that will be used to pull a
-                     json serializable identity out of the object.
+                     to define a callback function to convert any object passed
+                     in into a json serializable format.
     :param expires_delta: A `datetime.timedelta` for how long this token should
                           last before it expires. Set to False to disable
                           expiration. If this is None, it will use the
                           'JWT_REFRESH_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
-    :param user_claims: Optional JSON serializable to override user claims.
-    :param headers: Optional, valid dict for specifying additional headers in JWT
-                    header section
+    :param user_claims: Optional. A hash of claims to include in the refresh token.
+                        These claims are merged into the default claims (exp, iat, etc)
+                        and claims returned from the
+                        :meth:`~flask_jwt_extended.JWTManager.user_claims_loader`
+                        callback. On conflict, these claims take presidence.
+    :param headers: Optional. A hash of headers to include in the refresh token.
+                    These headers are merged into the default headers (alg, typ) and
+                    headers returned from the
+                    :meth:`~flask_jwt_extended.JWTManager.additional_headers_loader`
+                    callback. On conflict, these headers take presidence.
     :return: An encoded refresh token
     """
     jwt_manager = _get_jwt_manager()
@@ -224,7 +248,7 @@ def get_csrf_token(encoded_token):
     Returns the CSRF double submit token from an encoded JWT.
 
     :param encoded_token: The encoded JWT
-    :return: The CSRF double submit token
+    :return: The CSRF double submit token (string)
     """
     token = decode_token(encoded_token)
     return token["csrf"]
@@ -232,12 +256,11 @@ def get_csrf_token(encoded_token):
 
 def set_access_cookies(response, encoded_access_token, max_age=None):
     """
-    Takes a flask response object, and an encoded access token, and configures
-    the response to set in the access token in a cookie. If `JWT_CSRF_IN_COOKIES`
-    is `True` (see :ref:`Configuration Options`), this will also set the CSRF
-    double submit values in a separate cookie.
+    Modifiy a Flask Response to set a cookie containing the access JWT.
+    Also sets the corresponding CSRF cookies if `JWT_CSRF_IN_COOKIES` is `True`
+    (see :ref:`Configuration Options`)
 
-    :param response: The Flask response object to set the access cookies in.
+    :param response: A Flask Response object.
     :param encoded_access_token: The encoded access token to set in the cookies.
     :param max_age: The max age of the cookie. If this is None, it will use the
                     `JWT_SESSION_COOKIE` option (see :ref:`Configuration Options`).
@@ -271,12 +294,11 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
 
 def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
     """
-    Takes a flask response object, and an encoded refresh token, and configures
-    the response to set in the refresh token in a cookie. If `JWT_CSRF_IN_COOKIES`
-    is `True` (see :ref:`Configuration Options`), this will also set the CSRF
-    double submit values in a separate cookie.
+    Modifiy a Flask Response to set a cookie containing the refresh JWT.
+    Also sets the corresponding CSRF cookies if `JWT_CSRF_IN_COOKIES` is `True`
+    (see :ref:`Configuration Options`)
 
-    :param response: The Flask response object to set the refresh cookies in.
+    :param response: A Flask Response object.
     :param encoded_refresh_token: The encoded refresh token to set in the cookies.
     :param max_age: The max age of the cookie. If this is None, it will use the
                     `JWT_SESSION_COOKIE` option (see :ref:`Configuration Options`).
@@ -310,10 +332,10 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
 
 def unset_jwt_cookies(response):
     """
-    Takes a flask response object, and configures it to unset (delete) JWTs
-    stored in cookies.
+    Modifiy a Flask Response to delete the cookies containing access or refresh
+    JWTs.  Also deletes the corresponding CSRF cookies if applicable.
 
-    :param response: The Flask response object to delete the JWT cookies in.
+    :param response: A Flask Response object
     """
     unset_access_cookies(response)
     unset_refresh_cookies(response)
@@ -321,12 +343,10 @@ def unset_jwt_cookies(response):
 
 def unset_access_cookies(response):
     """
-    takes a flask response object, and configures it to unset (delete) the
-    access token from the response cookies. if `jwt_csrf_in_cookies`
-    (see :ref:`configuration options`) is `true`, this will also remove the
-    access csrf double submit value from the response cookies as well.
+    Modifiy a Flask Response to delete the cookie containing a refresh JWT.
+    Also deletes the corresponding CSRF cookie if applicable.
 
-    :param response: the flask response object to delete the jwt cookies in.
+    :param response: A Flask Response object
     """
     response.set_cookie(
         config.access_cookie_name,
@@ -354,12 +374,10 @@ def unset_access_cookies(response):
 
 def unset_refresh_cookies(response):
     """
-    takes a flask response object, and configures it to unset (delete) the
-    refresh token from the response cookies. if `jwt_csrf_in_cookies`
-    (see :ref:`configuration options`) is `true`, this will also remove the
-    refresh csrf double submit value from the response cookies as well.
+    Modifiy a Flask Response to delete the cookie containing an access JWT.
+    Also deletes the corresponding CSRF cookie if applicable.
 
-    :param response: the flask response object to delete the jwt cookies in.
+    :param response: A Flask Response object
     """
     response.set_cookie(
         config.refresh_cookie_name,
@@ -387,9 +405,7 @@ def unset_refresh_cookies(response):
 
 def get_unverified_jwt_headers(encoded_token):
     """
-    Returns the Headers of an encoded JWT without verifying the actual signature of JWT.
-     Note: The signature is not verified so the header parameters
-     should not be fully trusted until signature verification is complete
+    Returns the Headers of an encoded JWT without verifying the signature of the JWT.
 
     :param encoded_token: The encoded JWT to get the Header from.
     :return: JWT header parameters as python dict()

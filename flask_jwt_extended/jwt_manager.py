@@ -382,7 +382,8 @@ class JWTManager(object):
 
     # TODO: headers needs to be merged or this needs to overwrite. Update docs
     #       for whatever we end up going with to match.
-    # TODO: In the create tokens method, rename `user_claims` arg to just `claims`
+    # TODO: Rename this to something like `addition_claims_loader`, or just
+    #       `claims_loader`. Make sure the `headers_loader` follows the same convention
     def user_claims_loader(self, callback):
         """
         This decorator sets the callback function used to add additional claims

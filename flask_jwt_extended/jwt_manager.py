@@ -8,6 +8,7 @@ from jwt import InvalidIssuerError
 from jwt import InvalidTokenError
 
 from flask_jwt_extended.config import config
+from flask_jwt_extended.default_callbacks import default_additional_claims_callback
 from flask_jwt_extended.default_callbacks import default_decode_key_callback
 from flask_jwt_extended.default_callbacks import default_encode_key_callback
 from flask_jwt_extended.default_callbacks import default_expired_token_callback
@@ -20,7 +21,6 @@ from flask_jwt_extended.default_callbacks import (
     default_token_verification_failed_callback,
 )
 from flask_jwt_extended.default_callbacks import default_unauthorized_callback
-from flask_jwt_extended.default_callbacks import default_user_claims_callback
 from flask_jwt_extended.default_callbacks import default_user_identity_callback
 from flask_jwt_extended.default_callbacks import default_user_lookup_error_callback
 from flask_jwt_extended.exceptions import CSRFError
@@ -66,7 +66,7 @@ class JWTManager(object):
         self._token_in_blocklist_callback = None
         self._token_verification_callback = default_token_verification_callback
         self._unauthorized_callback = default_unauthorized_callback
-        self._user_claims_callback = default_user_claims_callback
+        self._user_claims_callback = default_additional_claims_callback
         self._user_identity_callback = default_user_identity_callback
         self._user_lookup_callback = None
         self._user_lookup_error_callback = default_user_lookup_error_callback
@@ -202,7 +202,9 @@ class JWTManager(object):
         """
         This decorator sets the callback function used to add additional claims
         when creating a JWT. The claims returned by this function will be merged
-        with any claims passed in via the `user_claims` argument when creating JWTs.
+        with any claims passed in via the `additional_claims` argument to
+        :func:`~flask_jwt_extended.create_access_token` or
+        :func:`~flask_jwt_extended.create_refresh_token`.
 
         The decorated function must take **one** argument.
 
@@ -470,6 +472,7 @@ class JWTManager(object):
         if headers is None:
             headers = self._jwt_additional_header_callback(identity)
 
+        # TODO: Remove this config options.
         if token_type == "access" or config.user_claims_in_refresh_token:
             claim_overrides = self._user_claims_callback(identity)
         else:

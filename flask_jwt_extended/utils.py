@@ -110,9 +110,8 @@ def _get_jwt_manager():
         )
 
 
-# TODO: Rename user_claims to something like additional_claims, or just claims
 def create_access_token(
-    identity, fresh=False, expires_delta=None, user_claims=None, headers=None
+    identity, fresh=False, expires_delta=None, additional_claims=None, headers=None
 ):
     """
     Create a new access token.
@@ -133,11 +132,13 @@ def create_access_token(
                           expiration. If this is None, it will use the
                           'JWT_ACCESS_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
-    :param user_claims: Optional. A hash of claims to include in the access token.
-                        These claims are merged into the default claims (exp, iat, etc)
-                        and claims returned from the
-                        :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader`
-                        callback. On conflict, these claims take presidence.
+
+    :param additional_claims:
+        Optional. A hash of claims to include in the access token.  These claims are
+        merged into the default claims (exp, iat, etc) and claims returned from the
+        :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader` callback.
+        On conflict, these claims take presidence.
+
     :param headers: Optional. A hash of headers to include in the access token.
                     These headers are merged into the default headers (alg, typ) and
                     headers returned from the
@@ -147,7 +148,7 @@ def create_access_token(
     """
     jwt_manager = _get_jwt_manager()
     return jwt_manager._encode_jwt_from_config(
-        claims=user_claims,
+        claims=additional_claims,
         expires_delta=expires_delta,
         fresh=fresh,
         headers=headers,
@@ -156,8 +157,9 @@ def create_access_token(
     )
 
 
-# TODO: Rename user_claims to something like additional_claims, or just claims
-def create_refresh_token(identity, expires_delta=None, user_claims=None, headers=None):
+def create_refresh_token(
+    identity, expires_delta=None, additional_claims=None, headers=None
+):
     """
     Create a new refresh token.
 
@@ -171,11 +173,13 @@ def create_refresh_token(identity, expires_delta=None, user_claims=None, headers
                           expiration. If this is None, it will use the
                           'JWT_REFRESH_TOKEN_EXPIRES` config value
                           (see :ref:`Configuration Options`)
-    :param user_claims: Optional. A hash of claims to include in the refresh token.
-                        These claims are merged into the default claims (exp, iat, etc)
-                        and claims returned from the
-                        :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader`
-                        callback. On conflict, these claims take presidence.
+
+    :param additional_claims:
+        Optional. A hash of claims to include in the refresh token. These claims are
+        merged into the default claims (exp, iat, etc) and claims returned from the
+        :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader` callback.
+        On conflict, these claims take presidence.
+
     :param headers: Optional. A hash of headers to include in the refresh token.
                     These headers are merged into the default headers (alg, typ) and
                     headers returned from the
@@ -185,7 +189,7 @@ def create_refresh_token(identity, expires_delta=None, user_claims=None, headers
     """
     jwt_manager = _get_jwt_manager()
     return jwt_manager._encode_jwt_from_config(
-        claims=user_claims,
+        claims=additional_claims,
         expires_delta=expires_delta,
         fresh=False,
         headers=headers,

@@ -46,7 +46,7 @@ def test_jwt_headers_in_access_token(app):
     assert response.status_code == 200
 
 
-def test_non_serializable_user_claims(app):
+def test_non_serializable_headers(app):
     jwt = get_jwt_manager(app)
 
     @jwt.additional_headers_loader

@@ -1,4 +1,4 @@
-name: Lint
+name: Coverage
 
 on:
   - push
@@ -17,5 +17,5 @@ jobs:
           python-version: '3.9'
       - name: Install Dependencies
         run: pip install tox
-      - name: Lint
+      - name: Coverage
         run: tox -e coverage

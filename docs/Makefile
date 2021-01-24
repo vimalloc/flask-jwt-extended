@@ -220,6 +220,6 @@ pseudoxml:
 
 .PHONY: dummy
 dummy:
-	$(SPHINXBUILD) -b dummy $(ALLSPHINXOPTS) $(BUILDDIR)/dummy
+	$(SPHINXBUILD) -b dummy $(ALLSPHINXOPTS) $(BUILDDIR)/dummy -n -W --keep-going
 	@echo
 	@echo "Build finished. Dummy builder generates no files."

@@ -1,0 +1,21 @@
+name: Documentation
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+	  - name: Set up Python 3.9
+		uses: actions/setup-python@v2
+		with:
+		  python-version: '3.9'
+      - name: Install Dependencies
+        run: pip install tox
+      - name: Check Documentation
+        run: tox -e docs

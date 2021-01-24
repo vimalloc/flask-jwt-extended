@@ -9,23 +9,7 @@ Configuring Flask-JWT-Extended
 .. module:: flask_jwt_extended
 
 .. autoclass:: JWTManager
-
-  .. automethod:: __init__
-  .. automethod:: init_app
-  .. automethod:: decode_key_loader
-  .. automethod:: encode_key_loader
-  .. automethod:: expired_token_loader
-  .. automethod:: invalid_token_loader
-  .. automethod:: needs_fresh_token_loader
-  .. automethod:: revoked_token_loader
-  .. automethod:: token_in_blocklist_loader
-  .. automethod:: token_verification_failed_loader
-  .. automethod:: token_verification_loader
-  .. automethod:: unauthorized_loader
-  .. automethod:: user_claims_loader
-  .. automethod:: user_identity_loader
-  .. automethod:: user_lookup_error_loader
-  .. automethod:: user_lookup_loader
+   :members:
 
 
 Protected endpoint decorators

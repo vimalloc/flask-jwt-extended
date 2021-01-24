@@ -6,7 +6,7 @@ lived tokens which can be used to create new access tokens once an old access
 token has expired. Refresh tokens cannot access an endpoint that is protected
 with :func:`~flask_jwt_extended.jwt_required` and access tokens cannot access
 and endpoint that is protected with
-:func:`~flask_jwt_extended.jwt_refresh_token_required`.
+:func:`~flask_jwt_extended.jwt_required`.
 
 By setting the access tokens to a shorter lifetime (see :ref:`Configuration Options`),
 and utilizing refresh tokens we can help reduce the damage that can be done if

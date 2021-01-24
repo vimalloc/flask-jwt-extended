@@ -3,7 +3,7 @@ Token Freshness
 
 The fresh token pattern is built into this extension. This pattern is very
 simple, you can choose to mark some access tokens as fresh and others as
-non-fresh, and use the :func:`~flask_jwt_extended.fresh_jwt_required` decorator
+non-fresh, and use the :func:`~flask_jwt_extended.jwt_required` decorator
 to only allow fresh tokens to access certain endpoints.
 
 This is useful for allowing fresh tokens to do some critical things (such as

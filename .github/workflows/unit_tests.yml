@@ -1,4 +1,4 @@
-name: Flask JWT Extended CI
+name: Unit Tests
 
 on:
   - push
@@ -22,5 +22,3 @@ jobs:
         run: pip install tox
       - name: Run Tox
         run: tox -e py
-      - name: Lint
-        run: tox -e style

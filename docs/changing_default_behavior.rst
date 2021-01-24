@@ -36,7 +36,7 @@ and what the return values of your callback functions need to be.
     * - :meth:`~flask_jwt_extended.JWTManager.invalid_token_loader`
       - Function to call when an invalid token accesses a protected endpoint
     * - :meth:`~flask_jwt_extended.JWTManager.needs_fresh_token_loader`
-      - Function to call when a non-fresh token accesses a :func:`~flask_jwt_extended.fresh_jwt_required` endpoint
+      - Function to call when a non-fresh token accesses a :func:`~flask_jwt_extended.jwt_required` endpoint
     * - :meth:`~flask_jwt_extended.JWTManager.revoked_token_loader`
       - Function to call when a revoked token accesses a protected endpoint
     * - :meth:`~flask_jwt_extended.JWTManager.token_in_blocklist_loader`

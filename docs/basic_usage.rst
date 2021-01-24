@@ -1,43 +1,65 @@
 Basic Usage
 ===========
 
-In its simplest form, there is not much to using flask_jwt_extended. You use
-:func:`~flask_jwt_extended.create_access_token` to make new access JWTs,
-the :func:`~flask_jwt_extended.jwt_required` decorator to protect endpoints,
-and :func:`~flask_jwt_extended.get_jwt_identity` function to get the identity
-of a JWT in a protected endpoint.
+In its simplest form, there is not much to using this extension. You use
+:func:`~flask_jwt_extended.create_access_token` to make JSON Web Tokens,
+:func:`~flask_jwt_extended.jwt_required` to protect routes, and
+:func:`~flask_jwt_extended.get_jwt_identity` to get the identity of a JWT in a
+protected route.
 
 .. literalinclude:: ../examples/simple.py
 
-To access a jwt_required protected view, all we have to do is send in the
-JWT with the request. By default, this is done with an authorization header
-that looks like:
+To access a jwt_required protected view you need to send in the JWT with each
+request. By default, this is done with an authorization header that looks like:
 
 .. code-block :: bash
 
   Authorization: Bearer <access_token>
 
 
-We can see this in action using CURL:
+We can see this in action using `HTTPie <https://httpie.io/>`_.
 
 .. code-block :: bash
 
-  $ curl http://localhost:5000/protected
+  $ http GET :5000/protected
+
+  HTTP/1.0 401 UNAUTHORIZED
+  Content-Length: 39
+  Content-Type: application/json
+  Date: Sun, 24 Jan 2021 18:09:17 GMT
+  Server: Werkzeug/1.0.1 Python/3.8.6
+
   {
-    "msg": "Missing Authorization Header"
+      "msg": "Missing Authorization Header"
   }
 
-  $ curl -H "Content-Type: application/json" -X POST \
-    -d '{"username":"test","password":"test"}' http://localhost:5000/login
+
+  $ http POST :5000/login username=test password=test
+
+  HTTP/1.0 200 OK
+  Content-Length: 288
+  Content-Type: application/json
+  Date: Sun, 24 Jan 2021 18:10:39 GMT
+  Server: Werkzeug/1.0.1 Python/3.8.6
+
   {
-    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYxMTQ2MzE4MCwianRpIjoiZTBjMzhhNDUtNGM5My00NTJmLWIzZWQtOTcyZGJiNzA5YWViIiwibmJmIjoxNjExNDYzMTgwLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoidGVzdCIsImV4cCI6MTYxNDA1NTE4MH0.Qc87HZBv_qBlzcybCMoeh0SM2oyM6Waefw_xEP0VdF8"
+      "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYxMTUxMTgzOSwianRpIjoiMmI0NzliNTQtYTI0OS00ZDNjLWE4NjItZGVkZGIzODljNmVlIiwibmJmIjoxNjExNTExODM5LCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoidGVzdCIsImV4cCI6MTYxNDEwMzgzOX0.UpTueBRwNLK8e-06-oo5Y_9eWbaN5T3IHwKsy6Jauaw"
   }
 
-  $ export JWT="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYxMTQ2MzE4MCwianRpIjoiZTBjMzhhNDUtNGM5My00NTJmLWIzZWQtOTcyZGJiNzA5YWViIiwibmJmIjoxNjExNDYzMTgwLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoidGVzdCIsImV4cCI6MTYxNDA1NTE4MH0.Qc87HZBv_qBlzcybCMoeh0SM2oyM6Waefw_xEP0VdF8"
 
-  $ curl -H "Authorization: Bearer $JWT" http://localhost:5000/protected
+  $ export JWT="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYxMTUxMTgzOSwianRpIjoiMmI0NzliNTQtYTI0OS00ZDNjLWE4NjItZGVkZGIzODljNmVlIiwibmJmIjoxNjExNTExODM5LCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoidGVzdCIsImV4cCI6MTYxNDEwMzgzOX0.UpTueBRwNLK8e-06-oo5Y_9eWbaN5T3IHwKsy6Jauaw"
+
+
+  $ http GET :5000/protected Authorization:"Bearer $JWT"
+
+  HTTP/1.0 200 OK
+  Content-Length: 24
+  Content-Type: application/json
+  Date: Sun, 24 Jan 2021 18:12:02 GMT
+  Server: Werkzeug/1.0.1 Python/3.8.6
+
   {
-    "logged_in_as": "test"
+      "logged_in_as": "test"
   }
 
 **Important**

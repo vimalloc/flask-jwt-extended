@@ -6,16 +6,31 @@
 Flask-JWT-Extended's Documentation
 ==================================
 
+# Installation
+# Basic Usage
+# Automatic User Loading
+# Adding claims to JWTs
+# Optional Endpoints
+# Fresh and Refresh Tokens
+# Token Locations
+#   - Headers
+#   - Cookies
+#   - JSON Body
+#   - Query String
+# Blocklist and Token Revoking
+# Configuratino Options
+# Modifying Behaviors with Callback Functions
+# Custom Decorators
+# API Documentation
 
 .. toctree::
    :maxdepth: 2
 
    installation
    basic_usage
-   optional_endpoints
+   automatic_user_loading
    add_custom_data_claims
-   tokens_from_complex_object
-   complex_objects_from_token
+   optional_endpoints
    custom_decorators
    refresh_tokens
    token_freshness

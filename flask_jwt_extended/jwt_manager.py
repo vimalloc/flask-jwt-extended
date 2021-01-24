@@ -52,7 +52,8 @@ class JWTManager(object):
         in directly here to register this extension with the flask app, or
         call init_app after creating this object (in a factory pattern).
 
-        :param app: A flask application
+        :param app:
+            The Flask Application object
         """
         # Register the default error handler callback methods. These can be
         # overridden with the appropriate loader decorators
@@ -82,7 +83,8 @@ class JWTManager(object):
         """
         Register this extension with the flask app.
 
-        :param app: A flask application
+        :param app:
+            The Flask Application object
         """
         # Save this so we can use it later in the extension
         if not hasattr(app, "extensions"):  # pragma: no cover

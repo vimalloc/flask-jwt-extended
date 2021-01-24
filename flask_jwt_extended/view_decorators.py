@@ -38,16 +38,23 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
     Verify that a valid JWT is present in the request, unless `optional=True` in
     which case no JWT is also considered valid.
 
-    :param optional: If `True`, do not raise an error if no JWT is present in
-                     the request. Defaults to `False`.
-    :param fresh: If `True`, require a JWT marked as `fresh` in order to be
-                  verified. Defaults to `False`.
-    :param refresh: If `True`, require a refresh JWT to be verified. If `False`
-                    require an access JWT to be verified. Defaults to `False`.
-    :param locations: A list of locations to look for the JWT in this request,
-                      for example: `['headers', 'cookies']`. Defaluts to `None`
-                      which indicates that JWTs will be looked for in the locations
-                      defined by the `JWT_TOKEN_LOCATION` configuration option.
+    :param optional:
+        If `True`, do not raise an error if no JWT is present in the request.
+        Defaults to `False`.
+
+    :param fresh:
+        If `True`, require a JWT marked as `fresh` in order to be verified.
+        Defaults to `False`.
+
+    :param refresh:
+        If `True`, require a refresh JWT to be verified. If `False` require an access
+        JWT to be verified. Defaults to `False`.
+
+    :param locations:
+        A list of locations to look for the JWT in this request, for example:
+        `['headers', 'cookies']`. Defaluts to `None` which indicates that JWTs
+        will be looked for in the locations defined by the `JWT_TOKEN_LOCATION`
+        configuration option.
     """
     if request.method in config.exempt_methods:
         return
@@ -87,17 +94,23 @@ def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
     request (unless optional=True, in which case no JWT is also valid) before the
     endpoint can be called.
 
-    :param optional: If `True`, allow the decorated endpoint to be if no JWT is
-                     present in the request. Defaults to `False`.
-    :param fresh: If `True`, require a JWT marked with `fresh` to be able to
-                  access this endpoint. Defaults to `False`.
-    :param refresh: If `True`, requires a refresh JWT to access this endpoint.
-                    If `False`, requires an access JWT to access this endpoint.
-                    defaults to `False`.
-    :param locations: A list of locations to look for the JWT in this request,
-                      for example: `['headers', 'cookies']`. Defaluts to `None`
-                      which indicates that JWTs will be looked for in the locations
-                      defined by the `JWT_TOKEN_LOCATION` configuration option.
+    :param optional:
+        If `True`, allow the decorated endpoint to be if no JWT is present in the
+        request. Defaults to `False`.
+
+    :param fresh:
+        If `True`, require a JWT marked with `fresh` to be able to access this
+        endpoint. Defaults to `False`.
+
+    :param refresh:
+        If `True`, requires a refresh JWT to access this endpoint. If `False`,
+        requires an access JWT to access this endpoint. Defaults to `False`.
+
+    :param locations:
+        A list of locations to look for the JWT in this request, for example:
+        `['headers', 'cookies']`. Defaluts to `None` which indicates that JWTs
+        will be looked for in the locations defined by the `JWT_TOKEN_LOCATION`
+        configuration option.
     """
 
     def wrapper(fn):

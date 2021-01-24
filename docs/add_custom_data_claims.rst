@@ -14,20 +14,20 @@ should never put any sensitive information in a JWT.
 .. literalinclude:: ../examples/additional_data_in_access_token.py
 
 
-Alternately you can use the :meth:`~flask_jwt_extended.JWTManager.user_claims_loader`
+Alternately you can use the :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader`
 decorator to register a callback function that will be called whenever a new JWT
 is created, and return a dictionary of claims to add to that token. In the case
-that both :meth:`~flask_jwt_extended.JWTManager.user_claims_loader` and the
+that both :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader` and the
 `additional_claims` argument are used, both results are merged together, with ties
 going to the data suplied by the `additional_claims` argument.
 
 .. code-block:: python
 
-  # Using the user_claims_loader, we can specify a method that will be
+  # Using the additional_claims_loader, we can specify a method that will be
   # called when creating JWTs. The decorated method must take the identity
   # we are creating a token for and return a dictionary of additional
   # claims to add to the JWT.
-  @jwt.user_claims_loader
+  @jwt.additional_claims_loader
   def add_claims_to_access_token(identity):
        return = {
            "aud": "some_audience",

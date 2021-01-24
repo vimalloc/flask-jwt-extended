@@ -31,7 +31,7 @@ def admin_required(fn):
     return wrapper
 
 
-@jwt.user_claims_loader
+@jwt.additional_claims_loader
 def add_claims_to_access_token(identity):
     if identity == "admin":
         return {"roles": "admin"}

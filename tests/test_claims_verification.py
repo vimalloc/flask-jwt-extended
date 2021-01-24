@@ -15,7 +15,7 @@ def app():
     app.config["JWT_SECRET_KEY"] = "foobarbaz"
     jwt = JWTManager(app)
 
-    @jwt.user_claims_loader
+    @jwt.additional_claims_loader
     def add_user_claims(identity):
         return {"foo": "bar"}
 

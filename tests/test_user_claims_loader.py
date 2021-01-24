@@ -34,7 +34,7 @@ def app():
 def test_user_claim_in_access_token(app):
     jwt = get_jwt_manager(app)
 
-    @jwt.user_claims_loader
+    @jwt.additional_claims_loader
     def add_claims(identity):
         return {"foo": "bar"}
 
@@ -50,7 +50,7 @@ def test_user_claim_in_access_token(app):
 def test_non_serializable_user_claims(app):
     jwt = get_jwt_manager(app)
 
-    @jwt.user_claims_loader
+    @jwt.additional_claims_loader
     def add_claims(identity):
         return app
 
@@ -66,7 +66,7 @@ def test_token_from_complex_object(app):
 
     jwt = get_jwt_manager(app)
 
-    @jwt.user_claims_loader
+    @jwt.additional_claims_loader
     def add_claims(test_obj):
         return {"username": test_obj.username}
 
@@ -91,7 +91,7 @@ def test_token_from_complex_object(app):
 def test_user_claim_not_in_refresh_token(app):
     jwt = get_jwt_manager(app)
 
-    @jwt.user_claims_loader
+    @jwt.additional_claims_loader
     def add_claims(identity):
         return {"foo": "bar"}
 
@@ -108,7 +108,7 @@ def test_user_claim_in_refresh_token(app):
     app.config["JWT_CLAIMS_IN_REFRESH_TOKEN"] = True
     jwt = get_jwt_manager(app)
 
-    @jwt.user_claims_loader
+    @jwt.additional_claims_loader
     def add_claims(identity):
         return {"foo": "bar"}
 
@@ -143,10 +143,10 @@ def test_user_claims_in_access_token_specified_at_creation(app):
     assert response.status_code == 200
 
 
-def test_user_claims_in_access_token_specified_at_creation_override(app):
+def test_addition_claims_merge(app):
     jwt = get_jwt_manager(app)
 
-    @jwt.user_claims_loader
+    @jwt.additional_claims_loader
     def add_claims(identity):
         return {"default": "value"}
 
@@ -156,4 +156,21 @@ def test_user_claims_in_access_token_specified_at_creation_override(app):
     test_client = app.test_client()
     response = test_client.get("/protected", headers=make_headers(access_token))
     assert response.get_json()["foo"] == "bar"
+    assert response.get_json()["default"] == "value"
+    assert response.status_code == 200
+
+
+def test_addition_claims_merge_tie_goes_to_create_access_token(app):
+    jwt = get_jwt_manager(app)
+
+    @jwt.additional_claims_loader
+    def add_claims(identity):
+        return {"default": "value"}
+
+    with app.test_request_context():
+        access_token = create_access_token("username", user_claims={"default": "foo"})
+
+    test_client = app.test_client()
+    response = test_client.get("/protected", headers=make_headers(access_token))
+    assert response.get_json()["default"] == "foo"
     assert response.status_code == 200

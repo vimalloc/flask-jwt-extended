@@ -198,6 +198,21 @@ class JWTManager(object):
         app.config.setdefault("JWT_TOKEN_LOCATION", ("headers",))
         app.config.setdefault("JWT_VERIFY_AUDIENCE", True)
 
+    def additional_claims_loader(self, callback):
+        """
+        This decorator sets the callback function used to add additional claims
+        when creating a JWT. The claims returned by this function will be merged
+        with any claims passed in via the `user_claims` argument when creating JWTs.
+
+        The decorated function must take **one** argument.
+
+        The argument is the identity that was used when creating a JWT.
+
+        The decorated function must return a dictionary of claims to add to the JWT.
+        """
+        self._user_claims_callback = callback
+        return callback
+
     def additional_headers_loader(self, callback):
         """
         This decorator sets the callback function for adding custom headers to
@@ -378,25 +393,6 @@ class JWTManager(object):
         The decorated function must return a Flask Response.
         """
         self._unauthorized_callback = callback
-        return callback
-
-    # TODO: headers needs to be merged or this needs to overwrite. Update docs
-    #       for whatever we end up going with to match.
-    # TODO: Rename this to something like `addition_claims_loader`, or just
-    #       `claims_loader`. Make sure the `headers_loader` follows the same convention
-    def user_claims_loader(self, callback):
-        """
-        This decorator sets the callback function used to add additional claims
-        when creating a JWT. The claims returned by this function will be merged
-        with any claims passed in via the `user_claims` argument when creating JWTs.
-
-        The decorated function must take **one** argument.
-
-        The argument is the identity that was used when creating a JWT.
-
-        The decorated function must return a dictionary of claims to add to the JWT.
-        """
-        self._user_claims_callback = callback
         return callback
 
     def user_identity_loader(self, callback):

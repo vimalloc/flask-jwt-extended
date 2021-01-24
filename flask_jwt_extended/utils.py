@@ -1,12 +1,9 @@
 import jwt
 from flask import _request_ctx_stack
-from flask import current_app
 from werkzeug.local import LocalProxy
 
 from flask_jwt_extended.config import config
-from flask_jwt_extended.exceptions import RevokedTokenError
-from flask_jwt_extended.exceptions import UserClaimsVerificationError
-from flask_jwt_extended.exceptions import WrongTokenError
+from flask_jwt_extended.internal_utils import get_jwt_manager
 
 
 # Proxy to access the current user
@@ -84,19 +81,6 @@ def get_current_user():
     return jwt_user_dict["loaded_user"]
 
 
-def get_jti(encoded_token):
-    """
-    Returns the JTI (unique identifier) of an encoded JWT
-
-    :param encoded_token:
-        The encoded JWT to get the JTI from.
-
-    :return:
-        The JTI (unique identifier) of a JWT.
-    """
-    return decode_token(encoded_token).get("jti")
-
-
 def decode_token(encoded_token, csrf_value=None, allow_expired=False):
     """
     Returns the decoded token (python dict) from an encoded JWT. This does all
@@ -118,18 +102,8 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
     :return:
         Dictionary containing the payload of the JWT decoded JWT.
     """
-    jwt_manager = _get_jwt_manager()
+    jwt_manager = get_jwt_manager()
     return jwt_manager._decode_jwt_from_config(encoded_token, csrf_value, allow_expired)
-
-
-def _get_jwt_manager():
-    try:
-        return current_app.extensions["flask-jwt-extended"]
-    except KeyError:  # pragma: no cover
-        raise RuntimeError(
-            "You must initialize a JWTManager with this flask "
-            "application before using this method"
-        )
 
 
 def create_access_token(
@@ -171,7 +145,7 @@ def create_access_token(
     :return:
         An encoded access token
     """
-    jwt_manager = _get_jwt_manager()
+    jwt_manager = get_jwt_manager()
     return jwt_manager._encode_jwt_from_config(
         claims=additional_claims,
         expires_delta=expires_delta,
@@ -214,7 +188,7 @@ def create_refresh_token(
     :return:
         An encoded refresh token
     """
-    jwt_manager = _get_jwt_manager()
+    jwt_manager = get_jwt_manager()
     return jwt_manager._encode_jwt_from_config(
         claims=additional_claims,
         expires_delta=expires_delta,
@@ -225,53 +199,30 @@ def create_refresh_token(
     )
 
 
-def has_user_lookup():
-    jwt_manager = _get_jwt_manager()
-    return jwt_manager._user_lookup_callback is not None
+def get_unverified_jwt_headers(encoded_token):
+    """
+    Returns the Headers of an encoded JWT without verifying the signature of the JWT.
+
+    :param encoded_token:
+        The encoded JWT to get the Header from.
+
+    :return:
+        JWT header parameters as python dict()
+    """
+    return jwt.get_unverified_header(encoded_token)
 
 
-def user_lookup(*args, **kwargs):
-    jwt_manager = _get_jwt_manager()
-    return jwt_manager._user_lookup_callback(*args, **kwargs)
+def get_jti(encoded_token):
+    """
+    Returns the JTI (unique identifier) of an encoded JWT
 
+    :param encoded_token:
+        The encoded JWT to get the JTI from.
 
-def has_token_in_blocklist_callback():
-    jwt_manager = _get_jwt_manager()
-    return jwt_manager._token_in_blocklist_callback is not None
-
-
-def token_in_blocklist(*args, **kwargs):
-    jwt_manager = _get_jwt_manager()
-    return jwt_manager._token_in_blocklist_callback(*args, **kwargs)
-
-
-def verify_token_type(decoded_token, expected_type):
-    if decoded_token["type"] != expected_type:
-        raise WrongTokenError("Only {} tokens are allowed".format(expected_type))
-
-
-def verify_token_not_blocklisted(jwt_header, jwt_data, request_type):
-    if not config.blocklist_enabled:
-        return
-    if not has_token_in_blocklist_callback():
-        raise RuntimeError(
-            "A token_in_blocklist_callback must be provided via "
-            "the '@token_in_blocklist_loader' if "
-            "JWT_BLOCKLIST_ENABLED is True"
-        )
-    if config.blocklist_access_tokens and request_type == "access":
-        if token_in_blocklist(jwt_data):
-            raise RevokedTokenError(jwt_header, jwt_data)
-    if config.blocklist_refresh_tokens and request_type == "refresh":
-        if token_in_blocklist(jwt_data):
-            raise RevokedTokenError(jwt_header, jwt_data)
-
-
-def _custom_verification_for_token(jwt_header, jwt_data):
-    jwt_manager = _get_jwt_manager()
-    if not jwt_manager._token_verification_callback(jwt_header, jwt_data):
-        error_msg = "User claims verification failed"
-        raise UserClaimsVerificationError(error_msg, jwt_header, jwt_data)
+    :return:
+        The JTI (unique identifier) of a JWT.
+    """
+    return decode_token(encoded_token).get("jti")
 
 
 def get_csrf_token(encoded_token):
@@ -446,16 +397,3 @@ def unset_refresh_cookies(response):
             path=config.refresh_csrf_cookie_path,
             samesite=config.cookie_samesite,
         )
-
-
-def get_unverified_jwt_headers(encoded_token):
-    """
-    Returns the Headers of an encoded JWT without verifying the signature of the JWT.
-
-    :param encoded_token:
-        The encoded JWT to get the Header from.
-
-    :return:
-        JWT header parameters as python dict()
-    """
-    return jwt.get_unverified_header(encoded_token)

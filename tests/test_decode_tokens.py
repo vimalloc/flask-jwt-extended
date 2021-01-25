@@ -235,9 +235,8 @@ def test_invalid_aud(app, default_access_token, token_aud):
 
 
 @pytest.mark.parametrize("token_aud", ["bar", ["bar"], ["bar", "baz"]])
-def test_verify_aud(app, default_access_token, token_aud):
-    app.config["JWT_DECODE_AUDIENCE"] = "foo"
-    app.config["JWT_VERIFY_AUDIENCE"] = False
+def test_verify_no_aud(app, default_access_token, token_aud):
+    app.config["JWT_DECODE_AUDIENCE"] = None
 
     default_access_token["aud"] = token_aud
     valid_token = encode_token(app, default_access_token)

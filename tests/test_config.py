@@ -71,7 +71,6 @@ def test_default_configs(app):
         assert config.json_encoder is app.json_encoder
 
         assert config.error_msg_key == "msg"
-        assert config.verify_audience is True
 
 
 @pytest.mark.parametrize("delta_func", [timedelta, relativedelta])

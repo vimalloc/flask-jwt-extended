@@ -61,9 +61,9 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
 
     try:
         if refresh:
-            jwt_data, jwt_header = _decode_jwt_from_request("refresh", locations)
+            jwt_data, jwt_header = _decode_jwt_from_request("refresh", locations, fresh)
         else:
-            jwt_data, jwt_header = _decode_jwt_from_request("access", locations)
+            jwt_data, jwt_header = _decode_jwt_from_request("access", locations, fresh)
     except (NoAuthorizationError, InvalidHeaderError):
         if not optional:
             raise
@@ -71,11 +71,6 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
         _request_ctx_stack.top.jwt_header = {}
         _request_ctx_stack.top.jwt_user = {"loaded_user": None}
         return
-
-    if fresh:
-        _verify_token_is_fresh(jwt_header, jwt_data)
-
-    custom_verification_for_token(jwt_header, jwt_data)
 
     # Save these at the very end so that they are only saved in the requet
     # context if the token is valid and all callbacks succeed
@@ -230,7 +225,7 @@ def _decode_jwt_from_json(token_type):
     return encoded_token, None
 
 
-def _decode_jwt_from_request(token_type, locations):
+def _decode_jwt_from_request(token_type, locations, fresh):
     # All the places we can get a JWT from in this request
     get_encoded_token_functions = []
 
@@ -281,6 +276,11 @@ def _decode_jwt_from_request(token_type, locations):
         else:
             raise NoAuthorizationError(errors[0])
 
+    # Additional verifications provided by this extension
     verify_token_type(decoded_token, expected_type=token_type)
+    if fresh:
+        _verify_token_is_fresh(jwt_header, decoded_token)
     verify_token_not_blocklisted(jwt_header, decoded_token, token_type)
+    custom_verification_for_token(jwt_header, decoded_token)
+
     return decoded_token, jwt_header

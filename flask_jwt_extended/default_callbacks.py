@@ -22,6 +22,10 @@ def default_additional_claims_callback(userdata):
     return {}
 
 
+def default_blocklist_callback(jwt_headers, jwt_data):
+    return False
+
+
 def default_jwt_headers_callback(default_headers):
     """
     By default header typically consists of two parts: the type of the token,

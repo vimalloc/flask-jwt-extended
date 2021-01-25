@@ -59,7 +59,6 @@ def test_default_configs(app):
         assert config.algorithm == "HS256"
         assert config.decode_algorithms == ["HS256"]
         assert config.is_asymmetric is False
-        assert config.blocklist_enabled is False
         assert config.blocklist_checks == ("access", "refresh")
         assert config.blocklist_access_tokens is True
         assert config.blocklist_refresh_tokens is True
@@ -110,7 +109,6 @@ def test_override_configs(app, delta_func):
     app.config["JWT_ALGORITHM"] = "HS512"
     app.config["JWT_DECODE_ALGORITHMS"] = ["HS512", "HS256"]
 
-    app.config["JWT_BLOCKLIST_ENABLED"] = True
     app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ("refresh",)
 
     app.config["JWT_IDENTITY_CLAIM"] = "foo"
@@ -162,7 +160,6 @@ def test_override_configs(app, delta_func):
         assert config.algorithm == "HS512"
         assert config.decode_algorithms == ["HS512", "HS256"]
 
-        assert config.blocklist_enabled is True
         assert config.blocklist_checks == ("refresh",)
         assert config.blocklist_access_tokens is False
         assert config.blocklist_refresh_tokens is True

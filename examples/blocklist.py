@@ -17,8 +17,6 @@ app = Flask(__name__)
 # Enable blocklisting and specify what kind of tokens to check
 # against the blocklist
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
-app.config["JWT_BLOCKLIST_ENABLED"] = True
-app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
 jwt = JWTManager(app)
 
 # A storage engine to save revoked tokens. In production if

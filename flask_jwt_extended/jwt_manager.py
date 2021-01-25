@@ -9,6 +9,7 @@ from jwt import InvalidTokenError
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.default_callbacks import default_additional_claims_callback
+from flask_jwt_extended.default_callbacks import default_blocklist_callback
 from flask_jwt_extended.default_callbacks import default_decode_key_callback
 from flask_jwt_extended.default_callbacks import default_encode_key_callback
 from flask_jwt_extended.default_callbacks import default_expired_token_callback
@@ -64,7 +65,7 @@ class JWTManager(object):
         self._jwt_additional_header_callback = default_jwt_headers_callback
         self._needs_fresh_token_callback = default_needs_fresh_token_callback
         self._revoked_token_callback = default_revoked_token_callback
-        self._token_in_blocklist_callback = None
+        self._token_in_blocklist_callback = default_blocklist_callback
         self._token_verification_callback = default_token_verification_callback
         self._unauthorized_callback = default_unauthorized_callback
         self._user_claims_callback = default_additional_claims_callback
@@ -164,7 +165,6 @@ class JWTManager(object):
         app.config.setdefault("JWT_ACCESS_CSRF_FIELD_NAME", "csrf_token")
         app.config.setdefault("JWT_ACCESS_CSRF_HEADER_NAME", "X-CSRF-TOKEN")
         app.config.setdefault("JWT_ALGORITHM", "HS256")
-        app.config.setdefault("JWT_BLOCKLIST_ENABLED", False)
         app.config.setdefault("JWT_BLOCKLIST_TOKEN_CHECKS", ("access", "refresh"))
         app.config.setdefault("JWT_COOKIE_CSRF_PROTECT", True)
         app.config.setdefault("JWT_COOKIE_DOMAIN", None)

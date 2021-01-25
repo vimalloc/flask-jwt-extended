@@ -212,10 +212,6 @@ class _Config(object):
         return algorithms
 
     @property
-    def blocklist_enabled(self):
-        return current_app.config["JWT_BLOCKLIST_ENABLED"]
-
-    @property
     def blocklist_checks(self):
         check_type = current_app.config["JWT_BLOCKLIST_TOKEN_CHECKS"]
         if isinstance(check_type, str):

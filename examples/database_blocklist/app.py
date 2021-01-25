@@ -23,7 +23,6 @@ def create_app():
     app = Flask(__name__)
 
     app.secret_key = "ChangeMe!"
-    app.config["JWT_BLOCKLIST_ENABLED"] = True
     app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

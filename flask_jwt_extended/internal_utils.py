@@ -26,36 +26,20 @@ def user_lookup(*args, **kwargs):
     return jwt_manager._user_lookup_callback(*args, **kwargs)
 
 
-def has_token_in_blocklist_callback():
-    jwt_manager = get_jwt_manager()
-    return jwt_manager._token_in_blocklist_callback is not None
-
-
-def _token_in_blocklist(*args, **kwargs):
-    jwt_manager = get_jwt_manager()
-    return jwt_manager._token_in_blocklist_callback(*args, **kwargs)
-
-
 def verify_token_type(decoded_token, expected_type):
     if decoded_token["type"] != expected_type:
         raise WrongTokenError("Only {} tokens are allowed".format(expected_type))
 
 
 def verify_token_not_blocklisted(jwt_header, jwt_data, request_type):
-    if not config.blocklist_enabled:
+    if request_type == "access" and not config.blocklist_access_tokens:
         return
-    if not has_token_in_blocklist_callback():
-        raise RuntimeError(
-            "A token_in_blocklist_callback must be provided via "
-            "the '@token_in_blocklist_loader' if "
-            "JWT_BLOCKLIST_ENABLED is True"
-        )
-    if config.blocklist_access_tokens and request_type == "access":
-        if _token_in_blocklist(jwt_data):
-            raise RevokedTokenError(jwt_header, jwt_data)
-    if config.blocklist_refresh_tokens and request_type == "refresh":
-        if _token_in_blocklist(jwt_data):
-            raise RevokedTokenError(jwt_header, jwt_data)
+    if request_type == "refresh" and not config.blocklist_refresh_tokens:
+        return
+
+    jwt_manager = get_jwt_manager()
+    if jwt_manager._token_in_blocklist_callback(jwt_header, jwt_data):
+        raise RevokedTokenError(jwt_header, jwt_data)
 
 
 def custom_verification_for_token(jwt_header, jwt_data):

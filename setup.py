@@ -1,8 +1,3 @@
-"""
-Flask-JWT-Extended
-------------------
-Flask-Login provides jwt endpoint protection for Flask.
-"""
 import io
 import re
 
@@ -22,7 +17,7 @@ setup(
     url="https://github.com/vimalloc/flask-jwt-extended",
     license="MIT",
     author="Landon Gilbert-Bland",
-    author_email="landogbland@gmail.com",
+    author_email="landongb@hey.com",
     description="Extended JWT integration with Flask",
     long_description=long_description,
     long_description_content_type="text/markdown",

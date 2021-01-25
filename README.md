@@ -1,8 +1,4 @@
 # Flask-JWT-Extended
-[![Build Status](https://travis-ci.org/vimalloc/flask-jwt-extended.svg?branch=master)](https://travis-ci.org/vimalloc/flask-jwt-extended)
-[![Coverage Status](https://coveralls.io/repos/github/vimalloc/flask-jwt-extended/badge.svg?branch=master)](https://coveralls.io/github/vimalloc/flask-jwt-extended?branch=master)
-[![PyPI version](https://badge.fury.io/py/Flask-JWT-Extended.svg)](https://badge.fury.io/py/Flask-JWT-Extended)
-[![Documentation Status](https://readthedocs.org/projects/flask-jwt-extended/badge/)](http://flask-jwt-extended.readthedocs.io/en/latest/)
 
 ### Features
 Flask-JWT-Extended not only adds support for using JSON Web Tokens (JWT) to Flask for protecting views,
@@ -11,9 +7,9 @@ easier. These include:
 
 * Support for adding custom claims to JSON Web Tokens
 * Custom claims validation on received tokens
-* Creating tokens from complex objects or complex object from received tokens
+* Creating tokens from complex objects or complex object from received tokens (current_user)
 * [Refresh tokens](https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/)
-* Token freshness and separate view decorators to only allow fresh tokens
+* First class support for fresh tokens for making sensitive changes.
 * Token revoking/blocklisting
 * Storing tokens in cookies and CSRF protection
 
@@ -30,21 +26,34 @@ Come chat with the community or ask questions at https://discord.gg/EJBsbFd
 ### Contributing
 Before making any changes, make sure to install the development requirements
 and setup the git hooks which will automatically lint and format your changes.
-```
-$ pip install -r requirements.txt
-$ pre-commit install
+```bash
+pip install -r dev-requirements.txt
+pre-commit install
 ```
 
 We require 100% code coverage in our unit tests. You can run the tests locally
-with `tox` which will print out a code coverage report and verify the code
-format looks good.
+with `tox` which insures that all tests pass, tests provide complete code coverage,
+documentation builds, and style guide are adhered to
+```bash
+tox
 ```
-# Replace py37 with whatever version of python is installed on your system
-$ tox -e py37
+
+A subset of checks can also be ran by adding an argument to tox. The available
+arguments are:
+  * py36, py37, py38, py39
+    * Run unit tests on the given python version
+  * coverage
+    * Run a code coverage check
+  * docs
+    * Insure documentation builds and there are no broken links
+  * style
+    * Insure style guide is adhered to
+```bash
+tox -e py38
 ```
 
 We also require features to be well documented.  You can generate a local copy
 of the documentation by going to the `docs` directory and running:
-```
-$ make clean && make html
+```bash
+make clean && make html && open _build/html/index.html
 ```

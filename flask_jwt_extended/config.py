@@ -314,6 +314,8 @@ class _Config(object):
     def leeway(self):
         return current_app.config["JWT_DECODE_LEEWAY"]
 
+    # TODO: This is stupid, just verify the audience depending on the jwt decode
+    #       audience. Same thing with the the blocklist enabled
     @property
     def verify_audience(self):
         return current_app.config["JWT_VERIFY_AUDIENCE"]

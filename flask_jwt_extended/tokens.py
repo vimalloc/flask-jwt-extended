@@ -15,7 +15,7 @@ def _encode_jwt(
     csrf,
     expires_delta,
     fresh,
-    headers,
+    header_overrides,
     identity,
     identity_claim_key,
     issuer,
@@ -50,7 +50,11 @@ def _encode_jwt(
         token_data.update(claim_overrides)
 
     return jwt.encode(
-        token_data, secret, algorithm, json_encoder=json_encoder, headers=headers
+        token_data,
+        secret,
+        algorithm,
+        json_encoder=json_encoder,
+        headers=header_overrides,
     )
 
 

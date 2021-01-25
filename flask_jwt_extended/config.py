@@ -283,10 +283,6 @@ class _Config(object):
         return current_app.config["JWT_IDENTITY_CLAIM"]
 
     @property
-    def user_claims_in_refresh_token(self):
-        return current_app.config["JWT_CLAIMS_IN_REFRESH_TOKEN"]
-
-    @property
     def exempt_methods(self):
         return {"OPTIONS"}
 

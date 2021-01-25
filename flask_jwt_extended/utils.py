@@ -107,7 +107,11 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
 
 
 def create_access_token(
-    identity, fresh=False, expires_delta=None, additional_claims=None, headers=None
+    identity,
+    fresh=False,
+    expires_delta=None,
+    additional_claims=None,
+    additional_headers=None,
 ):
     """
     Create a new access token.
@@ -150,14 +154,14 @@ def create_access_token(
         claims=additional_claims,
         expires_delta=expires_delta,
         fresh=fresh,
-        headers=headers,
+        headers=additional_headers,
         identity=identity,
         token_type="access",
     )
 
 
 def create_refresh_token(
-    identity, expires_delta=None, additional_claims=None, headers=None
+    identity, expires_delta=None, additional_claims=None, additional_headers=None
 ):
     """
     Create a new refresh token.
@@ -193,7 +197,7 @@ def create_refresh_token(
         claims=additional_claims,
         expires_delta=expires_delta,
         fresh=False,
-        headers=headers,
+        headers=additional_headers,
         identity=identity,
         token_type="refresh",
     )

@@ -30,7 +30,7 @@ def default_jwt_headers_callback(default_headers):
     further by default set while encoding the token
     :return: default we set None here
     """
-    return None
+    return {}
 
 
 def default_user_identity_callback(userdata):

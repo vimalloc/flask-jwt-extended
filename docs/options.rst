@@ -45,8 +45,6 @@ General Options:
 ``JWT_IDENTITY_CLAIM``            Claim in the tokens that is used as source of identity.
                                   For interoperability, the JWT RFC recommends using ``'sub'``.
                                   Defaults to ``'identity'`` for legacy reasons.
-``JWT_CLAIMS_IN_REFRESH_TOKEN``   If user claims should be included in refresh tokens.
-                                  Defaults to ``False``.
 ``JWT_ERROR_MESSAGE_KEY``         The key of the error message in a JSON error response when using
                                   the default error handlers.
                                   Defaults to ``'msg'``.

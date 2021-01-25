@@ -166,7 +166,6 @@ class JWTManager(object):
         app.config.setdefault("JWT_ALGORITHM", "HS256")
         app.config.setdefault("JWT_BLOCKLIST_ENABLED", False)
         app.config.setdefault("JWT_BLOCKLIST_TOKEN_CHECKS", ("access", "refresh"))
-        app.config.setdefault("JWT_CLAIMS_IN_REFRESH_TOKEN", False)
         app.config.setdefault("JWT_COOKIE_CSRF_PROTECT", True)
         app.config.setdefault("JWT_COOKIE_DOMAIN", None)
         app.config.setdefault("JWT_COOKIE_SAMESITE", None)
@@ -219,17 +218,17 @@ class JWTManager(object):
 
     def additional_headers_loader(self, callback):
         """
-        This decorator sets the callback function for adding custom headers to
-        a JWT when it is created.
-
-        This callback function is ignored when the `headers` kwarg is used in
+        This decorator sets the callback function used to add additional headers
+        when creating a JWT. The headers returned by this function will be merged
+        with any headers passed in via the `additional_headers` argument to
         :func:`~flask_jwt_extended.create_access_token` or
-        :func:`~flask_jwt_extended.create_refresh_token`
+        :func:`~flask_jwt_extended.create_refresh_token`.
 
-        The decorated function must take **no** arguments.
+        The decorated function must take **one** argument.
 
-        The function must returns a dictionary of the addition headers you want
-        included in the JWT.
+        The argument is the identity that was used when creating a JWT.
+
+        The decorated function must return a dictionary of headers to add to the JWT.
         """
         self._jwt_additional_header_callback = callback
         return callback
@@ -466,22 +465,16 @@ class JWTManager(object):
         expires_delta=None,
         headers=None,
     ):
+        header_overrides = self._jwt_additional_header_callback(identity)
+        if headers is not None:
+            header_overrides.update(headers)
+
+        claim_overrides = self._user_claims_callback(identity)
+        if claims is not None:
+            claim_overrides.update(claims)
+
         if expires_delta is None:
             expires_delta = config.refresh_expires
-
-        # TODO: These should either be merged like claims, or claims should
-        #       purely overwrite like this currently does. Pick one.
-        if headers is None:
-            headers = self._jwt_additional_header_callback(identity)
-
-        # TODO: Remove this config options.
-        if token_type == "access" or config.user_claims_in_refresh_token:
-            claim_overrides = self._user_claims_callback(identity)
-        else:
-            claim_overrides = {}
-
-        if claims:
-            claim_overrides.update(claims)
 
         return _encode_jwt(
             algorithm=config.algorithm,
@@ -489,7 +482,7 @@ class JWTManager(object):
             csrf=config.csrf_protect,
             expires_delta=expires_delta,
             fresh=fresh,
-            headers=headers,
+            header_overrides=header_overrides,
             identity=self._user_identity_callback(identity),
             identity_claim_key=config.identity_claim_key,
             issuer=config.encode_issuer,

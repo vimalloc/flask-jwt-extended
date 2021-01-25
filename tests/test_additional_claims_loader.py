@@ -88,24 +88,7 @@ def test_token_from_complex_object(app):
     assert response.status_code == 200
 
 
-def test_additional_claims_not_in_refresh_token(app):
-    jwt = get_jwt_manager(app)
-
-    @jwt.additional_claims_loader
-    def add_claims(identity):
-        return {"foo": "bar"}
-
-    with app.test_request_context():
-        refresh_token = create_refresh_token("username")
-
-    test_client = app.test_client()
-    response = test_client.get("/protected2", headers=make_headers(refresh_token))
-    assert "foo" not in response.get_json()
-    assert response.status_code == 200
-
-
 def test_additional_claims_in_refresh_token(app):
-    app.config["JWT_CLAIMS_IN_REFRESH_TOKEN"] = True
     jwt = get_jwt_manager(app)
 
     @jwt.additional_claims_loader
@@ -122,8 +105,6 @@ def test_additional_claims_in_refresh_token(app):
 
 
 def test_additional_claims_in_refresh_token_specified_at_creation(app):
-    app.config["JWT_CLAIMS_IN_REFRESH_TOKEN"] = True
-
     with app.test_request_context():
         refresh_token = create_refresh_token(
             "username", additional_claims={"foo": "bar"}

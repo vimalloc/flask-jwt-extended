@@ -76,7 +76,9 @@ def test_jwt_headers_in_refresh_token(app):
 
 def test_jwt_header_in_refresh_token_specified_at_creation(app):
     with app.test_request_context():
-        refresh_token = create_refresh_token("username", headers={"foo": "bar"})
+        refresh_token = create_refresh_token(
+            "username", additional_headers={"foo": "bar"}
+        )
 
     test_client = app.test_client()
     response = test_client.get("/protected2", headers=make_headers(refresh_token))
@@ -86,7 +88,9 @@ def test_jwt_header_in_refresh_token_specified_at_creation(app):
 
 def test_jwt_header_in_access_token_specified_at_creation(app):
     with app.test_request_context():
-        access_token = create_access_token("username", headers={"foo": "bar"})
+        access_token = create_access_token(
+            "username", additional_headers={"foo": "bar"}
+        )
 
     test_client = app.test_client()
     response = test_client.get("/protected", headers=make_headers(access_token))
@@ -102,7 +106,9 @@ def test_jwt_header_in_access_token_specified_at_creation_override(app):
         return {"ping": "pong"}
 
     with app.test_request_context():
-        access_token = create_access_token("username", headers={"foo": "bar"})
+        access_token = create_access_token(
+            "username", additional_headers={"foo": "bar"}
+        )
 
     test_client = app.test_client()
     response = test_client.get("/protected", headers=make_headers(access_token))
@@ -118,7 +124,9 @@ def test_jwt_header_in_refresh_token_specified_at_creation_override(app):
         return {"ping": "pong"}
 
     with app.test_request_context():
-        access_token = create_refresh_token("username", headers={"foo": "bar"})
+        access_token = create_refresh_token(
+            "username", additional_headers={"foo": "bar"}
+        )
 
     test_client = app.test_client()
     response = test_client.get("/protected2", headers=make_headers(access_token))

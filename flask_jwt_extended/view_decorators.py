@@ -74,8 +74,8 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
 
     if fresh:
         _verify_token_is_fresh(jwt_header, jwt_data)
-    if not refresh or config.user_claims_in_refresh_token:
-        custom_verification_for_token(jwt_header, jwt_data)
+
+    custom_verification_for_token(jwt_header, jwt_data)
 
     # Save these at the very end so that they are only saved in the requet
     # context if the token is valid and all callbacks succeed

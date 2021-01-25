@@ -68,8 +68,6 @@ def test_default_configs(app):
 
         assert config.identity_claim_key == "sub"
 
-        assert config.user_claims_in_refresh_token is False
-
         assert config.json_encoder is app.json_encoder
 
         assert config.error_msg_key == "msg"
@@ -117,8 +115,6 @@ def test_override_configs(app, delta_func):
     app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ("refresh",)
 
     app.config["JWT_IDENTITY_CLAIM"] = "foo"
-
-    app.config["JWT_CLAIMS_IN_REFRESH_TOKEN"] = True
 
     app.config["JWT_ERROR_MESSAGE_KEY"] = "message"
 
@@ -175,8 +171,6 @@ def test_override_configs(app, delta_func):
         assert config.cookie_max_age == 31540000
 
         assert config.identity_claim_key == "foo"
-
-        assert config.user_claims_in_refresh_token is True
 
         assert config.json_encoder is CustomJSONEncoder
 

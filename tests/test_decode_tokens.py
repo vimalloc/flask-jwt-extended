@@ -45,19 +45,6 @@ def default_access_token(app):
         }
 
 
-@pytest.fixture(scope="function")
-def patch_datetime_now(monkeypatch):
-    date_in_future = datetime.utcnow() + timedelta(seconds=30)
-
-    class mydatetime(datetime):
-        @classmethod
-        def utcnow(cls):
-            return date_in_future
-
-    monkeypatch.setattr(__name__ + ".datetime", mydatetime)
-    monkeypatch.setattr("datetime.datetime", mydatetime)
-
-
 @pytest.mark.parametrize("missing_claims", ["sub", "csrf"])
 def test_missing_claims(app, default_access_token, missing_claims):
     del default_access_token[missing_claims]
@@ -123,10 +110,14 @@ def test_never_expire_token(app):
             assert "exp" not in decoded
 
 
-def test_nbf_token_in_future(app, patch_datetime_now):
+def test_nbf_token_in_future(app):
+    date_in_future = datetime.utcnow() + timedelta(seconds=30)
+
     with pytest.raises(ImmatureSignatureError):
         with app.test_request_context():
-            access_token = create_access_token("username")
+            access_token = create_access_token(
+                "username", additional_claims={"nbf": date_in_future}
+            )
             decode_token(access_token)
 
     with app.test_request_context():

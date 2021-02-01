@@ -1,6 +1,7 @@
-import datetime
 import uuid
-from calendar import timegm
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 
 import jwt
 from werkzeug.security import safe_str_cmp
@@ -23,10 +24,10 @@ def _encode_jwt(
     secret,
     token_type,
 ):
-    now = datetime.datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
-    if isinstance(fresh, datetime.timedelta):
-        fresh = timegm((now + fresh).utctimetuple())
+    if isinstance(fresh, timedelta):
+        fresh = datetime.timestamp(now + fresh)
 
     token_data = {
         "fresh": fresh,

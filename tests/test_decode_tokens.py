@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -289,3 +290,21 @@ def test_jwt_headers(app):
         refresh_token = create_refresh_token("username", additional_headers=jwt_header)
         assert get_unverified_jwt_headers(access_token)["foo"] == "bar"
         assert get_unverified_jwt_headers(refresh_token)["foo"] == "bar"
+
+
+def test_token_expires_time(app):
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(hours=2)
+
+    now_timestamp = datetime.timestamp(datetime.now(timezone.utc))
+
+    with app.test_request_context():
+        access_token = create_access_token("username")
+        refresh_token = create_refresh_token("username")
+        access_timestamp = decode_token(access_token)["exp"]
+        refresh_timestamp = decode_token(refresh_token)["exp"]
+
+        # <  2 for a little bit of leeway from when we calculated now vs when
+        # the tokens are created
+        assert (access_timestamp - (now_timestamp + 3600)) < 2
+        assert (refresh_timestamp - (now_timestamp + 7200)) < 2

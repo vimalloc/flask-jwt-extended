@@ -1,5 +1,5 @@
-from calendar import timegm
 from datetime import datetime
+from datetime import timezone
 from functools import wraps
 from re import split
 
@@ -28,7 +28,7 @@ def _verify_token_is_fresh(jwt_header, jwt_data):
         if not fresh:
             raise FreshTokenRequired("Fresh token required", jwt_header, jwt_data)
     else:
-        now = timegm(datetime.utcnow().utctimetuple())
+        now = datetime.timestamp(datetime.now(timezone.utc))
         if fresh < now:
             raise FreshTokenRequired("Fresh token required", jwt_header, jwt_data)
 

@@ -3,6 +3,9 @@
 Blocklist and Token Revoking
 ============================
 
+NOTE: THIS DOCUMENTATION HAS NOT YET BEEN UPDATED
+
+
 This extension supports optional token revoking out of the box. This will
 allow you to revoke a specific token so that it can no longer access your endpoints.
 

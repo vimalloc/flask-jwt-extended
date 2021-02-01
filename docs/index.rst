@@ -42,8 +42,6 @@ Flask-JWT-Extended's Documentation
    token_locations
    refreshing_tokens
    custom_decorators
-   refresh_tokens
-   token_freshness
    changing_default_behavior
    options
    blocklist_and_token_revoking

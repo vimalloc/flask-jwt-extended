@@ -1,6 +1,9 @@
 Custom Decorators
 =================
 
+NOTE: THIS DOCUMENTATION HAS NOT YET BEEN UPDATED
+
+
 You can create your own decorators that extend the functionality of the
 decorators provided by this extension. For example, you may want to create
 your own decorator that verifies a JWT is present as well as verifying that

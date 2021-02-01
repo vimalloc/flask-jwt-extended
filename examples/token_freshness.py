@@ -1,23 +1,24 @@
+from datetime import timedelta
+
 from flask import Flask
 from flask import jsonify
 from flask import request
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import create_refresh_token
-from flask_jwt_extended import fresh_jwt_required
 from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_refresh_token_required
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
 
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 jwt = JWTManager(app)
 
 
-# Standard login endpoint. Will return a fresh access token and
-# a refresh token
+# We verify the users password here, so we are returning a fresh access token
 @app.route("/login", methods=["POST"])
 def login():
     username = request.json.get("username", None)
@@ -25,60 +26,26 @@ def login():
     if username != "test" or password != "test":
         return jsonify({"msg": "Bad username or password"}), 401
 
-    # create_access_token supports an optional 'fresh' argument,
-    # which marks the token as fresh or non-fresh accordingly.
-    # As we just verified their username and password, we are
-    # going to mark the token as fresh here.
-    ret = {
-        "access_token": create_access_token(identity=username, fresh=True),
-        "refresh_token": create_refresh_token(identity=username),
-    }
-    return jsonify(ret), 200
+    access_token = create_access_token(identity="example_user", fresh=True)
+    refresh_token = create_refresh_token(identity="example_user")
+    return jsonify(access_token=access_token, refresh_token=refresh_token)
 
 
-# Refresh token endpoint. This will generate a new access token from
-# the refresh token, but will mark that access token as non-fresh,
-# as we do not actually verify a password in this endpoint.
+# If we are refreshing a token here we have not verified the users password in
+# a while, so mark the newly created access token as not fresh
 @app.route("/refresh", methods=["POST"])
-@jwt_refresh_token_required
+@jwt_required(refresh=True)
 def refresh():
-    current_user = get_jwt_identity()
-    new_token = create_access_token(identity=current_user, fresh=False)
-    ret = {"access_token": new_token}
-    return jsonify(ret), 200
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity, fresh=False)
+    return jsonify(access_token=access_token)
 
 
-# Fresh login endpoint. This is designed to be used if we need to
-# make a fresh token for a user (by verifying they have the
-# correct username and password). Unlike the standard login endpoint,
-# this will only return a new access token, so that we don't keep
-# generating new refresh tokens, which entirely defeats their point.
-@app.route("/fresh-login", methods=["POST"])
-def fresh_login():
-    username = request.json.get("username", None)
-    password = request.json.get("password", None)
-    if username != "test" or password != "test":
-        return jsonify({"msg": "Bad username or password"}), 401
-
-    new_token = create_access_token(identity=username, fresh=True)
-    ret = {"access_token": new_token}
-    return jsonify(ret), 200
-
-
-# Any valid JWT can access this endpoint
+# Only allow fresh JWTs to access this route with the `fresh=True` arguement.
 @app.route("/protected", methods=["GET"])
-@jwt_required
+@jwt_required(fresh=True)
 def protected():
-    username = get_jwt_identity()
-    return jsonify(logged_in_as=username), 200
-
-
-# Only fresh JWTs can access this endpoint
-@app.route("/protected-fresh", methods=["GET"])
-@fresh_jwt_required
-def protected_fresh():
-    username = get_jwt_identity()
-    return jsonify(fresh_logged_in_as=username), 200
+    return jsonify(foo="bar")
 
 
 if __name__ == "__main__":

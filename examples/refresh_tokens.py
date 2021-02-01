@@ -1,54 +1,43 @@
+from datetime import timedelta
+
 from flask import Flask
 from flask import jsonify
-from flask import request
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import create_refresh_token
 from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_refresh_token_required
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
 
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 jwt = JWTManager(app)
 
 
 @app.route("/login", methods=["POST"])
 def login():
-    username = request.json.get("username", None)
-    password = request.json.get("password", None)
-    if username != "test" or password != "test":
-        return jsonify({"msg": "Bad username or password"}), 401
-
-    # Use create_access_token() and create_refresh_token() to create our
-    # access and refresh tokens
-    ret = {
-        "access_token": create_access_token(identity=username),
-        "refresh_token": create_refresh_token(identity=username),
-    }
-    return jsonify(ret), 200
+    access_token = create_access_token(identity="example_user")
+    refresh_token = create_refresh_token(identity="example_user")
+    return jsonify(access_token=access_token, refresh_token=refresh_token)
 
 
-# The jwt_refresh_token_required decorator insures a valid refresh
-# token is present in the request before calling this endpoint. We
-# can use the get_jwt_identity() function to get the identity of
-# the refresh token, and use the create_access_token() function again
-# to make a new access token for this identity.
+# We are using the `refresh=True` options in jwt_required to only allow
+# refresh tokens to access this route.
 @app.route("/refresh", methods=["POST"])
-@jwt_refresh_token_required
+@jwt_required(refresh=True)
 def refresh():
-    current_user = get_jwt_identity()
-    ret = {"access_token": create_access_token(identity=current_user)}
-    return jsonify(ret), 200
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+    return jsonify(access_token=access_token)
 
 
 @app.route("/protected", methods=["GET"])
-@jwt_required
+@jwt_required()
 def protected():
-    username = get_jwt_identity()
-    return jsonify(logged_in_as=username), 200
+    return jsonify(foo="bar")
 
 
 if __name__ == "__main__":

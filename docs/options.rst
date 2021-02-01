@@ -3,6 +3,9 @@
 Configuration Options
 =====================
 
+NOTE: THIS DOCUMENTATION HAS NOT YET BEEN UPDATED
+
+
 You can change many options for how this extension works via
 
 .. code-block:: python

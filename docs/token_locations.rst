@@ -102,6 +102,7 @@ out as invalid too. Lets look at how to do that:
   async function makeRequestWithJWT() {
     const options = {
       method: 'post',
+      credentials: 'same-origin',
       headers: {
         'X-CSRF-TOKEN': getCookie('csrf_access_token'),
       },

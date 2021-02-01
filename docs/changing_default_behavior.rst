@@ -1,6 +1,9 @@
 Changing Default Behaviors
 ==========================
 
+NOTE: THIS DOCUMENTATION HAS NOT YET BEEN UPDATED
+
+
 Changing callback functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

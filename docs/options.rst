@@ -130,7 +130,9 @@ These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use json data.
 ================================= =========================================
 
 
-Cross Site Request Forgery Options:
+.. _Cross Site Request Forgery Options:
+
+Cross Site Request Forgery Options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use cookies and
 ``JWT_COOKIE_CSRF_PROTECT`` is True.

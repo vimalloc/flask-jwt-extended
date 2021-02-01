@@ -9,7 +9,7 @@ from flask_jwt_extended import unset_jwt_cookies
 
 app = Flask(__name__)
 
-# Here you can globally configure all the way you want to allow JWTs to
+# Here you can globally configure all the ways you want to allow JWTs to
 # be sent to your web application. By default, this will be only headers.
 app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies", "json", "query_string"]
 
@@ -48,6 +48,12 @@ def logout_with_cookies():
 @jwt_required()
 def protected():
     return jsonify(foo="bar")
+
+
+@app.route("/only_headers")
+@jwt_required(locations=["headers"])
+def only_headers():
+    return jsonify(foo="baz")
 
 
 if __name__ == "__main__":

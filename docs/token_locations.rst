@@ -1,12 +1,15 @@
 JWT Locations
 =============
-JWTs can be passed sent in many different ways to a protected route. These
-available ways the tokens can be passed in can be controlled globally via
-the `app.config["JWT_TOKEN_LOCATION']` option, or overridden on a per route
-basis via the `locations` argument in :func:`~flask_jwt_extended.jwt_required`.
-Lets see how working with different locations look like in javascript:
+JWTs can be sent in with a request in many different ways. You can control which
+ways you want to accept JWTs in your Flask application via the `JWT_TOKEN_LOCATION`
+:ref:`configuration option<Configuration Options>`. You can also override that global
+configuration on a per route basis via the `locations` argument in
+:func:`~flask_jwt_extended.jwt_required`.
 
 .. literalinclude:: ../examples/jwt_locations.py
+
+Lets take a look at how you could utilize all of these locations using some
+javascript in a web browser.
 
 Headers
 ~~~~~~~
@@ -44,30 +47,40 @@ Cookies
 Cookies are a fantastic way of handling JWTs if you are using a web browser.
 They offer some nice benefits compared to the headers approach:
 
-* They can be set to send only if you are on an HTTPS connection. This prevents a
-  JWT from accidentally being leaked by being sent over an unsecure connection.
+* They can be configured to send only over HTTPS. This prevents a JWT from
+  accidentally being sent, and possibly compromised, over an unsecure connection.
 * They are stored in an http-only cookie, which prevents XSS attacks from being
   able to steal the underlying JWT.
-* You flask application can implicitly refresh JWTs that are close to expiring,
+* You Flask application can implicitly refresh JWTs that are close to expiring,
   which simplifies the logic of keeping active users logged in. More on this in
   the next section!
 
 Of course, when using cookies you also need to do some additional work to prevent
-Cross Site Request Forgery (CSRF) attacks. In this extension we do this by utilizing
-the double submit verification method. The basic idea behind this is that we are
-going to save two cookies when logging in. The first cookie contains the access
-token, and encoded in the access token is double submit token. This cookie is
-set as http-only, so javascript cannot access the cookie to decode the double
-submit token. The second cookie we save contains only the same double submit
-token, but this time in a cookie that is readable by javascript. Whenever a
-request is made, it needs to include an `X-CSRF-TOKEN` header, with the value
-of the double submit token. If the value in this header does not match the value
-stored in the access token, the request is kicked out as invalid. This prevents
-any CSRF attacks, because although they can implictitly send in the JWT as part
-of the request, they have no way to also include the double submit token.
+Cross Site Request Forgery (CSRF) attacks. In this extension we handle this via
+something called double submit verification.
+
+The basic idea behind double submit verification is that a JWT coming from a
+cookie will only be considered valid if a special double submit token is also
+present in the request, and that double submit token must not be something that
+is automatically sent by a web browser (ie it cannot be another cookie).
+
+By default, we accomplish this by setting two cookies when someone logging in.
+The first cookie contains the JWT, and encoded in that JWT is the double submit
+token. This cookie is set as http-only, so that it cannot be access via javascript
+(this is what prevents XSS attacks from being able to steal the JWT). The second
+cookie we set contains only the same double submit token, but this time in a
+cookie that is readable by javascript. Whenever a request is made, it needs to
+include an `X-CSRF-TOKEN` header, with the value of the double submit token.
+If the value in this header does not match the value stored in the JWT, the
+request is kicked out as invalid.
+
+Because the double submit token needs to be present as a header (which wont be
+automatically sent on a request), and some malicious javascript running on a
+different domain will not be able to read the cookie containing the double submit
+token on your website, we have successfully thwarted any CSRF attacks.
 
 This does mean that whenever you are making a request, you need to manually
-include the double submit token header, otherwise your requests will be kicked
+include the `X-CSRF-TOKEN` header, otherwise your requests will be kicked
 out as invalid too. Lets look at how to do that:
 
 .. code-block :: javascript
@@ -98,6 +111,11 @@ out as invalid too. Lets look at how to do that:
     return result;
   }
 
+Note that there are additional CSRF options, such as looking for the double
+submit token in a form, changing cookie paths, etc, that can be used to
+tailor things to the needs of your application. See
+:ref:`Cross Site Request Forgery Options` for details.
+
 
 Query String
 ~~~~~~~~~~~~~
@@ -122,7 +140,8 @@ in this extension.
   }
 
   async function makeRequestWithJWT() {
-    const response = await fetch('/protected', {method: 'post'});
+    const jwt = localStorage.getItem('jwt')
+    const response = await fetch(`/protected?jwt=${jwt}`, {method: 'post'});
     const result = await response.json();
     return result;
   }
@@ -164,7 +183,3 @@ we include the option for it regardless.
     const result = await response.json();
     return result;
   }
-
-
-Overwriting Locations On a Per Route Basis
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

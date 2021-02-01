@@ -46,7 +46,4 @@ Flask-JWT-Extended's Documentation
    changing_default_behavior
    options
    blocklist_and_token_revoking
-   tokens_in_cookies
-   tokens_in_query_string
-   tokens_in_json_body
    api

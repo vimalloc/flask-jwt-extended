@@ -6,7 +6,7 @@ the `app.config["JWT_TOKEN_LOCATION']` option, or overridden on a per route
 basis via the `locations` argument in :func:`~flask_jwt_extended.jwt_required`.
 Lets see how working with different locations look like in javascript:
 
-.. literalinclude:: ../examples/jwt_without_cookies.py
+.. literalinclude:: ../examples/jwt_locations.py
 
 Headers
 ~~~~~~~

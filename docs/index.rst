@@ -40,6 +40,7 @@ Flask-JWT-Extended's Documentation
    add_custom_data_claims
    optional_endpoints
    token_locations
+   refreshing_tokens
    custom_decorators
    refresh_tokens
    token_freshness

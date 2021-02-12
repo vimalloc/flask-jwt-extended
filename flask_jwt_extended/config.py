@@ -1,6 +1,8 @@
-import datetime
 from collections.abc import Sequence
 from collections.abc import Set
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 
 from flask import current_app
 from jwt.algorithms import requires_cryptography
@@ -172,10 +174,10 @@ class _Config(object):
     def access_expires(self):
         delta = current_app.config["JWT_ACCESS_TOKEN_EXPIRES"]
         if type(delta) is int:
-            delta = datetime.timedelta(seconds=delta)
+            delta = timedelta(seconds=delta)
         if delta is not False:
             try:
-                delta + datetime.datetime.now()
+                delta + datetime.now(timezone.utc)
             except TypeError as e:
                 err = (
                     "must be able to add JWT_ACCESS_TOKEN_EXPIRES to datetime.datetime"
@@ -187,10 +189,10 @@ class _Config(object):
     def refresh_expires(self):
         delta = current_app.config["JWT_REFRESH_TOKEN_EXPIRES"]
         if type(delta) is int:
-            delta = datetime.timedelta(seconds=delta)
+            delta = timedelta(seconds=delta)
         if delta is not False:
             try:
-                delta + datetime.datetime.now()
+                delta + datetime.now(timezone.utc)
             except TypeError as e:
                 err = (
                     "must be able to add JWT_REFRESH_TOKEN_EXPIRES to datetime.datetime"

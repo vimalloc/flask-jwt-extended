@@ -340,9 +340,11 @@ class JWTManager(object):
         This decorator sets the callback function used to check if a JWT has
         been revoked.
 
-        The decorated function must take **one** argument.
+        The decorated function must take **two** arguments.
 
-        The argument is a dictionary containing the jwt payload.
+        The first argument is a dictionary containing the header data of the JWT.
+
+        The second argument is a dictionary containing the payload data of the JWT.
 
         The decorated function must be return `True` if the token has been
         revoked, `False` otherwise.

@@ -18,14 +18,19 @@ In production, you will want to use some form of persistent storage (database,
 redis, etc) to store your JWTs. It would be bad if your application forgot that
 a JWT was revoked if it was restarted.
 
-If your only requirements are to check if a JWT has been previously revoked,
-our recommendation is to use redis, as it is blazing fast. If you need to keep
-track of information about revoked JWTs (when it was revoked, who revoked it,
-can it be un-revoked, etc), our general recommendation is to utilize your database.
-Ultimately though choice of what persistent storage engine to use will depend on
-your specific application and tech stack.
+If your only requirements are to check if a JWT has been revoked, our
+recommendation is to use redis. It is blazing fast, can be configured to persist
+data to disc, and can automatically clear out JWTs after they expire by utilizing
+the Time To Live (TTL) functionality when storing a JWT.
 
-For more production like examples of toking revoking, check out:
+If you need to keep track of information about revoked JWTs our recommendation is
+to utilize a database. This allows you to easily store and utilize metadata for
+revoked tokens, such as when it was revoked, who revoked it, can it be un-revoked,
+etc.
+
+Ultimately the choice of what persistent storage engine to use will depend on
+your specific application and tech stack. For some examples of JWT revoking using
+redist or a database, check out:
 
 - `Redis Example <https://github.com/vimalloc/flask-jwt-extended/blob/master/examples/redis_blocklist.py>`_
 - `Database Example <https://github.com/vimalloc/flask-jwt-extended/tree/master/examples/database_blocklist>`_

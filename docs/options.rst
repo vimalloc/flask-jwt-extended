@@ -254,58 +254,129 @@ Cross Site Request Forgery Options
 These are only applicable if a route is configured to accept JWTs via cookies and
 ``JWT_COOKIE_CSRF_PROTECT`` is ``True``.
 
-.. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
 
-================================= =========================================
-``JWT_CSRF_METHODS``              The request types that will use CSRF protection. Defaults to
-                                  ``['POST', 'PUT', 'PATCH', 'DELETE']``
-``JWT_ACCESS_CSRF_HEADER_NAME``   Name of the header that should contain the CSRF double submit value
-                                  for access tokens. Defaults to ``X-CSRF-TOKEN``.
-``JWT_REFRESH_CSRF_HEADER_NAME``  Name of the header that should contains the CSRF double submit value
-                                  for refresh tokens. Defaults to ``X-CSRF-TOKEN``.
-``JWT_CSRF_IN_COOKIES``           If we should store the CSRF double submit value in
-                                  another cookies when using ``set_access_cookies()`` and
-                                  ``set_refresh_cookies()``. Defaults to ``True``. If this is
-                                  False, you are responsible for getting the CSRF value to the
-                                  callers (see: ``get_csrf_token(encoded_token)``).
-``JWT_ACCESS_CSRF_COOKIE_NAME``   Name of the CSRF access cookie. Defaults to ``'csrf_access_token'``.
-                                  Only applicable if ``JWT_CSRF_IN_COOKIES`` is ``True``
-``JWT_REFRESH_CSRF_COOKIE_NAME``  Name of the CSRF refresh cookie. Defaults to ``'csrf_refresh_token'``.
-                                  Only applicable if ``JWT_CSRF_IN_COOKIES`` is ``True``
-``JWT_ACCESS_CSRF_COOKIE_PATH``   Path for the CSRF access cookie. Defaults to ``'/'``.
-                                  Only applicable if ``JWT_CSRF_IN_COOKIES`` is ``True``
-``JWT_REFRESH_CSRF_COOKIE_PATH``  Path of the CSRF refresh cookie. Defaults to ``'/'``.
-                                  Only applicable if ``JWT_CSRF_IN_COOKIES`` is ``True``
-``JWT_CSRF_CHECK_FORM``           When no CSRF token can be found in the header, check the form data. Defaults to
-                                  ``False``.
-``JWT_ACCESS_CSRF_FIELD_NAME``    Name of the form field that should contain the CSRF double submit value for access
-                                  tokens when no header is present. Only applicable if ``JWT_CSRF_CHECK_FORM`` is
-                                  ``True``. Defaults to ``'csrf_token'``.
-``JWT_REFRESH_CSRF_FIELD_NAME``   Name of the form field that should contain the CSRF double submit value for refresh
-                                  tokens when no header is present. Only applicable if ``JWT_CSRF_CHECK_FORM`` is
-                                  ``True``. Defaults to ``'csrf_token'``.
-================================= =========================================
+.. py:data:: JWT_CSRF_METHODS
+
+    A list of HTTP methods that we should do CSRF checks on.
+
+    Default: ``["POST", "PUT", "PATCH", "DELETE"]``
+
+
+.. py:data:: JWT_ACCESS_CSRF_HEADER_NAME
+
+    The name of the header on an incoming request that should contain the CSRF
+    double submit token.
+
+    Default: ``"X-CSRF-TOKEN"``
+
+
+.. py:data:: JWT_REFRESH_CSRF_HEADER_NAME
+
+    The name of the header on an incoming request that should contain the CSRF
+    double submit token.
+
+    Note: We generally do not recommend using refresh tokens with cookies. See
+    :ref:`Implicit Refreshing With Cookies`.
+
+    Default: ``"X-CSRF-TOKEN"``
+
+
+.. py:data:: JWT_CSRF_IN_COOKIES
+
+    Controls if the CSRF double submit token will be stored in additional cookies.
+    If setting this to ``False``, you can use :func:`flask_jwt_extended.get_csrf_token`
+    to get the csrf token from an encoded JWT, and return it to your frontend in
+    whatever way suites your application.
+
+    Default: ``True``
+
+
+.. py:data:: JWT_ACCESS_CSRF_COOKIE_NAME
+
+    The name of the cookie that contains the CSRF double submit token. Only
+    applicable if ``JWT_CSRF_IN_COOKIES`` is ``True``
+
+    Default: ``csrf_access_token``
+
+
+.. py:data:: JWT_REFRESH_CSRF_COOKIE_NAME
+
+    The name of the cookie that contains the CSRF double submit token. Only
+    applicable if ``JWT_CSRF_IN_COOKIES`` is ``True``
+
+    Note: We generally do not recommend using refresh tokens with cookies. See
+    :ref:`Implicit Refreshing With Cookies`.
+
+    Default: ``csrf_refresh_token``
+
+
+.. py:data:: JWT_ACCESS_CSRF_COOKIE_PATH
+
+    The path of the access CSRF double submit cookie.
+
+    Default: ``"/"``
+
+
+.. py:data:: JWT_REFRESH_CSRF_COOKIE_PATH
+
+    The path of the refresh CSRF double submit cookie.
+
+    Note: We generally do not recommend using refresh tokens with cookies. See
+    :ref:`Implicit Refreshing With Cookies`.
+
+    Default: ``"/"``
+
+
+.. py:data:: JWT_CSRF_CHECK_FORM
+
+    Controls if form data should also be check for the CSRF double submit token.
+
+    Default: ``False``
+
+
+.. py:data:: JWT_ACCESS_CSRF_FIELD_NAME
+
+    Name of the form field that should contain the CSRF double submit token for
+    an access token. Only applicable if ``JWT_CSRF_CHECK_FORM`` is ``True``
+
+    Default: ``"csrf_token"``
+
+
+.. py:data:: JWT_REFRESH_CSRF_FIELD_NAME
+
+    Name of the form field that should contain the CSRF double submit token for
+    a refresh token. Only applicable if ``JWT_CSRF_CHECK_FORM`` is ``True``
+
+    Note: We generally do not recommend using refresh tokens with cookies. See
+    :ref:`Implicit Refreshing With Cookies`.
+
+    Default: ``"csrf_token"``
 
 
 Query String Options:
 ~~~~~~~~~~~~~~~~~~~~~
-These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use query strings.
+These are only applicable if a route is configured to accept JWTs via query string.
 
-.. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
+.. py:data:: JWT_QUERY_STRING_NAME
 
-================================= =========================================
-``JWT_QUERY_STRING_NAME``         What query paramater name to look for a JWT in a request. Defaults to ``'jwt'``
-================================= =========================================
+    What query string parameter should contain the JWT.
+
+    Default: ``"jwt"``
 
 
+JSON Body Options:
+~~~~~~~~~~~~~~~~~~
+These are only applicable if a route is configured to accept JWTs via the JSON body.
 
-Json Body Options:
-~~~~~~~~~~~~~~~~~~~~~
-These are only applicable if ``JWT_TOKEN_LOCATION`` is set to use json data.
+.. py:data:: JWT_JSON_KEY
 
-.. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
+    What key should contain the access token in the JSON body of a request.
 
-================================= =========================================
-``JWT_JSON_KEY``                  Key to look for in the body of an `application/json` request. Defaults to ``'access_token'``
-``JWT_REFRESH_JSON_KEY``          Key to look for the refresh token in an `application/json` request. Defaults to ``'refresh_token'``
-================================= =========================================
+    Default: ``"access_token"``
+
+
+.. py:data:: JWT_REFRESH_JSON_KEY
+
+    What key should contain the refresh token in the JSON body of a request.
+
+    Default: ``"access_token"``

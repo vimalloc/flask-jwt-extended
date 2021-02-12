@@ -23,7 +23,6 @@ def app():
 
 
 def test_default_headers(app):
-    app.config
     test_client = app.test_client()
 
     with app.test_request_context():

@@ -32,7 +32,6 @@ def app():
 @pytest.mark.parametrize("blocklist_type", [["access"], ["refresh", "access"]])
 def test_non_blocklisted_access_token(app, blocklist_type):
     jwt = get_jwt_manager(app)
-    app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = blocklist_type
 
     @jwt.token_in_blocklist_loader
     def check_blocklisted(jwt_header, jwt_data):
@@ -52,7 +51,6 @@ def test_non_blocklisted_access_token(app, blocklist_type):
 @pytest.mark.parametrize("blocklist_type", [["access"], ["refresh", "access"]])
 def test_blocklisted_access_token(app, blocklist_type):
     jwt = get_jwt_manager(app)
-    app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = blocklist_type
 
     @jwt.token_in_blocklist_loader
     def check_blocklisted(jwt_header, jwt_data):
@@ -70,7 +68,6 @@ def test_blocklisted_access_token(app, blocklist_type):
 @pytest.mark.parametrize("blocklist_type", [["refresh"], ["refresh", "access"]])
 def test_non_blocklisted_refresh_token(app, blocklist_type):
     jwt = get_jwt_manager(app)
-    app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = blocklist_type
 
     @jwt.token_in_blocklist_loader
     def check_blocklisted(jwt_header, jwt_data):
@@ -90,7 +87,6 @@ def test_non_blocklisted_refresh_token(app, blocklist_type):
 @pytest.mark.parametrize("blocklist_type", [["refresh"], ["refresh", "access"]])
 def test_blocklisted_refresh_token(app, blocklist_type):
     jwt = get_jwt_manager(app)
-    app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = blocklist_type
 
     @jwt.token_in_blocklist_loader
     def check_blocklisted(jwt_header, jwt_data):
@@ -105,31 +101,6 @@ def test_blocklisted_refresh_token(app, blocklist_type):
     )
     assert response.get_json() == {"msg": "Token has been revoked"}
     assert response.status_code == 401
-
-
-def test_revoked_token_of_different_type(app):
-    jwt = get_jwt_manager(app)
-    test_client = app.test_client()
-
-    @jwt.token_in_blocklist_loader
-    def check_blocklisted(jwt_header, jwt_data):
-        return True
-
-    with app.test_request_context():
-        access_token = create_access_token("username")
-        refresh_token = create_refresh_token("username")
-
-    app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ["access"]
-    response = test_client.get(
-        "/refresh_protected", headers=make_headers(refresh_token)
-    )
-    assert response.get_json() == {"foo": "bar"}
-    assert response.status_code == 200
-
-    app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ["refresh"]
-    response = test_client.get("/protected", headers=make_headers(access_token))
-    assert response.get_json() == {"foo": "bar"}
-    assert response.status_code == 200
 
 
 def test_custom_blocklisted_message(app):

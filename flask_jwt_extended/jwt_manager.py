@@ -165,7 +165,6 @@ class JWTManager(object):
         app.config.setdefault("JWT_ACCESS_CSRF_FIELD_NAME", "csrf_token")
         app.config.setdefault("JWT_ACCESS_CSRF_HEADER_NAME", "X-CSRF-TOKEN")
         app.config.setdefault("JWT_ALGORITHM", "HS256")
-        app.config.setdefault("JWT_BLOCKLIST_TOKEN_CHECKS", ("access", "refresh"))
         app.config.setdefault("JWT_COOKIE_CSRF_PROTECT", True)
         app.config.setdefault("JWT_COOKIE_DOMAIN", None)
         app.config.setdefault("JWT_COOKIE_SAMESITE", None)

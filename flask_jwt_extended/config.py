@@ -214,27 +214,6 @@ class _Config(object):
         return algorithms
 
     @property
-    def blocklist_checks(self):
-        check_type = current_app.config["JWT_BLOCKLIST_TOKEN_CHECKS"]
-        if isinstance(check_type, str):
-            check_type = (check_type,)
-        elif not isinstance(check_type, (Sequence, Set)):
-            raise RuntimeError("JWT_BLOCKLIST_TOKEN_CHECKS must be a sequence or a set")
-        for item in check_type:
-            if item not in ("access", "refresh"):
-                err = 'JWT_BLOCKLIST_TOKEN_CHECKS must be "access" or "refresh"'
-                raise RuntimeError(err)
-        return check_type
-
-    @property
-    def blocklist_access_tokens(self):
-        return "access" in self.blocklist_checks
-
-    @property
-    def blocklist_refresh_tokens(self):
-        return "refresh" in self.blocklist_checks
-
-    @property
     def _secret_key(self):
         key = current_app.config["JWT_SECRET_KEY"]
         if not key:

@@ -59,9 +59,6 @@ def test_default_configs(app):
         assert config.algorithm == "HS256"
         assert config.decode_algorithms == ["HS256"]
         assert config.is_asymmetric is False
-        assert config.blocklist_checks == ("access", "refresh")
-        assert config.blocklist_access_tokens is True
-        assert config.blocklist_refresh_tokens is True
 
         assert config.cookie_max_age is None
 
@@ -108,8 +105,6 @@ def test_override_configs(app, delta_func):
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = delta_func(days=5)
     app.config["JWT_ALGORITHM"] = "HS512"
     app.config["JWT_DECODE_ALGORITHMS"] = ["HS512", "HS256"]
-
-    app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ("refresh",)
 
     app.config["JWT_IDENTITY_CLAIM"] = "foo"
 
@@ -159,10 +154,6 @@ def test_override_configs(app, delta_func):
         assert config.refresh_expires == delta_func(days=5)
         assert config.algorithm == "HS512"
         assert config.decode_algorithms == ["HS512", "HS256"]
-
-        assert config.blocklist_checks == ("refresh",)
-        assert config.blocklist_access_tokens is False
-        assert config.blocklist_refresh_tokens is True
 
         assert config.cookie_max_age == 31540000
 
@@ -293,26 +284,6 @@ def test_invalid_config_options(app):
         with pytest.raises(RuntimeError):
             config.refresh_expires
 
-        app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = "banana"
-        with pytest.raises(RuntimeError):
-            config.blocklist_checks
-
-        app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = 1
-        with pytest.raises(RuntimeError):
-            config.blocklist_checks
-
-        app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = {"token_type": "access"}
-        with pytest.raises(RuntimeError):
-            config.blocklist_checks
-
-        app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = range(99)
-        with pytest.raises(RuntimeError):
-            config.blocklist_checks
-
-        app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = ["access", "banana"]
-        with pytest.raises(RuntimeError):
-            config.blocklist_checks
-
 
 def test_jwt_token_locations_config(app):
     with app.test_request_context():
@@ -338,32 +309,6 @@ def test_jwt_token_locations_config(app):
         ):
             app.config["JWT_TOKEN_LOCATION"] = locations
             assert config.token_location == locations
-
-
-def test_jwt_blocklist_token_checks_config(app):
-    with app.test_request_context():
-        allowed_token_types = ("access", "refresh")
-        allowed_data_structures = (tuple, list, frozenset, set)
-
-        for token_type in allowed_token_types:
-            app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = token_type
-            assert config.blocklist_checks == (token_type,)
-
-        for token_types in (
-            data_structure((token_type,))
-            for data_structure in allowed_data_structures
-            for token_type in allowed_token_types
-        ):
-            app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = token_types
-            assert config.blocklist_checks == token_types
-
-        for token_types in (
-            data_structure(allowed_token_types[:i])
-            for data_structure in allowed_data_structures
-            for i in range(1, len(allowed_token_types))
-        ):
-            app.config["JWT_BLOCKLIST_TOKEN_CHECKS"] = token_types
-            assert config.blocklist_checks == token_types
 
 
 def test_csrf_protect_config(app):

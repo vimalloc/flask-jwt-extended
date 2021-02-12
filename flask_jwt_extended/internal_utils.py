@@ -1,6 +1,5 @@
 from flask import current_app
 
-from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import RevokedTokenError
 from flask_jwt_extended.exceptions import UserClaimsVerificationError
 from flask_jwt_extended.exceptions import WrongTokenError
@@ -32,11 +31,6 @@ def verify_token_type(decoded_token, expected_type):
 
 
 def verify_token_not_blocklisted(jwt_header, jwt_data, request_type):
-    if request_type == "access" and not config.blocklist_access_tokens:
-        return
-    if request_type == "refresh" and not config.blocklist_refresh_tokens:
-        return
-
     jwt_manager = get_jwt_manager()
     if jwt_manager._token_in_blocklist_callback(jwt_header, jwt_data):
         raise RevokedTokenError(jwt_header, jwt_data)

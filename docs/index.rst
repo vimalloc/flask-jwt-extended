@@ -42,7 +42,7 @@ Flask-JWT-Extended's Documentation
    token_locations
    refreshing_tokens
    blocklist_and_token_revoking
-   custom_decorators
-   changing_default_behavior
    options
+   changing_default_behavior
+   custom_decorators
    api

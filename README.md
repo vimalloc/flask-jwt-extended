@@ -16,6 +16,9 @@ easier. These include:
 ### Usage
 [View the documentation online](https://flask-jwt-extended.readthedocs.io/en/stable/)
 
+## Upgrading from 3.x.x to 4.0.0
+[View the changes](https://flask-jwt-extended.readthedocs.io/en/stable/v4_upgrade_guide/)
+
 ### Changelog
 You can view the changelog [here](https://github.com/vimalloc/flask-jwt-extended/releases).
 This project follows [semantic versioning](https://semver.org/).

@@ -5,9 +5,9 @@ Flask-JWT-Extended not only adds support for using JSON Web Tokens (JWT) to Flas
 but also many helpful (and **optional**) features  built in to make working with JSON Web Tokens
 easier. These include:
 
-* Support for adding custom claims to JSON Web Tokens
+* Adding custom claims to JSON Web Tokens
 * Custom claims validation on received tokens
-* Creating tokens from complex objects or complex object from received tokens (current_user)
+* Automatic user loading (`current_user`).
 * [Refresh tokens](https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/)
 * First class support for fresh tokens for making sensitive changes.
 * Token revoking/blocklisting
@@ -30,7 +30,7 @@ Come chat with the community or ask questions at https://discord.gg/EJBsbFd
 Before making any changes, make sure to install the development requirements
 and setup the git hooks which will automatically lint and format your changes.
 ```bash
-pip install -r dev-requirements.txt
+pip install -r requirements.txt
 pre-commit install
 ```
 

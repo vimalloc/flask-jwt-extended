@@ -36,6 +36,9 @@ General Options:
     If set to ``False`` tokens will never expire. **This is dangerous and should
     be avoided in most case**
 
+    This can be overridden on a per token basis by passing the ``expires_delta``
+    argument to :func:`flask_jwt_extended.create_access_token`
+
     Default: ``datetime.timedelta(minutes=15)``
 
 
@@ -48,6 +51,9 @@ General Options:
 
     If set to ``False`` tokens will never expire. **This is dangerous and should
     be avoided in most case**
+
+    This can be overridden on a per token basis by passing the ``expires_delta``
+    argument to :func:`flask_jwt_extended.create_refresh_token`
 
     Default: ``datetime.timedelta(days=30)``
 

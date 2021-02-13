@@ -1,6 +1,5 @@
 from flask import Flask
 from flask import jsonify
-from flask import request
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import jwt_required
@@ -12,39 +11,26 @@ app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
 jwt = JWTManager(app)
 
 
-# Using the expired_token_loader decorator, we will now call
-# this function whenever an expired but otherwise valid access
-# token attempts to access an endpoint
+# Set a callback function to return a custom response whenever an expired
+# token attempts to access a protected route. This particular callback function
+# takes the jwt_header and jwt_payload as arguments, and must return a Flask
+# response. Check the API documentation to see the required argument and return
+# values for other callback functions.
 @jwt.expired_token_loader
-def my_expired_token_callback(expired_token):
-    token_type = expired_token["type"]
-    return (
-        jsonify(
-            {
-                "status": 401,
-                "sub_status": 42,
-                "msg": "The {} token has expired".format(token_type),
-            }
-        ),
-        401,
-    )
+def my_expired_token_callback(jwt_header, jwt_payload):
+    return jsonify(code="dave", err="I can't let you do that"), 401
 
 
 @app.route("/login", methods=["POST"])
 def login():
-    username = request.json.get("username", None)
-    password = request.json.get("password", None)
-    if username != "test" or password != "test":
-        return jsonify({"msg": "Bad username or password"}), 401
-
-    ret = {"access_token": create_access_token(username)}
-    return jsonify(ret), 200
+    access_token = create_access_token("example_user")
+    return jsonify(access_token=access_token)
 
 
 @app.route("/protected", methods=["GET"])
 @jwt_required
 def protected():
-    return jsonify({"hello": "world"}), 200
+    return jsonify(hello="world")
 
 
 if __name__ == "__main__":

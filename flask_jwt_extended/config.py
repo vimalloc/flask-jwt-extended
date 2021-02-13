@@ -272,8 +272,12 @@ class _Config(object):
         return current_app.json_encoder
 
     @property
-    def audience(self):
+    def decode_audience(self):
         return current_app.config["JWT_DECODE_AUDIENCE"]
+
+    @property
+    def encode_audience(self):
+        return current_app.config["JWT_ENCODE_AUDIENCE"]
 
     @property
     def encode_issuer(self):

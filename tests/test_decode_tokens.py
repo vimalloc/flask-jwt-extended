@@ -11,6 +11,7 @@ from jwt import ImmatureSignatureError
 from jwt import InvalidAudienceError
 from jwt import InvalidIssuerError
 from jwt import InvalidSignatureError
+from jwt import MissingRequiredClaimError
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import create_refresh_token
@@ -76,6 +77,47 @@ def test_bad_token_type(app, default_access_token):
     with pytest.raises(JWTDecodeError):
         with app.test_request_context():
             decode_token(bad_type_token)
+
+
+def test_encode_decode_audience(app):
+    # Default, no audience
+    with app.test_request_context():
+        encoded_token = create_access_token("username")
+        decoded_token = decode_token(encoded_token)
+        with pytest.raises(KeyError):
+            decoded_token["aud"]
+
+    # Encode and decode audience configured
+    app.config["JWT_ENCODE_AUDIENCE"] = "foo"
+    app.config["JWT_DECODE_AUDIENCE"] = "foo"
+    with app.test_request_context():
+        encoded_token = create_access_token("username")
+        decoded_token = decode_token(encoded_token)
+        assert decoded_token["aud"] == "foo"
+
+    # Encode and decode mismatch
+    app.config["JWT_ENCODE_AUDIENCE"] = "foo"
+    app.config["JWT_DECODE_AUDIENCE"] = "bar"
+    with app.test_request_context():
+        encoded_token = create_access_token("username")
+        with pytest.raises(InvalidAudienceError):
+            decode_token(encoded_token)
+
+    # No encode defined
+    app.config["JWT_ENCODE_AUDIENCE"] = None
+    app.config["JWT_DECODE_AUDIENCE"] = "foo"
+    with app.test_request_context():
+        encoded_token = create_access_token("username")
+        with pytest.raises(MissingRequiredClaimError):
+            decode_token(encoded_token)
+
+    # No decode defined
+    app.config["JWT_ENCODE_AUDIENCE"] = "foo"
+    app.config["JWT_DECODE_AUDIENCE"] = None
+    with app.test_request_context():
+        encoded_token = create_access_token("username")
+        decoded_token = decode_token(encoded_token)
+        assert decoded_token["aud"] == "foo"
 
 
 @pytest.mark.parametrize("delta_func", [timedelta, relativedelta])

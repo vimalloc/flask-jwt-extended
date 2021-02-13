@@ -6,6 +6,7 @@ from jwt import ExpiredSignatureError
 from jwt import InvalidAudienceError
 from jwt import InvalidIssuerError
 from jwt import InvalidTokenError
+from jwt import MissingRequiredClaimError
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.default_callbacks import default_additional_claims_callback
@@ -113,6 +114,10 @@ class JWTManager(object):
         def handle_fresh_token_required(e):
             return self._needs_fresh_token_callback(e.jwt_header, e.jwt_data)
 
+        @app.errorhandler(MissingRequiredClaimError)
+        def handle_missing_required_claim_error(e):
+            return self._invalid_token_callback(str(e))
+
         @app.errorhandler(InvalidAudienceError)
         def handle_invalid_audience_error(e):
             return self._invalid_token_callback(str(e))
@@ -176,6 +181,7 @@ class JWTManager(object):
         app.config.setdefault("JWT_DECODE_AUDIENCE", None)
         app.config.setdefault("JWT_DECODE_ISSUER", None)
         app.config.setdefault("JWT_DECODE_LEEWAY", 0)
+        app.config.setdefault("JWT_ENCODE_AUDIENCE", None)
         app.config.setdefault("JWT_ENCODE_ISSUER", None)
         app.config.setdefault("JWT_ERROR_MESSAGE_KEY", "msg")
         app.config.setdefault("JWT_HEADER_NAME", "Authorization")
@@ -481,6 +487,7 @@ class JWTManager(object):
 
         return _encode_jwt(
             algorithm=config.algorithm,
+            audience=config.encode_audience,
             claim_overrides=claim_overrides,
             csrf=config.csrf_protect,
             expires_delta=expires_delta,
@@ -507,14 +514,14 @@ class JWTManager(object):
 
         kwargs = {
             "algorithms": config.decode_algorithms,
-            "audience": config.audience,
+            "audience": config.decode_audience,
             "csrf_value": csrf_value,
             "encoded_token": encoded_token,
             "identity_claim_key": config.identity_claim_key,
             "issuer": config.decode_issuer,
             "leeway": config.leeway,
             "secret": secret,
-            "verify_aud": config.audience is not None,
+            "verify_aud": config.decode_audience is not None,
         }
 
         try:

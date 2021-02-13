@@ -12,6 +12,7 @@ from flask_jwt_extended.exceptions import JWTDecodeError
 
 def _encode_jwt(
     algorithm,
+    audience,
     claim_overrides,
     csrf,
     expires_delta,
@@ -40,6 +41,9 @@ def _encode_jwt(
 
     if csrf:
         token_data["csrf"] = str(uuid.uuid4())
+
+    if audience:
+        token_data["aud"] = audience
 
     if issuer:
         token_data["iss"] = issuer

@@ -110,8 +110,28 @@ General Options:
 
 .. py:data:: JWT_DECODE_AUDIENCE
 
-    The expected audience (``aud``) or list of audiences you expect in a JWT when
-    decoding it.
+    The string or list of audiences (``aud``) expected in a JWT when decoding it.
+
+    Default: ``None``
+
+
+.. py:data:: JWT_ENCODE_AUDIENCE
+
+    The string or list of audiences (``aud``) for created JWTs.
+
+    Default: ``None``
+
+
+.. py:data:: JWT_DECODE_ISSUER
+
+    The issuer (``iss``) you expect in a JWT when decoding it.
+
+    Default: ``None``
+
+
+.. py:data:: JWT_ENCODE_ISSUER
+
+    The issuer (``iss``) for created JWTs.
 
     Default: ``None``
 

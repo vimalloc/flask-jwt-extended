@@ -21,3 +21,4 @@ Flask-JWT-Extended's Documentation
    changing_default_behavior
    custom_decorators
    api
+   v4_upgrade_guide

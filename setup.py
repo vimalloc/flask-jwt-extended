@@ -31,6 +31,7 @@ setup(
         "PyJWT>=2.0,<3.0",
     ],
     extras_require={"asymmetric_crypto": ["cryptography>=3.0,<4.0"]},
+    python_requires=">=3.6,<4",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",

@@ -8,7 +8,7 @@ extension, you must defining a callback function via the
 :meth:`~flask_jwt_extended.JWTManager.token_in_blocklist_loader` decorator.
 This function is called whenever a valid JWT is used to access a protected route.
 The callback will receive the JWT header and JWT payload as arguments, and must
-return `True` if the JWT has been revoked.
+return ``True`` if the JWT has been revoked.
 
 In production, you will want to use some form of persistent storage (database,
 redis, etc) to store your JWTs. It would be bad if your application forgot that

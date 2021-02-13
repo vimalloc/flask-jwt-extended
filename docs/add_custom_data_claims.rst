@@ -1,7 +1,7 @@
 Storing Data in Access Tokens
 =============================
 You may want to store additional information in the access token which you could
-later access in the protected views. This can be done using the `additional_claims`
+later access in the protected views. This can be done using the ``additional_claims``
 argument with the :func:`~flask_jwt_extended.create_access_token` or
 :func:`~flask_jwt_extended.create_refresh_token` functions. The claims
 can be accessed in a protected route via the :func:`~flask_jwt_extended.get_jwt`
@@ -18,8 +18,8 @@ Alternately you can use the :meth:`~flask_jwt_extended.JWTManager.additional_cla
 decorator to register a callback function that will be called whenever a new JWT
 is created, and return a dictionary of claims to add to that token. In the case
 that both :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader` and the
-`additional_claims` argument are used, both results are merged together, with ties
-going to the data suplied by the `additional_claims` argument.
+``additional_claims`` argument are used, both results are merged together, with ties
+going to the data suplied by the ``additional_claims`` argument.
 
 .. code-block:: python
 

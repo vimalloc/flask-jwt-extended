@@ -6,10 +6,10 @@ accessing a protected route. We provide a couple callback functions that make
 this seemless while working with JWTs.
 
 The first is :meth:`~flask_jwt_extended.JWTManager.user_identity_loader`, which
-will convert any `User` object used to create a JWT into a JSON serializable format.
+will convert any ``User`` object used to create a JWT into a JSON serializable format.
 
 On the flip side, you can use :meth:`~flask_jwt_extended.JWTManager.user_lookup_loader`
-to automaticallly load your `User` object when a JWT is present in the request.
+to automaticallly load your ``User`` object when a JWT is present in the request.
 The loaded user is available in your protected routes via :attr:`~flask_jwt_extended.current_user`.
 
 Lets see an example of this while utilizing SQLAlchemy to store our users:

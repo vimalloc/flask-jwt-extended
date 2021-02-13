@@ -58,12 +58,12 @@ an access token. Here is an example using `HTTPie <https://httpie.io/>`_.
 Token Freshness Pattern
 ~~~~~~~~~~~~~~~~~~~~~~~
 The token freshness pattern is a very simple idea. Every time a user authenticates
-by providing a username and password, they receive a `fresh` access token that
+by providing a username and password, they receive a ``fresh`` access token that
 can access any route. But after some time, that token should no longer be considered
-`fresh`, and some critical or dangerous routes will be blocked until the user
+``fresh``, and some critical or dangerous routes will be blocked until the user
 verifies their password again. All other routes will still work normally for
-the user even though their token is no longer `fresh`. As an example, we might
-not allow users to change their email address unless they have a `fresh` token,
+the user even though their token is no longer ``fresh``. As an example, we might
+not allow users to change their email address unless they have a ``fresh`` token,
 but we do allow them use the rest of our Flask application normally.
 
 The token freshness pattern is built into this extension, and works seamlessly
@@ -74,7 +74,7 @@ refresh example).
 .. literalinclude:: ../examples/token_freshness.py
 
 We also support marking a token as fresh for a given amount of time after it
-is created. You can do this by passing a `datetime.timedelta` to the `fresh`
+is created. You can do this by passing a ``datetime.timedelta`` to the ``fresh``
 option when creating JWTs:
 
 .. code-block :: python

@@ -3,7 +3,7 @@ Partially protecting routes
 
 There may be cases where you want to use the same route regardless of if a JWT
 is present in the requst or not. In these situations, you can use
-:func:`~flask_jwt_extended.jwt_required` with the `optional=True` argument. This
+:func:`~flask_jwt_extended.jwt_required` with the ``optional=True`` argument. This
 will allow the endpoint to be accessed regardless of if a JWT is sent in with
 the request.
 

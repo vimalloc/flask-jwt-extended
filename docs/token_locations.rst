@@ -1,9 +1,9 @@
 JWT Locations
 =============
 JWTs can be sent in with a request in many different ways. You can control which
-ways you want to accept JWTs in your Flask application via the `JWT_TOKEN_LOCATION`
+ways you want to accept JWTs in your Flask application via the ``JWT_TOKEN_LOCATION``
 :ref:`configuration option<Configuration Options>`. You can also override that global
-configuration on a per route basis via the `locations` argument in
+configuration on a per route basis via the ``locations`` argument in
 :func:`~flask_jwt_extended.jwt_required`.
 
 .. literalinclude:: ../examples/jwt_locations.py
@@ -70,7 +70,7 @@ token. This cookie is set as http-only, so that it cannot be access via javascri
 (this is what prevents XSS attacks from being able to steal the JWT). The second
 cookie we set contains only the same double submit token, but this time in a
 cookie that is readable by javascript. Whenever a request is made, it needs to
-include an `X-CSRF-TOKEN` header, with the value of the double submit token.
+include an ``X-CSRF-TOKEN`` header, with the value of the double submit token.
 If the value in this header does not match the value stored in the JWT, the
 request is kicked out as invalid.
 
@@ -80,7 +80,7 @@ different domain will not be able to read the cookie containing the double submi
 token on your website, we have successfully thwarted any CSRF attacks.
 
 This does mean that whenever you are making a request, you need to manually
-include the `X-CSRF-TOKEN` header, otherwise your requests will be kicked
+include the ``X-CSRF-TOKEN`` header, otherwise your requests will be kicked
 out as invalid too. Lets look at how to do that:
 
 .. code-block :: javascript

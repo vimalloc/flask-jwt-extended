@@ -3,11 +3,10 @@
 This release includes a lot of breaking changes that have been a long time coming,
 and will require some manual intervention to upgrade your application. Breaking
 changes are never fun, but I really believe they are for the best. As a result
-of all these breaking changes, this extension should be simpiler to use,
-provide more flexibility, and allow for easier additions to the API without
-introducing further breaking changes in the future. Here are all the breaking
-changes that might affect your flask application when upgrading to 4.0.0.
-
+of all these changes, this extension should be simpler to use, provide more
+flexibility, and allow for easier additions to the API without introducing
+further breaking changes. Here is everything you will need to be aware of when
+upgrading to 4.0.0.
 
 Encoded JWT Changes (IMPORTANT)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -125,3 +124,11 @@ API Changes
   will now always be put in the JWT regardless of if it is an access or refresh
   tokens. If you don't want additional claims in your refresh tokens, do not
   include any additional claims when creating the refresh token.
+
+New Stuff
+~~~~~~~~~
+- Add ``locations`` argument to ``@jwt_required()`` and ``verify_jwt_in_request``.
+  This will allow you to override the ``JWT_LOCATIONS`` option on a per route basis.
+- Revamped and cleaned up documentation. It should be clearer how to work with this
+  extension both on the backend and frontend now.
+- Lots of code cleanup behind the scenes.

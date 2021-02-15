@@ -207,7 +207,7 @@ class JWTManager(object):
         """
         This decorator sets the callback function used to add additional claims
         when creating a JWT. The claims returned by this function will be merged
-        with any claims passed in via the `additional_claims` argument to
+        with any claims passed in via the ``additional_claims`` argument to
         :func:`~flask_jwt_extended.create_access_token` or
         :func:`~flask_jwt_extended.create_refresh_token`.
 
@@ -224,7 +224,7 @@ class JWTManager(object):
         """
         This decorator sets the callback function used to add additional headers
         when creating a JWT. The headers returned by this function will be merged
-        with any headers passed in via the `additional_headers` argument to
+        with any headers passed in via the ``additional_headers`` argument to
         :func:`~flask_jwt_extended.create_access_token` or
         :func:`~flask_jwt_extended.create_refresh_token`.
 
@@ -311,7 +311,7 @@ class JWTManager(object):
         """
         This decorator sets the callback function for returning a custom
         response when a valid and non-fresh token is used on an endpoint
-        that is marked as `fresh=True`.
+        that is marked as ``fresh=True``.
 
         The decorated function must take **two** arguments.
 
@@ -351,8 +351,8 @@ class JWTManager(object):
 
         The second argument is a dictionary containing the payload data of the JWT.
 
-        The decorated function must be return `True` if the token has been
-        revoked, `False` otherwise.
+        The decorated function must be return ``True`` if the token has been
+        revoked, ``False`` otherwise.
         """
         self._token_in_blocklist_callback = callback
         return callback
@@ -384,8 +384,8 @@ class JWTManager(object):
 
         The second argument is a dictionary containing the payload data of the JWT.
 
-        The decorated function must return `True` if the token is valid, or
-        `False` otherwise.
+        The decorated function must return ``True`` if the token is valid, or
+        ``False`` otherwise.
         """
         self._token_verification_callback = callback
         return callback
@@ -439,7 +439,7 @@ class JWTManager(object):
 
         The decorated function can return any python object, which can then be
         accessed in a protected endpoint. If an object cannot be loaded, for
-        example if a user has been deleted from your database, `None` must be
+        example if a user has been deleted from your database, ``None`` must be
         returned to indicate that an error occurred loading the user.
         """
         self._user_lookup_callback = callback

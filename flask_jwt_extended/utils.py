@@ -14,7 +14,7 @@ def get_jwt():
     """
     In a protected endpoint, this will return the python dictionary which has
     the payload of the JWT that is accessing the endpoint. If no JWT is present
-    due to `jwt_required(optional=True)`, an empty dictionary is returned.
+    due to ``jwt_required(optional=True)``, an empty dictionary is returned.
 
     :return:
         The payload (claims) of the JWT in the current request
@@ -32,7 +32,7 @@ def get_jwt_header():
     """
     In a protected endpoint, this will return the python dictionary which has
     the header of the JWT that is accessing the endpoint. If no JWT is present
-    due to `jwt_required(optional=True)`, an empty dictionary is returned.
+    due to ``jwt_required(optional=True)``, an empty dictionary is returned.
 
     :return:
         The headers of the JWT in the current request
@@ -50,7 +50,7 @@ def get_jwt_identity():
     """
     In a protected endpoint, this will return the identity of the JWT that is
     accessing the endpoint. If no JWT is present due to
-    `jwt_required(optional=True)`, `None` is returned.
+    ``jwt_required(optional=True)``, ``None`` is returned.
 
     :return:
         The identity of the JWT in the current request
@@ -67,7 +67,7 @@ def get_current_user():
     is configured. If the user loader callback is not being used, this will
     raise an error.
 
-    If no JWT is present due to `jwt_required(optional=True)`, `None` is returned.
+    If no JWT is present due to ``jwt_required(optional=True)``, ``None`` is returned.
 
     :return:
         The current user object for the JWT in the current request
@@ -97,7 +97,7 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
         Expected CSRF double submit value (optional).
 
     :param allow_expired:
-        If `True`, do not raise an error if the JWT is expired.  Defaults to `False`
+        If ``True``, do not raise an error if the JWT is expired.  Defaults to ``False``
 
     :return:
         Dictionary containing the payload of the JWT decoded JWT.
@@ -124,15 +124,15 @@ def create_access_token(
 
     :param fresh:
         If this token should be marked as fresh, and can thus access endpoints
-        protected with `@jwt_required(fresh=True)`. Defaults to `False`.
+        protected with ``@jwt_required(fresh=True)``. Defaults to ``False``.
 
-        This value can also be a `datetime.timedelta`, which indicate
+        This value can also be a ``datetime.timedelta``, which indicate
         how long this token will be considered fresh.
 
     :param expires_delta:
-        A `datetime.timedelta` for how long this token should last before it
+        A ``datetime.timedelta`` for how long this token should last before it
         expires. Set to False to disable expiration. If this is None, it will use
-        the 'JWT_ACCESS_TOKEN_EXPIRES` config value (see :ref:`Configuration Options`)
+        the ``JWT_ACCESS_TOKEN_EXPIRES`` config value (see :ref:`Configuration Options`)
 
     :param additional_claims:
         Optional. A hash of claims to include in the access token.  These claims are
@@ -173,9 +173,9 @@ def create_refresh_token(
         serializable format.
 
     :param expires_delta:
-        A `datetime.timedelta` for how long this token should last before it expires.
+        A ``datetime.timedelta`` for how long this token should last before it expires.
         Set to False to disable expiration. If this is None, it will use the
-        'JWT_REFRESH_TOKEN_EXPIRES` config value (see :ref:`Configuration Options`)
+        ``JWT_REFRESH_TOKEN_EXPIRES`` config value (see :ref:`Configuration Options`)
 
     :param additional_claims:
         Optional. A hash of claims to include in the refresh token. These claims are
@@ -246,7 +246,7 @@ def get_csrf_token(encoded_token):
 def set_access_cookies(response, encoded_access_token, max_age=None):
     """
     Modifiy a Flask Response to set a cookie containing the access JWT.
-    Also sets the corresponding CSRF cookies if `JWT_CSRF_IN_COOKIES` is `True`
+    Also sets the corresponding CSRF cookies if ``JWT_CSRF_IN_COOKIES`` is ``True``
     (see :ref:`Configuration Options`)
 
     :param response:
@@ -257,8 +257,8 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
 
     :param max_age:
         The max age of the cookie. If this is None, it will use the
-        `JWT_SESSION_COOKIE` option (see :ref:`Configuration Options`). Otherwise,
-        it will use this as the cookies `max-age` and the JWT_SESSION_COOKIE option
+        ``JWT_SESSION_COOKIE`` option (see :ref:`Configuration Options`). Otherwise,
+        it will use this as the cookies ``max-age`` and the JWT_SESSION_COOKIE option
         will be ignored. Values should be the number of seconds (as an integer).
     """
     response.set_cookie(
@@ -288,7 +288,7 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
 def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
     """
     Modifiy a Flask Response to set a cookie containing the refresh JWT.
-    Also sets the corresponding CSRF cookies if `JWT_CSRF_IN_COOKIES` is `True`
+    Also sets the corresponding CSRF cookies if ``JWT_CSRF_IN_COOKIES`` is ``True``
     (see :ref:`Configuration Options`)
 
     :param response:
@@ -299,8 +299,8 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
 
     :param max_age:
         The max age of the cookie. If this is None, it will use the
-        `JWT_SESSION_COOKIE` option (see :ref:`Configuration Options`). Otherwise,
-        it will use this as the cookies `max-age` and the JWT_SESSION_COOKIE option
+        ``JWT_SESSION_COOKIE`` option (see :ref:`Configuration Options`). Otherwise,
+        it will use this as the cookies ``max-age`` and the JWT_SESSION_COOKIE option
         will be ignored. Values should be the number of seconds (as an integer).
     """
     response.set_cookie(

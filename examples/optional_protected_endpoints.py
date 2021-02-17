@@ -4,7 +4,7 @@ from flask import request
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_optional
 from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
@@ -26,7 +26,7 @@ def login():
 
 
 @app.route("/optionally_protected", methods=["GET"])
-@jwt_required(optional=True)
+@jwt_optional
 def optionally_protected():
     current_identity = get_jwt_identity()
     if current_identity:

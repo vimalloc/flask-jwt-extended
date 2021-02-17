@@ -11,7 +11,7 @@ upgrading to 4.0.0.
 Encoded JWT Changes (IMPORTANT)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - The ``JWT_USER_CLAIMS`` configuration option has been removed. Now when creating
-  JWTs with additional claims, those claims areput on the top level of the token,
+  JWTs with additional claims, those claims are put on the top level of the token,
   insetad of inside the the nested ``user_claims`` dictionary. This has the very
   important benefit of allowing you to override reserved claims (such as ``nbf``)
   which was not previously possible in this extension.

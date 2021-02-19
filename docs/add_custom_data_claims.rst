@@ -1,5 +1,5 @@
-Storing Data in Access Tokens
-=============================
+Storing Additional Data in JWTs
+===============================
 You may want to store additional information in the access token which you could
 later access in the protected views. This can be done using the ``additional_claims``
 argument with the :func:`~flask_jwt_extended.create_access_token` or

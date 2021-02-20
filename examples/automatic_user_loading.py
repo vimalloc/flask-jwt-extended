@@ -28,7 +28,8 @@ class User(db.Model):
     full_name = db.Column(db.Text, nullable=False)
 
     # NOTE: In a real application make sure to properly hash and salt passwords
-    def check_password(self, password):
+    @staticmethod
+    def check_password(password):
         return safe_str_cmp(password, "password")
 
 

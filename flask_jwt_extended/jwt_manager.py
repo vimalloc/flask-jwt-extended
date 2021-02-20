@@ -38,7 +38,7 @@ from flask_jwt_extended.tokens import _decode_jwt
 from flask_jwt_extended.tokens import _encode_jwt
 
 
-class JWTManager(object):
+class JWTManager:
     """
     An object used to hold JWT settings and callback functions for the
     Flask-JWT-Extended extension.

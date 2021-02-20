@@ -8,7 +8,7 @@ from flask import current_app
 from jwt.algorithms import requires_cryptography
 
 
-class _Config(object):
+class _Config:
     """
     Helper object for accessing and verifying options in this extension. This
     is meant for internal use of the application; modifying config options

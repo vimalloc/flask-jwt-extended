@@ -47,8 +47,7 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
         Defaults to ``False``.
 
     :param refresh:
-        If ``True``, require a refresh JWT to be verified. If ``False`` require an access
-        JWT to be verified. Defaults to ``False``.
+        If ``True``, require a refresh JWT to be verified.
 
     :param locations:
         A list of locations to look for the JWT in this request, for example:
@@ -61,9 +60,11 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
 
     try:
         if refresh:
-            jwt_data, jwt_header = _decode_jwt_from_request("refresh", locations, fresh)
+            jwt_data, jwt_header = _decode_jwt_from_request(
+                locations, fresh, refresh=True
+            )
         else:
-            jwt_data, jwt_header = _decode_jwt_from_request("access", locations, fresh)
+            jwt_data, jwt_header = _decode_jwt_from_request(locations, fresh)
     except (NoAuthorizationError, InvalidHeaderError):
         if not optional:
             raise
@@ -170,15 +171,15 @@ def _decode_jwt_from_headers():
     return encoded_token, None
 
 
-def _decode_jwt_from_cookies(token_type):
-    if token_type == "access":
-        cookie_key = config.access_cookie_name
-        csrf_header_key = config.access_csrf_header_name
-        csrf_field_key = config.access_csrf_field_name
-    else:
+def _decode_jwt_from_cookies(refresh):
+    if refresh:
         cookie_key = config.refresh_cookie_name
         csrf_header_key = config.refresh_csrf_header_name
         csrf_field_key = config.refresh_csrf_field_name
+    else:
+        cookie_key = config.access_cookie_name
+        csrf_header_key = config.access_csrf_header_name
+        csrf_field_key = config.access_csrf_field_name
 
     encoded_token = request.cookies.get(cookie_key)
     if not encoded_token:
@@ -205,15 +206,15 @@ def _decode_jwt_from_query_string():
     return encoded_token, None
 
 
-def _decode_jwt_from_json(token_type):
+def _decode_jwt_from_json(refresh):
     content_type = request.content_type or ""
     if not content_type.startswith("application/json"):
         raise NoAuthorizationError("Invalid content-type. Must be application/json.")
 
-    if token_type == "access":
-        token_key = config.json_key
-    else:
+    if refresh:
         token_key = config.refresh_json_key
+    else:
+        token_key = config.json_key
 
     try:
         encoded_token = request.json.get(token_key, None)
@@ -225,7 +226,7 @@ def _decode_jwt_from_json(token_type):
     return encoded_token, None
 
 
-def _decode_jwt_from_request(token_type, locations, fresh):
+def _decode_jwt_from_request(locations, fresh, refresh=False):
     # All the places we can get a JWT from in this request
     get_encoded_token_functions = []
 
@@ -238,16 +239,14 @@ def _decode_jwt_from_request(token_type, locations, fresh):
     for location in locations:
         if location == "cookies":
             get_encoded_token_functions.append(
-                lambda: _decode_jwt_from_cookies(token_type)
+                lambda: _decode_jwt_from_cookies(refresh)
             )
         if location == "query_string":
             get_encoded_token_functions.append(_decode_jwt_from_query_string)
         if location == "headers":
             get_encoded_token_functions.append(_decode_jwt_from_headers)
         if location == "json":
-            get_encoded_token_functions.append(
-                lambda: _decode_jwt_from_json(token_type)
-            )
+            get_encoded_token_functions.append(lambda: _decode_jwt_from_json(refresh))
 
     # Try to find the token from one of these locations. It only needs to exist
     # in one place to be valid (not every location).
@@ -277,10 +276,10 @@ def _decode_jwt_from_request(token_type, locations, fresh):
             raise NoAuthorizationError(errors[0])
 
     # Additional verifications provided by this extension
-    verify_token_type(decoded_token, expected_type=token_type)
+    verify_token_type(decoded_token, refresh)
     if fresh:
         _verify_token_is_fresh(jwt_header, decoded_token)
-    verify_token_not_blocklisted(jwt_header, decoded_token, token_type)
+    verify_token_not_blocklisted(jwt_header, decoded_token)
     custom_verification_for_token(jwt_header, decoded_token)
 
     return decoded_token, jwt_header

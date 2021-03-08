@@ -70,13 +70,13 @@ def test_default_decode_token_values(app, default_access_token):
         assert decoded["fresh"] is False
 
 
-def test_bad_token_type(app, default_access_token):
-    default_access_token["type"] = "banana"
-    bad_type_token = encode_token(app, default_access_token)
+def test_supports_decoding_other_token_types(app, default_access_token):
+    default_access_token["type"] = "app"
+    other_token = encode_token(app, default_access_token)
 
-    with pytest.raises(JWTDecodeError):
-        with app.test_request_context():
-            decode_token(bad_type_token)
+    with app.test_request_context():
+        decoded = decode_token(other_token)
+        assert decoded["type"] == "app"
 
 
 def test_encode_decode_audience(app):

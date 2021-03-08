@@ -72,7 +72,7 @@ def test_jwt_required(app):
     # Test refresh token access to jwt_required
     response = test_client.get(url, headers=make_headers(refresh_token))
     assert response.status_code == 422
-    assert response.get_json() == {"msg": "Only access tokens are allowed"}
+    assert response.get_json() == {"msg": "Only non-refresh tokens are allowed"}
 
 
 def test_fresh_jwt_required(app):
@@ -113,7 +113,7 @@ def test_fresh_jwt_required(app):
 
     response = test_client.get(url, headers=make_headers(refresh_token))
     assert response.status_code == 422
-    assert response.get_json() == {"msg": "Only access tokens are allowed"}
+    assert response.get_json() == {"msg": "Only non-refresh tokens are allowed"}
 
     # Test with custom response
     @jwtM.needs_fresh_token_loader
@@ -176,7 +176,7 @@ def test_jwt_optional(app, delta_func):
 
     response = test_client.get(url, headers=make_headers(refresh_token))
     assert response.status_code == 422
-    assert response.get_json() == {"msg": "Only access tokens are allowed"}
+    assert response.get_json() == {"msg": "Only non-refresh tokens are allowed"}
 
     response = test_client.get(url, headers=None)
     assert response.status_code == 200

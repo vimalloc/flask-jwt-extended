@@ -226,10 +226,6 @@ def _decode_jwt_from_json(refresh):
     return encoded_token, None
 
 
-def _invalid_location(location):
-    raise NoAuthorizationError(f"'{location}' is not a valid location")
-
-
 def _decode_jwt_from_request(locations, fresh, refresh=False):
     # Figure out what locations to look for the JWT in this request
     if isinstance(locations, str):
@@ -252,7 +248,7 @@ def _decode_jwt_from_request(locations, fresh, refresh=False):
         elif location == "json":
             get_encoded_token_functions.append(lambda: _decode_jwt_from_json(refresh))
         else:
-            get_encoded_token_functions.append(lambda: _invalid_location(location))
+            raise RuntimeError(f"'{location}' is not a valid location")
 
     # Try to find the token from one of these locations. It only needs to exist
     # in one place to be valid (not every location).

@@ -216,8 +216,7 @@ def test_override_jwt_location(app):
 
     url = "/protected_invalid"
     response = test_client.get(url, headers=make_headers(access_token))
-    assert response.status_code == 401
-    assert response.get_json() == {"msg": "'INVALID_LOCATION' is not a valid location"}
+    assert response.status_code == 500
 
 
 def test_invalid_jwt(app):

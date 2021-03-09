@@ -50,10 +50,10 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
         If ``True``, require a refresh JWT to be verified.
 
     :param locations:
-        A list of locations to look for the JWT in this request, for example:
-        ``['headers', 'cookies']``. Defaluts to ``None`` which indicates that JWTs
-        will be looked for in the locations defined by the ``JWT_TOKEN_LOCATION``
-        configuration option.
+        A location or list of locations to look for the JWT in this request, for
+        example ``'headers'`` or ``['headers', 'cookies']``. Defaluts to ``None``
+        which indicates that JWTs will be looked for in the locations defined by the
+        ``JWT_TOKEN_LOCATION`` configuration option.
     """
     if request.method in config.exempt_methods:
         return
@@ -103,10 +103,10 @@ def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
         requires an access JWT to access this endpoint. Defaults to ``False``.
 
     :param locations:
-        A list of locations to look for the JWT in this request, for example:
-        ``['headers', 'cookies']``. Defaluts to ``None`` which indicates that JWTs
-        will be looked for in the locations defined by the ``JWT_TOKEN_LOCATION``
-        configuration option.
+        A location or list of locations to look for the JWT in this request, for
+        example ``'headers'`` or ``['headers', 'cookies']``. Defaluts to ``None``
+        which indicates that JWTs will be looked for in the locations defined by the
+        ``JWT_TOKEN_LOCATION`` configuration option.
     """
 
     def wrapper(fn):
@@ -226,27 +226,33 @@ def _decode_jwt_from_json(refresh):
     return encoded_token, None
 
 
-def _decode_jwt_from_request(locations, fresh, refresh=False):
-    # All the places we can get a JWT from in this request
-    get_encoded_token_functions = []
+def _invalid_location(location):
+    raise NoAuthorizationError(f"'{location}' is not a valid location")
 
-    # Get locations in the order specified by the decorator or JWT_TOKEN_LOCATION
-    # configuration.
+
+def _decode_jwt_from_request(locations, fresh, refresh=False):
+    # Figure out what locations to look for the JWT in this request
+    if isinstance(locations, str):
+        locations = [locations]
+
     if not locations:
         locations = config.token_location
 
-    # Add the functions in the order specified by locations.
+    # Get the decode functions in the order specified by locations.
+    get_encoded_token_functions = []
     for location in locations:
         if location == "cookies":
             get_encoded_token_functions.append(
                 lambda: _decode_jwt_from_cookies(refresh)
             )
-        if location == "query_string":
+        elif location == "query_string":
             get_encoded_token_functions.append(_decode_jwt_from_query_string)
-        if location == "headers":
+        elif location == "headers":
             get_encoded_token_functions.append(_decode_jwt_from_headers)
-        if location == "json":
+        elif location == "json":
             get_encoded_token_functions.append(lambda: _decode_jwt_from_json(refresh))
+        else:
+            get_encoded_token_functions.append(lambda: _invalid_location(location))
 
     # Try to find the token from one of these locations. It only needs to exist
     # in one place to be valid (not every location).

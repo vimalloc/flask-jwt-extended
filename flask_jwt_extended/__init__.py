@@ -18,4 +18,4 @@ from .utils import unset_refresh_cookies
 from .view_decorators import jwt_required
 from .view_decorators import verify_jwt_in_request
 
-__version__ = "4.0.2"
+__version__ = "4.1.0"

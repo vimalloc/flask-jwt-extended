@@ -98,9 +98,6 @@ def _decode_jwt(
     if "type" not in decoded_token:
         decoded_token["type"] = "access"
 
-    if decoded_token["type"] not in ("access", "refresh"):
-        raise JWTDecodeError("Invalid token type: {}".format(decoded_token["type"]))
-
     if "fresh" not in decoded_token:
         decoded_token["fresh"] = False
 

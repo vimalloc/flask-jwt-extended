@@ -30,7 +30,7 @@ def login():
 # In a protected view, get the claims you added to the jwt with the
 # get_jwt() method
 @app.route("/protected", methods=["GET"])
-@jwt_required
+@jwt_required()
 def protected():
     claims = get_jwt()
     return jsonify(foo=claims["foo"])

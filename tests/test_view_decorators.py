@@ -187,6 +187,38 @@ def test_jwt_optional(app, delta_func):
     assert response.get_json() == {"msg": "Token has expired"}
 
 
+def test_override_jwt_location(app):
+    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+
+    @app.route("/protected_other")
+    @jwt_required(locations="headers")
+    def protected_other():
+        return jsonify(foo="bar")
+
+    @app.route("/protected_invalid")
+    @jwt_required(locations="INVALID_LOCATION")
+    def protected_invalid():
+        return jsonify(foo="bar")
+
+    test_client = app.test_client()
+    with app.test_request_context():
+        access_token = create_access_token("username")
+
+    url = "/protected_other"
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.get_json() == {"foo": "bar"}
+    assert response.status_code == 200
+
+    url = "/protected"
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.status_code == 401
+    assert response.get_json() == {"msg": 'Missing cookie "access_token_cookie"'}
+
+    url = "/protected_invalid"
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert response.status_code == 500
+
+
 def test_invalid_jwt(app):
     url = "/protected"
     jwtM = get_jwt_manager(app)

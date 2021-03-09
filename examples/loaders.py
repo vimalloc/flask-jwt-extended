@@ -28,7 +28,7 @@ def login():
 
 
 @app.route("/protected", methods=["GET"])
-@jwt_required
+@jwt_required()
 def protected():
     return jsonify(hello="world")
 

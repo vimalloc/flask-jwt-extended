@@ -18,7 +18,7 @@ identify==1.5.13
 idna==2.10
 imagesize==1.2.0
 itsdangerous==1.1.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 keyring==21.8.0
 MarkupSafe==1.1.1
 mypy-extensions==0.4.3

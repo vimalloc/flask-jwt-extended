@@ -35,7 +35,7 @@ Pygments==2.7.4
 PyJWT==2.0.1
 pyparsing==2.4.7
 pytz==2020.5
-PyYAML==5.3.1
+PyYAML==5.4
 readme-renderer==28.0
 regex==2020.11.13
 requests==2.25.1

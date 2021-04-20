@@ -202,6 +202,7 @@ class JWTManager(object):
         app.config.setdefault("JWT_SECRET_KEY", None)
         app.config.setdefault("JWT_SESSION_COOKIE", True)
         app.config.setdefault("JWT_TOKEN_LOCATION", ("headers",))
+        app.config.setdefault("JWT_ENCODE_NBF", True)
 
     def additional_claims_loader(self, callback):
         """
@@ -499,6 +500,7 @@ class JWTManager(object):
             json_encoder=config.json_encoder,
             secret=self._encode_key_callback(identity),
             token_type=token_type,
+            nbf=config.encode_nbf,
         )
 
     def _decode_jwt_from_config(

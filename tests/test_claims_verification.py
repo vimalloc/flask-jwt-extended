@@ -3,6 +3,7 @@ from flask import Flask
 from flask import jsonify
 
 from flask_jwt_extended import create_access_token
+from flask_jwt_extended import decode_token
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 from tests.utils import get_jwt_manager

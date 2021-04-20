@@ -142,6 +142,13 @@ General Options:
     Default: ``None``
 
 
+.. py:data:: JWT_ENCODE_NBR
+
+    The not before (``nbf``) claim which defines that a JWT MUST NOT be accepted for processing during decode.
+
+    Default: ``True``
+
+
 .. py:data:: JWT_DECODE_LEEWAY
 
     The number of seconds a token will be considered valid before the Not Before

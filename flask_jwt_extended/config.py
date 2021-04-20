@@ -295,4 +295,5 @@ class _Config(object):
     def encode_nbf(self):
         return current_app.config["JWT_ENCODE_NBF"]
 
+
 config = _Config()

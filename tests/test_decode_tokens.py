@@ -356,7 +356,7 @@ def test_nbf_is_present_by_default(app):
     with app.test_request_context():
         access_token = create_access_token("username", fresh=True)
         decoded = decode_token(access_token)
-        assert 'nbf' in decoded
+        assert "nbf" in decoded
 
 
 def test_disable_nbf_encoding(app):
@@ -364,4 +364,4 @@ def test_disable_nbf_encoding(app):
     with app.test_request_context():
         access_token = create_access_token("username", fresh=True)
         decoded = decode_token(access_token)
-        assert 'nbf' not in decoded
+        assert "nbf" not in decoded

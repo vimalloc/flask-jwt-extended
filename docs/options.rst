@@ -142,7 +142,7 @@ General Options:
     Default: ``None``
 
 
-.. py:data:: JWT_ENCODE_NBR
+.. py:data:: JWT_ENCODE_NBF
 
     The not before (``nbf``) claim which defines that a JWT MUST NOT be accepted for processing during decode.
 

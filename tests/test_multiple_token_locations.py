@@ -6,6 +6,7 @@ from flask_jwt_extended import create_access_token
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended import set_access_cookies
+from flask_jwt_extended import get_jwt_request_location
 
 
 @pytest.fixture(scope="function")
@@ -25,7 +26,7 @@ def app():
     @app.route("/protected", methods=["GET", "POST"])
     @jwt_required()
     def access_protected():
-        return jsonify(foo="bar")
+        return jsonify(foo="bar", location=get_jwt_request_location())
 
     return app
 
@@ -48,7 +49,7 @@ def app_with_locations():
     @app.route("/protected", methods=["GET", "POST"])
     @jwt_required(locations=locations)
     def access_protected():
-        return jsonify(foo="bar")
+        return jsonify(foo="bar", location=get_jwt_request_location())
 
     return app
 
@@ -62,7 +63,7 @@ def test_header_access(app, app_with_locations):
         access_headers = {"Authorization": "Bearer {}".format(access_token)}
         response = test_client.get("/protected", headers=access_headers)
         assert response.status_code == 200
-        assert response.get_json() == {"foo": "bar"}
+        assert response.get_json() == {"foo": "bar", "location": "headers"}
 
 
 def test_cookie_access(app, app_with_locations):
@@ -71,7 +72,7 @@ def test_cookie_access(app, app_with_locations):
         test_client.get("/cookie_login")
         response = test_client.get("/protected")
         assert response.status_code == 200
-        assert response.get_json() == {"foo": "bar"}
+        assert response.get_json() == {"foo": "bar", "location": "cookies"}
 
 
 def test_query_string_access(app, app_with_locations):
@@ -83,7 +84,7 @@ def test_query_string_access(app, app_with_locations):
         url = "/protected?jwt={}".format(access_token)
         response = test_client.get(url)
         assert response.status_code == 200
-        assert response.get_json() == {"foo": "bar"}
+        assert response.get_json() == {"foo": "bar", "location": "query_string"}
 
 
 def test_json_access(app, app_with_locations):
@@ -94,7 +95,7 @@ def test_json_access(app, app_with_locations):
         data = {"access_token": access_token}
         response = test_client.post("/protected", json=data)
         assert response.status_code == 200
-        assert response.get_json() == {"foo": "bar"}
+        assert response.get_json() == {"foo": "bar", "location": "json"}
 
 
 @pytest.mark.parametrize(
@@ -129,8 +130,8 @@ def test_no_jwt_in_request(app, options):
 @pytest.mark.parametrize(
     "options",
     [
-        (["cookies", "headers"], 200, None, {"foo": "bar"}),
-        (["headers", "cookies"], 200, None, {"foo": "bar"}),
+        (["cookies", "headers"], 200, None, {"foo": "bar", "location": "cookies"}),
+        (["headers", "cookies"], 200, None, {"foo": "bar", "location": "cookies"}),
     ],
 )
 def test_order_of_jwt_locations_in_request(app, options):
@@ -151,7 +152,7 @@ def test_order_of_jwt_locations_in_request(app, options):
 @pytest.mark.parametrize(
     "options",
     [
-        (["cookies", "headers"], 200, None, {"foo": "bar"}),
+        (["cookies", "headers"], 200, None, {"foo": "bar", "location": "cookies"}),
         (["headers", "cookies"], 422, ("Invalid header padding"), None),
     ],
 )

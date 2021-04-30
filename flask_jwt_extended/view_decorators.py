@@ -64,7 +64,9 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
                 locations, fresh, refresh=True
             )
         else:
-            jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(locations, fresh)
+            jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
+                locations, fresh
+            )
     except (NoAuthorizationError, InvalidHeaderError):
         if not optional:
             raise

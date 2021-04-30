@@ -243,16 +243,21 @@ def _decode_jwt_from_request(locations, fresh, refresh=False):
     get_encoded_token_functions = []
     for location in locations:
         if location == "cookies":
-            fn = lambda: _decode_jwt_from_cookies(refresh)
+            get_encoded_token_functions.append(
+                (location, lambda: _decode_jwt_from_cookies(refresh))
+            )
         elif location == "query_string":
-            fn = _decode_jwt_from_query_string
+            get_encoded_token_functions.append(
+                (location, _decode_jwt_from_query_string)
+            )
         elif location == "headers":
-            fn = _decode_jwt_from_headers
+            get_encoded_token_functions.append((location, _decode_jwt_from_headers))
         elif location == "json":
-            fn = lambda: _decode_jwt_from_json(refresh)
+            get_encoded_token_functions.append(
+                (location, lambda: _decode_jwt_from_json(refresh))
+            )
         else:
             raise RuntimeError(f"'{location}' is not a valid location")
-        get_encoded_token_functions.append((location, fn))
 
     # Try to find the token from one of these locations. It only needs to exist
     # in one place to be valid (not every location).

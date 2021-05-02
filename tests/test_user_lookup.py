@@ -20,14 +20,30 @@ def app():
     @app.route("/get_user1", methods=["GET"])
     @jwt_required()
     def get_user1():
-        return jsonify(foo=get_current_user()["username"])
+        try:
+            return jsonify(foo=get_current_user()["username"])
+        except RuntimeError as e:
+            return jsonify(error=str(e))
 
     @app.route("/get_user2", methods=["GET"])
     @jwt_required()
     def get_user2():
-        return jsonify(foo=current_user["username"])
+        try:
+            return jsonify(foo=current_user["username"])
+        except RuntimeError as e:
+            return jsonify(error=str(e))
 
     return app
+
+
+@pytest.mark.parametrize("url", ["/get_user1", "/get_user2"])
+def test_no_user_lookup_loader_specified(app, url):
+    test_client = app.test_client()
+    with app.test_request_context():
+        access_token = create_access_token("username")
+
+    response = test_client.get(url, headers=make_headers(access_token))
+    assert "@jwt.user_lookup_loader" in response.get_json()["error"]
 
 
 @pytest.mark.parametrize("url", ["/get_user1", "/get_user2"])

@@ -22,7 +22,7 @@ def get_jwt():
     decoded_jwt = getattr(_request_ctx_stack.top, "jwt", None)
     if decoded_jwt is None:
         raise RuntimeError(
-            "You must call `@jwt_required()` or `verify_jwt_in_request` "
+            "You must call `@jwt_required()` or `verify_jwt_in_request()` "
             "before using this method"
         )
     return decoded_jwt
@@ -40,7 +40,7 @@ def get_jwt_header():
     decoded_header = getattr(_request_ctx_stack.top, "jwt_header", None)
     if decoded_header is None:
         raise RuntimeError(
-            "You must call `@jwt_required()` or `verify_jwt_in_request` "
+            "You must call `@jwt_required()` or `verify_jwt_in_request()` "
             "before using this method"
         )
     return decoded_header
@@ -87,6 +87,7 @@ def get_current_user():
     :return:
         The current user object for the JWT in the current request
     """
+    get_jwt()  # Raise an error if not in a decorated context
     jwt_user_dict = getattr(_request_ctx_stack.top, "jwt_user", None)
     if jwt_user_dict is None:
         raise RuntimeError(

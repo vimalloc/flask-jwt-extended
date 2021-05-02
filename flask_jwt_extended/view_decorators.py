@@ -141,7 +141,7 @@ def _decode_jwt_from_headers():
     header_type = config.header_type
 
     # Verify we have the auth header
-    auth_header = request.headers.get(header_name, None)
+    auth_header = request.headers.get(header_name, "").strip().strip(",")
     if not auth_header:
         raise NoAuthorizationError("Missing {} Header".format(header_name))
 

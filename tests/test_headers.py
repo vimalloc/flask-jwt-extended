@@ -54,6 +54,18 @@ def test_default_headers(app):
     assert response.get_json() == {"foo": "bar"}
 
 
+def test_header_with_trailing_spaces_and_commas(app):
+    test_client = app.test_client()
+
+    with app.test_request_context():
+        access_token = create_access_token("username")
+
+    access_headers = {"Authorization": "Bearer {},   ".format(access_token)}
+    response = test_client.get("/protected", headers=access_headers)
+    assert response.status_code == 200
+    assert response.get_json() == {"foo": "bar"}
+
+
 def test_custom_header_name(app):
     app.config["JWT_HEADER_NAME"] = "Foo"
     test_client = app.test_client()

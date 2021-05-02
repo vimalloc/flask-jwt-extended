@@ -67,7 +67,7 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
             jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
                 locations, fresh
             )
-    except (NoAuthorizationError, InvalidHeaderError):
+    except NoAuthorizationError:
         if not optional:
             raise
         _request_ctx_stack.top.jwt = {}
@@ -143,34 +143,39 @@ def _decode_jwt_from_headers():
     # Verify we have the auth header
     auth_header = request.headers.get(header_name, "").strip().strip(",")
     if not auth_header:
-        raise NoAuthorizationError("Missing {} Header".format(header_name))
+        raise NoAuthorizationError(f"Missing {header_name} Header")
 
     # Make sure the header is in a valid format that we are expecting, ie
-    # <HeaderName>: <HeaderType(optional)> <JWT>
-    jwt_header = None
-
-    # Check if header is comma delimited, ie
+    # <HeaderName>: <HeaderType(optional)> <JWT>.
+    #
+    # Also handle the fact that the header that can be comma delimited, ie
     # <HeaderName>: <field> <value>, <field> <value>, etc...
     if header_type:
         field_values = split(r",\s*", auth_header)
-        jwt_header = [s for s in field_values if s.split()[0] == header_type]
-        if len(jwt_header) < 1 or len(jwt_header[0].split()) != 2:
-            msg = "Bad {} header. Expected value '{} <JWT>'".format(
-                header_name, header_type
+        jwt_headers = [s for s in field_values if s.split()[0] == header_type]
+        if len(jwt_headers) != 1:
+            msg = (
+                f"Missing '{header_type}' type in '{header_name}' header. "
+                f"Expected '{header_name}: {header_type} <JWT>'"
+            )
+            raise NoAuthorizationError(msg)
+
+        parts = jwt_headers[0].split()
+        if len(parts) != 2:
+            msg = (
+                f"Bad {header_name} header. "
+                f"Expected '{header_name}: {header_type} <JWT>'"
             )
             raise InvalidHeaderError(msg)
-        jwt_header = jwt_header[0]
-    else:
-        jwt_header = auth_header
 
-    parts = jwt_header.split()
-    if not header_type:
-        if len(parts) != 1:
-            msg = "Bad {} header. Expected value '<JWT>'".format(header_name)
-            raise InvalidHeaderError(msg)
-        encoded_token = parts[0]
-    else:
         encoded_token = parts[1]
+    else:
+        parts = auth_header.split()
+        if len(parts) != 1:
+            msg = f"Bad {header_name} header. Expected '{header_name}: <JWT>'"
+            raise InvalidHeaderError(msg)
+
+        encoded_token = parts[0]
 
     return encoded_token, None
 

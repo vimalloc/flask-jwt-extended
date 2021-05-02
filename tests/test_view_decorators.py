@@ -178,13 +178,55 @@ def test_jwt_optional(app, delta_func):
     assert response.status_code == 422
     assert response.get_json() == {"msg": "Only non-refresh tokens are allowed"}
 
+    response = test_client.get(url, headers=make_headers(expired_token))
+    assert response.status_code == 401
+    assert response.get_json() == {"msg": "Token has expired"}
+
+
+def test_jwt_optional_with_no_valid_jwt(app):
+    url = "/optional_protected"
+    test_client = app.test_client()
+
+    # No auth headers
     response = test_client.get(url, headers=None)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
-    response = test_client.get(url, headers=make_headers(expired_token))
-    assert response.status_code == 401
-    assert response.get_json() == {"msg": "Token has expired"}
+    # auth header with type that isn't configured to be checked
+    response = test_client.get(url, headers={"Authorization": "basic creds"})
+    assert response.status_code == 200
+    assert response.get_json() == {"foo": "bar"}
+
+    # auth header with Bearer type but no JWT
+    response = test_client.get(url, headers={"Authorization": "Bearer "})
+    assert response.status_code == 422
+    assert response.get_json() == {
+        "msg": "Bad Authorization header. Expected 'Authorization: Bearer <JWT>'"
+    }
+
+    # Bearer token malformed
+    response = test_client.get(url, headers={"Authorization": "Bearer xxx"})
+    assert response.status_code == 422
+    assert response.get_json() == {"msg": "Not enough segments"}
+
+    # auth header comma seperated with no bearer token
+    response = test_client.get(url, headers={"Authorization": "Foo 1, Bar 2, Baz, 3"})
+    assert response.status_code == 200
+    assert response.get_json() == {"foo": "bar"}
+
+    # auth header comma seperated with missing bearer token
+    response = test_client.get(url, headers={"Authorization": "Foo 1, Bearer, Baz, 3"})
+    assert response.status_code == 422
+    assert response.get_json() == {
+        "msg": "Bad Authorization header. Expected 'Authorization: Bearer <JWT>'"
+    }
+
+    # Bearer token comma seperated with malformed bearer token
+    response = test_client.get(
+        url, headers={"Authorization": "Foo 1, Bearer 2, Baz, 3"}
+    )
+    assert response.status_code == 422
+    assert response.get_json() == {"msg": "Not enough segments"}
 
 
 def test_override_jwt_location(app):

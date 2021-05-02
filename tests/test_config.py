@@ -31,6 +31,7 @@ def test_default_configs(app):
         assert config.header_type == "Bearer"
 
         assert config.query_string_name == "jwt"
+        assert config.query_string_value_prefix == ""
 
         assert config.access_cookie_name == "access_token_cookie"
         assert config.refresh_cookie_name == "refresh_token_cookie"
@@ -81,6 +82,7 @@ def test_override_configs(app, delta_func):
     app.config["JWT_ENCODE_ISSUER"] = "TestEncodeIssuer"
 
     app.config["JWT_QUERY_STRING_NAME"] = "banana"
+    app.config["JWT_QUERY_STRING_VALUE_PREFIX"] = "kiwi"
 
     app.config["JWT_ACCESS_COOKIE_NAME"] = "new_access_cookie"
     app.config["JWT_REFRESH_COOKIE_NAME"] = "new_refresh_cookie"
@@ -130,6 +132,7 @@ def test_override_configs(app, delta_func):
         assert config.encode_issuer == "TestEncodeIssuer"
 
         assert config.query_string_name == "banana"
+        assert config.query_string_value_prefix == "kiwi"
 
         assert config.access_cookie_name == "new_access_cookie"
         assert config.refresh_cookie_name == "new_refresh_cookie"

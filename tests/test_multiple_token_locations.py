@@ -113,7 +113,7 @@ def test_json_access(app, app_with_locations):
             (
                 "Missing JWT in json or query_string (Invalid "
                 "content-type. Must be application/json.; "
-                'Missing "jwt" query paramater)'
+                "Missing 'jwt' query paramater)"
             ),
         ),
     ],

@@ -397,6 +397,17 @@ These are only applicable if a route is configured to accept JWTs via query stri
     Default: ``"jwt"``
 
 
+.. py:data:: JWT_QUERY_STRING_VALUE_PREFIX
+
+    An optional prefix string that should show up before the JWT in a
+    query string parameter.
+
+    For example, if this was ``"Bearer "``, the query string should look like
+    ``"/endpoint?jwt=Bearer <JWT>"``
+
+    Default: ``""``
+
+
 JSON Body Options:
 ~~~~~~~~~~~~~~~~~~
 These are only applicable if a route is configured to accept JWTs via the JSON body.

@@ -11,6 +11,7 @@ from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import FreshTokenRequired
 from flask_jwt_extended.exceptions import InvalidHeaderError
+from flask_jwt_extended.exceptions import InvalidQueryParamError
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_jwt_extended.exceptions import UserLookupError
 from flask_jwt_extended.internal_utils import custom_verification_for_token
@@ -207,11 +208,20 @@ def _decode_jwt_from_cookies(refresh):
 
 
 def _decode_jwt_from_query_string():
-    query_param = config.query_string_name
-    encoded_token = request.args.get(query_param)
-    if not encoded_token:
-        raise NoAuthorizationError('Missing "{}" query paramater'.format(query_param))
+    param_name = config.query_string_name
+    prefix = config.query_string_value_prefix
 
+    value = request.args.get(param_name)
+    if not value:
+        raise NoAuthorizationError(f"Missing '{param_name}' query paramater")
+
+    if not value.startswith(prefix):
+        raise InvalidQueryParamError(
+            f"Invalid value for query parameter '{param_name}'. "
+            f"Expected the value to start with '{prefix}'"
+        )
+
+    encoded_token = value[len(prefix) :]  # noqa: E203
     return encoded_token, None
 
 

@@ -28,6 +28,7 @@ from flask_jwt_extended.default_callbacks import default_user_lookup_error_callb
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import FreshTokenRequired
 from flask_jwt_extended.exceptions import InvalidHeaderError
+from flask_jwt_extended.exceptions import InvalidQueryParamError
 from flask_jwt_extended.exceptions import JWTDecodeError
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_jwt_extended.exceptions import RevokedTokenError
@@ -142,6 +143,10 @@ class JWTManager(object):
         def handle_auth_error(e):
             return self._unauthorized_callback(str(e))
 
+        @app.errorhandler(InvalidQueryParamError)
+        def handle_invalid_query_param_error(e):
+            return self._invalid_token_callback(str(e))
+
         @app.errorhandler(RevokedTokenError)
         def handle_revoked_token_error(e):
             return self._revoked_token_callback(e.jwt_header, e.jwt_data)
@@ -191,6 +196,7 @@ class JWTManager(object):
         app.config.setdefault("JWT_PRIVATE_KEY", None)
         app.config.setdefault("JWT_PUBLIC_KEY", None)
         app.config.setdefault("JWT_QUERY_STRING_NAME", "jwt")
+        app.config.setdefault("JWT_QUERY_STRING_VALUE_PREFIX", "")
         app.config.setdefault("JWT_REFRESH_COOKIE_NAME", "refresh_token_cookie")
         app.config.setdefault("JWT_REFRESH_COOKIE_PATH", "/")
         app.config.setdefault("JWT_REFRESH_CSRF_COOKIE_NAME", "csrf_refresh_token")

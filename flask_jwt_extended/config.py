@@ -83,6 +83,10 @@ class _Config(object):
         return current_app.config["JWT_QUERY_STRING_NAME"]
 
     @property
+    def query_string_value_prefix(self):
+        return current_app.config["JWT_QUERY_STRING_VALUE_PREFIX"]
+
+    @property
     def access_cookie_name(self):
         return current_app.config["JWT_ACCESS_COOKIE_NAME"]
 

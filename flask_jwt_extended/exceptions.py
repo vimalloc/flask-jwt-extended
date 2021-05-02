@@ -22,6 +22,14 @@ class InvalidHeaderError(JWTExtendedException):
     pass
 
 
+class InvalidQueryParamError(JWTExtendedException):
+    """
+    An error when a query string param is not in the correct format
+    """
+
+    pass
+
+
 class NoAuthorizationError(JWTExtendedException):
     """
     An error raised when no authorization token was found in a protected endpoint

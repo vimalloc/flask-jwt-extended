@@ -60,17 +60,20 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
 
     try:
         if refresh:
-            jwt_data, jwt_header = _decode_jwt_from_request(
+            jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
                 locations, fresh, refresh=True
             )
         else:
-            jwt_data, jwt_header = _decode_jwt_from_request(locations, fresh)
+            jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
+                locations, fresh
+            )
     except (NoAuthorizationError, InvalidHeaderError):
         if not optional:
             raise
         _request_ctx_stack.top.jwt = {}
         _request_ctx_stack.top.jwt_header = {}
         _request_ctx_stack.top.jwt_user = {"loaded_user": None}
+        _request_ctx_stack.top.jwt_location = None
         return
 
     # Save these at the very end so that they are only saved in the requet
@@ -78,6 +81,7 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
     _request_ctx_stack.top.jwt_user = _load_user(jwt_header, jwt_data)
     _request_ctx_stack.top.jwt_header = jwt_header
     _request_ctx_stack.top.jwt = jwt_data
+    _request_ctx_stack.top.jwt_location = jwt_location
 
     return jwt_header, jwt_data
 
@@ -235,18 +239,23 @@ def _decode_jwt_from_request(locations, fresh, refresh=False):
         locations = config.token_location
 
     # Get the decode functions in the order specified by locations.
+    # Each entry in this list is a tuple (<location>, <encoded-token-function>)
     get_encoded_token_functions = []
     for location in locations:
         if location == "cookies":
             get_encoded_token_functions.append(
-                lambda: _decode_jwt_from_cookies(refresh)
+                (location, lambda: _decode_jwt_from_cookies(refresh))
             )
         elif location == "query_string":
-            get_encoded_token_functions.append(_decode_jwt_from_query_string)
+            get_encoded_token_functions.append(
+                (location, _decode_jwt_from_query_string)
+            )
         elif location == "headers":
-            get_encoded_token_functions.append(_decode_jwt_from_headers)
+            get_encoded_token_functions.append((location, _decode_jwt_from_headers))
         elif location == "json":
-            get_encoded_token_functions.append(lambda: _decode_jwt_from_json(refresh))
+            get_encoded_token_functions.append(
+                (location, lambda: _decode_jwt_from_json(refresh))
+            )
         else:
             raise RuntimeError(f"'{location}' is not a valid location")
 
@@ -255,10 +264,12 @@ def _decode_jwt_from_request(locations, fresh, refresh=False):
     errors = []
     decoded_token = None
     jwt_header = None
-    for get_encoded_token_function in get_encoded_token_functions:
+    jwt_location = None
+    for location, get_encoded_token_function in get_encoded_token_functions:
         try:
             encoded_token, csrf_token = get_encoded_token_function()
             decoded_token = decode_token(encoded_token, csrf_token)
+            jwt_location = location
             jwt_header = get_unverified_jwt_headers(encoded_token)
             break
         except NoAuthorizationError as e:
@@ -284,4 +295,4 @@ def _decode_jwt_from_request(locations, fresh, refresh=False):
     verify_token_not_blocklisted(jwt_header, decoded_token)
     custom_verification_for_token(jwt_header, decoded_token)
 
-    return decoded_token, jwt_header
+    return decoded_token, jwt_header, jwt_location

@@ -58,6 +58,21 @@ def get_jwt_identity():
     return get_jwt().get(config.identity_claim_key, None)
 
 
+def get_jwt_request_location():
+    """
+    In a protected endpoint, this will return the "location" at which the JWT
+    that is accessing the endpoint was found--e.g., "cookies", "query-string",
+    "headers", or "json". If no JWT is present due to ``jwt_required(optional=True)``,
+    None is returned.
+
+    :return:
+        The location of the JWT in the current request; e.g., cookies",
+        "query-string", "headers", or "json"
+    """
+    location = getattr(_request_ctx_stack.top, "jwt_location", None)
+    return location
+
+
 def get_current_user():
     """
     In a protected endpoint, this will return the user object for the JWT that

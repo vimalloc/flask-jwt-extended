@@ -350,3 +350,18 @@ def test_token_expires_time(app):
         # the tokens are created
         assert (access_timestamp - (now_timestamp + 3600)) < 2
         assert (refresh_timestamp - (now_timestamp + 7200)) < 2
+
+
+def test_nbf_is_present_by_default(app):
+    with app.test_request_context():
+        access_token = create_access_token("username", fresh=True)
+        decoded = decode_token(access_token)
+        assert "nbf" in decoded
+
+
+def test_disable_nbf_encoding(app):
+    app.config["JWT_ENCODE_NBF"] = False
+    with app.test_request_context():
+        access_token = create_access_token("username", fresh=True)
+        decoded = decode_token(access_token)
+        assert "nbf" not in decoded

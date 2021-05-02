@@ -24,6 +24,7 @@ def _encode_jwt(
     json_encoder,
     secret,
     token_type,
+    nbf,
 ):
     now = datetime.now(timezone.utc)
 
@@ -34,10 +35,12 @@ def _encode_jwt(
         "fresh": fresh,
         "iat": now,
         "jti": str(uuid.uuid4()),
-        "nbf": now,
         "type": token_type,
         identity_claim_key: identity,
     }
+
+    if nbf:
+        token_data["nbf"] = now
 
     if csrf:
         token_data["csrf"] = str(uuid.uuid4())

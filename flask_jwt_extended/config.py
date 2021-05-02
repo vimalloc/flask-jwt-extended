@@ -291,5 +291,9 @@ class _Config(object):
     def leeway(self):
         return current_app.config["JWT_DECODE_LEEWAY"]
 
+    @property
+    def encode_nbf(self):
+        return current_app.config["JWT_ENCODE_NBF"]
+
 
 config = _Config()

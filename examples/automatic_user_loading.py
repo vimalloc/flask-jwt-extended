@@ -1,8 +1,9 @@
+from hmac import compare_digest
+
 from flask import Flask
 from flask import jsonify
 from flask import request
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import safe_str_cmp
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import current_user
@@ -29,7 +30,7 @@ class User(db.Model):
 
     # NOTE: In a real application make sure to properly hash and salt passwords
     def check_password(self, password):
-        return safe_str_cmp(password, "password")
+        return compare_digest(password, "password")
 
 
 # Register a callback function that takes whatever object is passed in as the

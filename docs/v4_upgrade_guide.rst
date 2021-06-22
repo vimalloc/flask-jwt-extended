@@ -43,7 +43,7 @@ General Changes
   a ``RuntimeError`` when called outside of a protected context (ie if you forgot
   ``@jwt.required()`` or ``verify_jwt_in_request()``).  Previously these calls
   would return ``None``.
-- Calling ``get_jwt()`` or ``get_jwt_header()`` will return an emptry dictionary
+- Calling ``get_jwt()`` or ``get_jwt_header()`` will return an empty dictionary
   if called from an optionally protected endpoint. Previously this would return ``None``.
 - Calling ``get_current_user()`` or ``current_user`` will raise a ``RuntimeError``
   if no ``@jwt.user_lookup_loader`` callback is defined.

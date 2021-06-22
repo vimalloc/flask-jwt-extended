@@ -41,7 +41,7 @@ General Changes
 
 - Calling ``get_jwt()``, ``get_jwt_header()``, or ``get_jwt_identity()`` will raise
   a ``RuntimeError`` when called outside of a protected context (ie if you forgot
-  ``@jwt.required()`` or ``verify_jwt_in_request()``).  Previously these calls
+  ``@jwt_required()`` or ``verify_jwt_in_request()``).  Previously these calls
   would return ``None``.
 - Calling ``get_jwt()`` or ``get_jwt_header()`` will return an empty dictionary
   if called from an optionally protected endpoint. Previously this would return ``None``.

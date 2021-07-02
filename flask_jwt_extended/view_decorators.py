@@ -4,6 +4,7 @@ from functools import wraps
 from re import split
 
 from flask import _request_ctx_stack
+from flask import current_app
 from flask import request
 from werkzeug.exceptions import BadRequest
 
@@ -118,7 +119,7 @@ def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
         @wraps(fn)
         def decorator(*args, **kwargs):
             verify_jwt_in_request(optional, fresh, refresh, locations)
-            return fn(*args, **kwargs)
+            return current_app.ensure_sync(fn)(*args, **kwargs)
 
         return decorator
 

@@ -119,7 +119,14 @@ def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
         @wraps(fn)
         def decorator(*args, **kwargs):
             verify_jwt_in_request(optional, fresh, refresh, locations)
-            return current_app.ensure_sync(fn)(*args, **kwargs)
+
+            # Compatibility with flask < 2.0
+            try:
+                return current_app.ensure_sync(fn)(*args, **kwargs)
+            except AttributeError as e:
+                if str(e) != "'Flask' object has no attribute 'ensure_sync'":
+                    raise
+                return fn(*args, **kwargs)
 
         return decorator
 

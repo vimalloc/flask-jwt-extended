@@ -3,5 +3,6 @@ cryptography==3.4.7
 Flask==2.0.1
 Pallets-Sphinx-Themes==2.0.1
 pre-commit==2.13.0
+PyJWT==2.1.0
 Sphinx==4.0.2
 tox==3.23.1

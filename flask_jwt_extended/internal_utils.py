@@ -29,7 +29,7 @@ def verify_token_type(decoded_token, refresh, token_type):
     if refresh and decoded_token["type"] != "refresh":
         raise WrongTokenError("Only refresh tokens are allowed")
     elif not refresh and decoded_token["type"] != token_type:
-        raise WrongTokenError(f"Token is not of type {token_type}")
+        raise WrongTokenError(f"Token of type { decoded_token['type'] } is not allowed")
 
 
 def verify_token_not_blocklisted(jwt_header, jwt_data):

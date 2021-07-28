@@ -222,6 +222,7 @@ def create_refresh_token(
 def create_custom_token(
     identity,
     token_type,
+    fresh=False,
     expires_delta=None,
     additional_claims=None,
     additional_headers=None,
@@ -263,7 +264,7 @@ def create_custom_token(
     return jwt_manager._encode_jwt_from_config(
         claims=additional_claims,
         expires_delta=expires_delta,
-        fresh=False,
+        fresh=fresh,
         headers=additional_headers,
         identity=identity,
         token_type=token_type,

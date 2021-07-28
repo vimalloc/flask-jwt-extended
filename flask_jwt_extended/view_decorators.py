@@ -69,8 +69,9 @@ def verify_jwt_in_request(
 
     try:
         if refresh:
+            token_type = "refresh"
             jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
-                locations, fresh, refresh=True
+                locations, fresh, refresh=True, token_type=token_type
             )
         else:
             jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(

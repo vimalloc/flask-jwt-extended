@@ -121,12 +121,12 @@ def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
             verify_jwt_in_request(optional, fresh, refresh, locations)
 
             # Compatibility with flask < 2.0
-            try:
+            if hasattr(current_app, "ensure_sync") and callable(
+                getattr(current_app, "ensure_sync", None)
+            ):
                 return current_app.ensure_sync(fn)(*args, **kwargs)
-            except AttributeError as e:  # pragma: no cover
-                if str(e) != "'Flask' object has no attribute 'ensure_sync'":
-                    raise
-                return fn(*args, **kwargs)
+
+            return fn(*args, **kwargs)  # pragma: no cover
 
         return decorator
 

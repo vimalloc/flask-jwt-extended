@@ -21,4 +21,6 @@ jobs:
       - name: Install Dependencies
         run: pip install tox
       - name: Run Tox
-        run: tox
+        run: tox -e py
+      - name: Run Tox Flask 1
+        run: tox -e flask1

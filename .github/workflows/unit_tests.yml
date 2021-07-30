@@ -21,4 +21,4 @@ jobs:
       - name: Install Dependencies
         run: pip install tox
       - name: Run Tox
-        run: tox -e py
+        run: tox

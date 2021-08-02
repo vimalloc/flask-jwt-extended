@@ -229,7 +229,7 @@ These are only applicable if a route is configured to accept JWTs via cookies.
 
 .. py:data:: JWT_REFRESH_COOKIE_NAME
 
-    The name of the cookie that will hold the access token.
+    The name of the cookie that will hold the refresh token.
 
     Note: We generally do not recommend using refresh tokens with cookies. See
     :ref:`Implicit Refreshing With Cookies`.

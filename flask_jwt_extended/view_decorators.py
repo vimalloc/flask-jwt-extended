@@ -97,7 +97,7 @@ def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
     endpoint can be called.
 
     :param optional:
-        If ``True``, allow the decorated endpoint to be accessed if no JWT is present in 
+        If ``True``, allow the decorated endpoint to be accessed if no JWT is present in
         the request. Defaults to ``False``.
 
     :param fresh:

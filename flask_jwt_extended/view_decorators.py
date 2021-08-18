@@ -53,7 +53,7 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
 
     :param locations:
         A location or list of locations to look for the JWT in this request, for
-        example ``'headers'`` or ``['headers', 'cookies']``. Defaluts to ``None``
+        example ``'headers'`` or ``['headers', 'cookies']``. Defaults to ``None``
         which indicates that JWTs will be looked for in the locations defined by the
         ``JWT_TOKEN_LOCATION`` configuration option.
     """
@@ -97,8 +97,8 @@ def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
     endpoint can be called.
 
     :param optional:
-        If ``True``, allow the decorated endpoint to be if no JWT is present in the
-        request. Defaults to ``False``.
+        If ``True``, allow the decorated endpoint to be accessed if no JWT is present in
+        the request. Defaults to ``False``.
 
     :param fresh:
         If ``True``, require a JWT marked with ``fresh`` to be able to access this
@@ -110,7 +110,7 @@ def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
 
     :param locations:
         A location or list of locations to look for the JWT in this request, for
-        example ``'headers'`` or ``['headers', 'cookies']``. Defaluts to ``None``
+        example ``'headers'`` or ``['headers', 'cookies']``. Defaults to ``None``
         which indicates that JWTs will be looked for in the locations defined by the
         ``JWT_TOKEN_LOCATION`` configuration option.
     """

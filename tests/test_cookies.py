@@ -1,6 +1,7 @@
 import pytest
 from flask import Flask
 from flask import jsonify
+from flask import request
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import create_refresh_token
@@ -35,34 +36,39 @@ def app():
 
     @app.route("/access_token", methods=["GET"])
     def access_token():
+        domain = request.args.get("domain")
         resp = jsonify(login=True)
         access_token = create_access_token("username")
-        set_access_cookies(resp, access_token)
+        set_access_cookies(resp, access_token, domain=domain)
         return resp
 
     @app.route("/refresh_token", methods=["GET"])
     def refresh_token():
+        domain = request.args.get("domain")
         resp = jsonify(login=True)
         refresh_token = create_refresh_token("username")
-        set_refresh_cookies(resp, refresh_token)
+        set_refresh_cookies(resp, refresh_token, domain=domain)
         return resp
 
     @app.route("/delete_tokens", methods=["GET"])
     def delete_tokens():
+        domain = request.args.get("domain")
         resp = jsonify(logout=True)
-        unset_jwt_cookies(resp)
+        unset_jwt_cookies(resp, domain=domain)
         return resp
 
     @app.route("/delete_access_tokens", methods=["GET"])
     def delete_access_tokens():
+        domain = request.args.get("domain")
         resp = jsonify(access_revoked=True)
-        unset_access_cookies(resp)
+        unset_access_cookies(resp, domain=domain)
         return resp
 
     @app.route("/delete_refresh_tokens", methods=["GET"])
     def delete_refresh_tokens():
+        domain = request.args.get("domain")
         resp = jsonify(refresh_revoked=True)
-        unset_refresh_cookies(resp)
+        unset_refresh_cookies(resp, domain=domain)
         return resp
 
     @app.route("/protected", methods=["GET"])
@@ -494,3 +500,54 @@ def test_jwt_optional_with_csrf_enabled(app):
     response = test_client.post("/optional_post_protected")
     assert response.status_code == 401
     assert response.get_json() == {"msg": "Missing CSRF token"}
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        (
+            "/access_token",
+            "/delete_access_tokens",
+            "access_token_cookie",
+            "csrf_access_token",
+        ),
+        (
+            "/refresh_token",
+            "/delete_refresh_tokens",
+            "refresh_token_cookie",
+            "csrf_refresh_token",
+        ),
+    ],
+)
+def test_override_domain_option(app, options):
+    auth_url, delete_url, auth_cookie_name, csrf_cookie_name = options
+    domain = "yolo.com"
+
+    test_client = app.test_client()
+    app.config["JWT_COOKIE_DOMAIN"] = "test.com"
+
+    # Test set access cookies with custom domain
+    response = test_client.get(f"{auth_url}?domain={domain}")
+    cookies = response.headers.getlist("Set-Cookie")
+    assert len(cookies) == 2  # JWT and CSRF value
+
+    access_cookie = _get_cookie_from_response(response, auth_cookie_name)
+    assert access_cookie is not None
+    assert access_cookie["domain"] == domain
+
+    access_csrf_cookie = _get_cookie_from_response(response, csrf_cookie_name)
+    assert access_csrf_cookie is not None
+    assert access_csrf_cookie["domain"] == domain
+
+    # Test unset access cookies with custom domain
+    response = test_client.get(f"{delete_url}?domain={domain}")
+    cookies = response.headers.getlist("Set-Cookie")
+    assert len(cookies) == 2  # JWT and CSRF value
+
+    access_cookie = _get_cookie_from_response(response, auth_cookie_name)
+    assert access_cookie is not None
+    assert access_cookie["domain"] == domain
+
+    access_csrf_cookie = _get_cookie_from_response(response, csrf_cookie_name)
+    assert access_csrf_cookie is not None
+    assert access_csrf_cookie["domain"] == domain

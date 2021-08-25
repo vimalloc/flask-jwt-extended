@@ -259,7 +259,7 @@ def get_csrf_token(encoded_token):
     return token["csrf"]
 
 
-def set_access_cookies(response, encoded_access_token, max_age=None):
+def set_access_cookies(response, encoded_access_token, max_age=None, domain=None):
     """
     Modifiy a Flask Response to set a cookie containing the access JWT.
     Also sets the corresponding CSRF cookies if ``JWT_CSRF_IN_COOKIES`` is ``True``
@@ -276,6 +276,12 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
         ``JWT_SESSION_COOKIE`` option (see :ref:`Configuration Options`). Otherwise,
         it will use this as the cookies ``max-age`` and the JWT_SESSION_COOKIE option
         will be ignored. Values should be the number of seconds (as an integer).
+
+    :param domain:
+        The domain of the cookie. If this is None, it will use the
+        ``JWT_COOKIE_DOMAIN`` option (see :ref:`Configuration Options`). Otherwise,
+        it will use this as the cookies ``domain`` and the JWT_COOKIE_DOMAIN option
+        will be ignored.
     """
     response.set_cookie(
         config.access_cookie_name,
@@ -283,7 +289,7 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
         max_age=max_age or config.cookie_max_age,
         secure=config.cookie_secure,
         httponly=True,
-        domain=config.cookie_domain,
+        domain=domain or config.cookie_domain,
         path=config.access_cookie_path,
         samesite=config.cookie_samesite,
     )
@@ -295,13 +301,13 @@ def set_access_cookies(response, encoded_access_token, max_age=None):
             max_age=max_age or config.cookie_max_age,
             secure=config.cookie_secure,
             httponly=False,
-            domain=config.cookie_domain,
+            domain=domain or config.cookie_domain,
             path=config.access_csrf_cookie_path,
             samesite=config.cookie_samesite,
         )
 
 
-def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
+def set_refresh_cookies(response, encoded_refresh_token, max_age=None, domain=None):
     """
     Modifiy a Flask Response to set a cookie containing the refresh JWT.
     Also sets the corresponding CSRF cookies if ``JWT_CSRF_IN_COOKIES`` is ``True``
@@ -318,6 +324,12 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
         ``JWT_SESSION_COOKIE`` option (see :ref:`Configuration Options`). Otherwise,
         it will use this as the cookies ``max-age`` and the JWT_SESSION_COOKIE option
         will be ignored. Values should be the number of seconds (as an integer).
+
+    :param domain:
+        The domain of the cookie. If this is None, it will use the
+        ``JWT_COOKIE_DOMAIN`` option (see :ref:`Configuration Options`). Otherwise,
+        it will use this as the cookies ``domain`` and the JWT_COOKIE_DOMAIN option
+        will be ignored.
     """
     response.set_cookie(
         config.refresh_cookie_name,
@@ -325,7 +337,7 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
         max_age=max_age or config.cookie_max_age,
         secure=config.cookie_secure,
         httponly=True,
-        domain=config.cookie_domain,
+        domain=domain or config.cookie_domain,
         path=config.refresh_cookie_path,
         samesite=config.cookie_samesite,
     )
@@ -337,13 +349,13 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None):
             max_age=max_age or config.cookie_max_age,
             secure=config.cookie_secure,
             httponly=False,
-            domain=config.cookie_domain,
+            domain=domain or config.cookie_domain,
             path=config.refresh_csrf_cookie_path,
             samesite=config.cookie_samesite,
         )
 
 
-def unset_jwt_cookies(response):
+def unset_jwt_cookies(response, domain=None):
     """
     Modifiy a Flask Response to delete the cookies containing access or refresh
     JWTs.  Also deletes the corresponding CSRF cookies if applicable.
@@ -351,17 +363,23 @@ def unset_jwt_cookies(response):
     :param response:
         A Flask Response object
     """
-    unset_access_cookies(response)
-    unset_refresh_cookies(response)
+    unset_access_cookies(response, domain)
+    unset_refresh_cookies(response, domain)
 
 
-def unset_access_cookies(response):
+def unset_access_cookies(response, domain=None):
     """
     Modifiy a Flask Response to delete the cookie containing a refresh JWT.
     Also deletes the corresponding CSRF cookie if applicable.
 
     :param response:
         A Flask Response object
+
+    :param domain:
+        The domain of the cookie. If this is None, it will use the
+        ``JWT_COOKIE_DOMAIN`` option (see :ref:`Configuration Options`). Otherwise,
+        it will use this as the cookies ``domain`` and the JWT_COOKIE_DOMAIN option
+        will be ignored.
     """
     response.set_cookie(
         config.access_cookie_name,
@@ -369,7 +387,7 @@ def unset_access_cookies(response):
         expires=0,
         secure=config.cookie_secure,
         httponly=True,
-        domain=config.cookie_domain,
+        domain=domain or config.cookie_domain,
         path=config.access_cookie_path,
         samesite=config.cookie_samesite,
     )
@@ -381,19 +399,25 @@ def unset_access_cookies(response):
             expires=0,
             secure=config.cookie_secure,
             httponly=False,
-            domain=config.cookie_domain,
+            domain=domain or config.cookie_domain,
             path=config.access_csrf_cookie_path,
             samesite=config.cookie_samesite,
         )
 
 
-def unset_refresh_cookies(response):
+def unset_refresh_cookies(response, domain=None):
     """
     Modifiy a Flask Response to delete the cookie containing an access JWT.
     Also deletes the corresponding CSRF cookie if applicable.
 
     :param response:
         A Flask Response object
+
+    :param domain:
+        The domain of the cookie. If this is None, it will use the
+        ``JWT_COOKIE_DOMAIN`` option (see :ref:`Configuration Options`). Otherwise,
+        it will use this as the cookies ``domain`` and the JWT_COOKIE_DOMAIN option
+        will be ignored.
     """
     response.set_cookie(
         config.refresh_cookie_name,
@@ -401,7 +425,7 @@ def unset_refresh_cookies(response):
         expires=0,
         secure=config.cookie_secure,
         httponly=True,
-        domain=config.cookie_domain,
+        domain=domain or config.cookie_domain,
         path=config.refresh_cookie_path,
         samesite=config.cookie_samesite,
     )
@@ -413,7 +437,7 @@ def unset_refresh_cookies(response):
             expires=0,
             secure=config.cookie_secure,
             httponly=False,
-            domain=config.cookie_domain,
+            domain=domain or config.cookie_domain,
             path=config.refresh_csrf_cookie_path,
             samesite=config.cookie_samesite,
         )

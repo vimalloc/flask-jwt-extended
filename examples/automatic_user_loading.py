@@ -40,7 +40,7 @@ def user_identity_lookup(user):
     return user.id
 
 
-# Register a callback function that loades a user from your database whenever
+# Register a callback function that loads a user from your database whenever
 # a protected route is accessed. This should return any python object on a
 # successful lookup, or None if the lookup failed for any reason (for example
 # if the user has been deleted from the database).

@@ -19,7 +19,7 @@ decorator to register a callback function that will be called whenever a new JWT
 is created, and return a dictionary of claims to add to that token. In the case
 that both :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader` and the
 ``additional_claims`` argument are used, both results are merged together, with ties
-going to the data suplied by the ``additional_claims`` argument.
+going to the data supplied by the ``additional_claims`` argument.
 
 .. code-block:: python
 

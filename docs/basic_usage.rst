@@ -64,7 +64,7 @@ We can see this in action using `HTTPie <https://httpie.io/>`_.
 
 **Important**
 
-Remember to change the jwt secret key in your application, and ensure that it
+Remember to change the JWT secret key in your application, and ensure that it
 is secure. The JWTs are signed with this key, and if someone gets their hands
-on it they will be able to create arbitraty tokens that are accepted by your
+on it they will be able to create arbitrary tokens that are accepted by your
 web flask application.

@@ -20,7 +20,7 @@ General Options:
     ``["headers", "cookies"]``. The order of the list sets the precedence of
     where JWTs will be looked for.
 
-    This can be overriden on a per-route basis by using the ``locations``
+    This can be overridden on a per-route basis by using the ``locations``
     argument in :func:`flask_jwt_extended.jwt_required`.
 
     Default: ``"headers"``
@@ -61,7 +61,7 @@ General Options:
 .. py:data:: JWT_ALGORITHM
 
     Which algorithm to sign the JWT with. See `PyJWT <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
-    for the available algorightms.
+    for the available algorithms.
 
     Default: ``"HS256"``
 
@@ -69,7 +69,7 @@ General Options:
 .. py:data:: JWT_DECODE_ALGORITHMS
 
     Which algorithms to use when decoding a JWT. See `PyJWT <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
-    for the available algorightms.
+    for the available algorithms.
 
     By default this will always be the same algorithm that is defined in ``JWT_ALGORITHM``.
 
@@ -79,7 +79,7 @@ General Options:
 .. py:data:: JWT_SECRET_KEY
 
     The secret key used to encode and decode JWTs when using a symmetric signing
-    algorightm (such as ``HS*``). It should be a long random string of bytes,
+    algorithm (such as ``HS*``). It should be a long random string of bytes,
     although unicode is accepted too. For example, copy the output of this to
     your config.
 
@@ -99,7 +99,7 @@ General Options:
 .. py:data:: JWT_PRIVATE_KEY
 
     The secret key used to encode JWTs when using an asymmetric signing
-    algorightm (such as ``RS*`` or ``ES*``). The key must be in PEM format.
+    algorithm (such as ``RS*`` or ``ES*``). The key must be in PEM format.
 
     **Do not reveal the secret key when posting questions or committing code.**
 
@@ -109,7 +109,7 @@ General Options:
 .. py:data:: JWT_PUBLIC_KEY
 
     The secret key used to decode JWTs when using an asymmetric signing
-    algorightm (such as ``RS*`` or ``ES*``). The key must be in PEM format.
+    algorithm (such as ``RS*`` or ``ES*``). The key must be in PEM format.
 
     Default: ``None``
 

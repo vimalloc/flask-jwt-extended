@@ -248,7 +248,9 @@ def _decode_jwt_from_json(refresh):
         if not encoded_token:
             raise BadRequest()
     except BadRequest:
-        raise NoAuthorizationError('Missing "{}" key in json data.'.format(token_key))
+        raise NoAuthorizationError(
+            'Missing "{}" key in json data.'.format(token_key)
+        ) from None
 
     return encoded_token, None
 

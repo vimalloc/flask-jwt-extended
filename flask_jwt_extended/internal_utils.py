@@ -12,7 +12,7 @@ def get_jwt_manager():
         raise RuntimeError(
             "You must initialize a JWTManager with this flask "
             "application before using this method"
-        )
+        ) from None
 
 
 def has_user_lookup():

@@ -369,7 +369,7 @@ def unset_jwt_cookies(response, domain=None):
 
 def unset_access_cookies(response, domain=None):
     """
-    Modifiy a Flask Response to delete the cookie containing a refresh JWT.
+    Modifiy a Flask Response to delete the cookie containing an access JWT.
     Also deletes the corresponding CSRF cookie if applicable.
 
     :param response:
@@ -407,7 +407,7 @@ def unset_access_cookies(response, domain=None):
 
 def unset_refresh_cookies(response, domain=None):
     """
-    Modifiy a Flask Response to delete the cookie containing an access JWT.
+    Modifiy a Flask Response to delete the cookie containing a refresh JWT.
     Also deletes the corresponding CSRF cookie if applicable.
 
     :param response:

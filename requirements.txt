@@ -1,5 +1,5 @@
 black==21.6b0
-cryptography==3.4.7
+cryptography==35.0.0
 Flask==2.0.1
 Pallets-Sphinx-Themes==2.0.1
 pre-commit==2.13.0

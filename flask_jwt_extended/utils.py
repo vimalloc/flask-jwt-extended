@@ -219,6 +219,58 @@ def create_refresh_token(
     )
 
 
+def create_custom_token(
+    identity,
+    token_type,
+    fresh=False,
+    expires_delta=None,
+    additional_claims=None,
+    additional_headers=None,
+):
+    """
+    Create a new custom token, with a manually specified type.
+
+    :param identity:
+        The identity of this token. It can be any data that is json serializable.
+        You can use :meth:`~flask_jwt_extended.JWTManager.user_identity_loader`
+        to define a callback function to convert any object passed in into a json
+        serializable format.
+
+    :param token_type:
+        The type of this token. A string such as "refresh" or "access" that specifies
+        the type and purpose of this token.
+
+    :param expires_delta:
+        A ``datetime.timedelta`` for how long this token should last before it expires.
+        Set to False to disable expiration. If this is None, it will use the
+        ``JWT_REFRESH_TOKEN_EXPIRES`` config value (see :ref:`Configuration Options`)
+
+    :param additional_claims:
+        Optional. A hash of claims to include in the refresh token. These claims are
+        merged into the default claims (exp, iat, etc) and claims returned from the
+        :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader` callback.
+        On conflict, these claims take presidence.
+
+    :param headers:
+        Optional. A hash of headers to include in the refresh token. These headers
+        are merged into the default headers (alg, typ) and headers returned from the
+        :meth:`~flask_jwt_extended.JWTManager.additional_headers_loader` callback.
+        On conflict, these headers take presidence.
+
+    :return:
+        An encoded refresh token
+    """
+    jwt_manager = get_jwt_manager()
+    return jwt_manager._encode_jwt_from_config(
+        claims=additional_claims,
+        expires_delta=expires_delta,
+        fresh=fresh,
+        headers=additional_headers,
+        identity=identity,
+        token_type=token_type,
+    )
+
+
 def get_unverified_jwt_headers(encoded_token):
     """
     Returns the Headers of an encoded JWT without verifying the signature of the JWT.

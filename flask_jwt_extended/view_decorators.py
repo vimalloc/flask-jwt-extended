@@ -35,7 +35,9 @@ def _verify_token_is_fresh(jwt_header, jwt_data):
             raise FreshTokenRequired("Fresh token required", jwt_header, jwt_data)
 
 
-def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=None):
+def verify_jwt_in_request(
+    optional=False, fresh=False, refresh=False, locations=None, token_type="access"
+):
     """
     Verify that a valid JWT is present in the request, unless ``optional=True`` in
     which case no JWT is also considered valid.
@@ -49,25 +51,31 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
         Defaults to ``False``.
 
     :param refresh:
-        If ``True``, require a refresh JWT to be verified.
+        If ``True``, require a refresh JWT to be verified. If ``False``, compare
+        the JWT type to ``token_type``. Defaults to ``False``.
 
     :param locations:
         A location or list of locations to look for the JWT in this request, for
         example ``'headers'`` or ``['headers', 'cookies']``. Defaults to ``None``
         which indicates that JWTs will be looked for in the locations defined by the
         ``JWT_TOKEN_LOCATION`` configuration option.
+
+    :param token_type:
+        If ``refresh`` is ``False``, then the ``type`` claim on the JWT must exactly match
+        this string in order to be verified. Defaults to ``"access"``.
     """
     if request.method in config.exempt_methods:
         return
 
     try:
         if refresh:
+            token_type = "refresh"
             jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
-                locations, fresh, refresh=True
+                locations, fresh, refresh=True, token_type=token_type
             )
         else:
             jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
-                locations, fresh
+                locations, fresh, refresh=False, token_type=token_type
             )
     except NoAuthorizationError:
         if not optional:
@@ -88,7 +96,9 @@ def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=
     return jwt_header, jwt_data
 
 
-def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
+def jwt_required(
+    optional=False, fresh=False, refresh=False, locations=None, token_type="access"
+):
     """
     A decorator to protect a Flask endpoint with JSON Web Tokens.
 
@@ -106,19 +116,24 @@ def jwt_required(optional=False, fresh=False, refresh=False, locations=None):
 
     :param refresh:
         If ``True``, requires a refresh JWT to access this endpoint. If ``False``,
-        requires an access JWT to access this endpoint. Defaults to ``False``.
+        requires a JWT specified by ``token_type`` to access
+        this endpoint. Defaults to ``False``.
 
     :param locations:
         A location or list of locations to look for the JWT in this request, for
         example ``'headers'`` or ``['headers', 'cookies']``. Defaults to ``None``
         which indicates that JWTs will be looked for in the locations defined by the
         ``JWT_TOKEN_LOCATION`` configuration option.
+
+    :param token_type:
+        If ``refresh`` is ``False``, then the ``type`` claim on the JWT must exactly match
+        this string to access this endpoint. Defaults to ``"access"``.
     """
 
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
-            verify_jwt_in_request(optional, fresh, refresh, locations)
+            verify_jwt_in_request(optional, fresh, refresh, locations, token_type)
 
             # Compatibility with flask < 2.0
             if hasattr(current_app, "ensure_sync") and callable(
@@ -255,7 +270,7 @@ def _decode_jwt_from_json(refresh):
     return encoded_token, None
 
 
-def _decode_jwt_from_request(locations, fresh, refresh=False):
+def _decode_jwt_from_request(locations, fresh, refresh=False, token_type="access"):
     # Figure out what locations to look for the JWT in this request
     if isinstance(locations, str):
         locations = [locations]
@@ -314,7 +329,7 @@ def _decode_jwt_from_request(locations, fresh, refresh=False):
             raise NoAuthorizationError(errors[0])
 
     # Additional verifications provided by this extension
-    verify_token_type(decoded_token, refresh)
+    verify_token_type(decoded_token, refresh, token_type)
     if fresh:
         _verify_token_is_fresh(jwt_header, decoded_token)
     verify_token_not_blocklisted(jwt_header, decoded_token)

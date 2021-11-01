@@ -25,11 +25,11 @@ def user_lookup(*args, **kwargs):
     return jwt_manager._user_lookup_callback(*args, **kwargs)
 
 
-def verify_token_type(decoded_token, refresh):
-    if not refresh and decoded_token["type"] == "refresh":
-        raise WrongTokenError("Only non-refresh tokens are allowed")
-    elif refresh and decoded_token["type"] != "refresh":
+def verify_token_type(decoded_token, refresh, token_type):
+    if refresh and decoded_token["type"] != "refresh":
         raise WrongTokenError("Only refresh tokens are allowed")
+    elif not refresh and decoded_token["type"] != token_type:
+        raise WrongTokenError(f"Token of type { decoded_token['type'] } is not allowed")
 
 
 def verify_token_not_blocklisted(jwt_header, jwt_data):

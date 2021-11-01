@@ -487,10 +487,10 @@ class JWTManager(object):
             claim_overrides.update(claims)
 
         if expires_delta is None:
-            if token_type == "access":
-                expires_delta = config.access_expires
-            else:
+            if token_type == "refresh":
                 expires_delta = config.refresh_expires
+            else:
+                expires_delta = config.access_expires
 
         return _encode_jwt(
             algorithm=config.algorithm,

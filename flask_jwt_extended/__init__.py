@@ -1,5 +1,6 @@
 from .jwt_manager import JWTManager
 from .utils import create_access_token
+from .utils import create_custom_token
 from .utils import create_refresh_token
 from .utils import current_user
 from .utils import decode_token

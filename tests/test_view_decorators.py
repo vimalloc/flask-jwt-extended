@@ -6,6 +6,7 @@ from flask import Flask
 from flask import jsonify
 
 from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_custom_token
 from flask_jwt_extended import create_refresh_token
 from flask_jwt_extended import decode_token
 from flask_jwt_extended import get_jwt_identity
@@ -46,6 +47,11 @@ def app():
         else:
             return jsonify(foo="bar")
 
+    @app.route("/custom_protected", methods=["GET"])
+    @jwt_required(token_type="custom")
+    def custom_protected():
+        return jsonify(foo="bar")
+
     return app
 
 
@@ -72,7 +78,7 @@ def test_jwt_required(app):
     # Test refresh token access to jwt_required
     response = test_client.get(url, headers=make_headers(refresh_token))
     assert response.status_code == 422
-    assert response.get_json() == {"msg": "Only non-refresh tokens are allowed"}
+    assert response.get_json() == {"msg": "Token of type refresh is not allowed"}
 
 
 def test_fresh_jwt_required(app):
@@ -113,7 +119,7 @@ def test_fresh_jwt_required(app):
 
     response = test_client.get(url, headers=make_headers(refresh_token))
     assert response.status_code == 422
-    assert response.get_json() == {"msg": "Only non-refresh tokens are allowed"}
+    assert response.get_json() == {"msg": "Token of type refresh is not allowed"}
 
     # Test with custom response
     @jwtM.needs_fresh_token_loader
@@ -176,7 +182,7 @@ def test_jwt_optional(app, delta_func):
 
     response = test_client.get(url, headers=make_headers(refresh_token))
     assert response.status_code == 422
-    assert response.get_json() == {"msg": "Only non-refresh tokens are allowed"}
+    assert response.get_json() == {"msg": "Token of type refresh is not allowed"}
 
     response = test_client.get(url, headers=make_headers(expired_token))
     assert response.status_code == 401
@@ -227,6 +233,42 @@ def test_jwt_optional_with_no_valid_jwt(app):
     )
     assert response.status_code == 422
     assert response.get_json() == {"msg": "Not enough segments"}
+
+
+def test_custom_jwt_required(app):
+    url = "/custom_protected"
+
+    test_client = app.test_client()
+    with app.test_request_context():
+        custom_token = create_custom_token("username", token_type="custom")
+        fresh_custom_token = create_custom_token(
+            "username", token_type="custom", fresh=True
+        )
+        refresh_token = create_refresh_token("username")
+        incorrect_custom_token = create_custom_token(
+            "username", token_type="other_custom"
+        )
+
+    # Access and fresh access should be able to access this
+    for token in (custom_token, fresh_custom_token):
+        response = test_client.get(url, headers=make_headers(token))
+        assert response.status_code == 200
+        assert response.get_json() == {"foo": "bar"}
+
+    # Test accessing jwt_required with no jwt in the request
+    response = test_client.get(url, headers=None)
+    assert response.status_code == 401
+    assert response.get_json() == {"msg": "Missing Authorization Header"}
+
+    # Test refresh token access to jwt_required
+    response = test_client.get(url, headers=make_headers(refresh_token))
+    assert response.status_code == 422
+    assert response.get_json() == {"msg": "Token of type refresh is not allowed"}
+
+    # Test refresh token access to jwt_required
+    response = test_client.get(url, headers=make_headers(incorrect_custom_token))
+    assert response.status_code == 422
+    assert response.get_json() == {"msg": "Token of type other_custom is not allowed"}
 
 
 def test_override_jwt_location(app):

@@ -24,6 +24,8 @@ db = SQLAlchemy(app)
 # Making jti an index can significantly speed up the search when there are
 # tens of thousands of records. Remember this query will happen for every
 # (protected) request,
+# If your database supports a UUID type, this can be used for the jti column
+# as well
 class TokenBlocklist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     jti = db.Column(db.String(36), nullable=False, index=True)

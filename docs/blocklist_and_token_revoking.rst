@@ -96,15 +96,18 @@ or, for the database format:
         db.session.commit()
         return jsonify(msg=f"{ttype.capitalize()} token revoked")
 
+
 Token type and user are not required and can be omitted. That being said, including
 these columns can help to audit that the frontend is performing its revoking job
 correctly and revoking both tokens.
 
 
-An alternative, albeit more complex, implementation is to invalidate all issued
-tokens at once. 
+An alternative, albeit much more complex, implementation is to invalidate all issued
+tokens for a user at once. To do this, all issued tokens must be tracked (by default,
+they verified by being validated against the secret key). A few steps would be
+required:
 
-#. Store all generated access and refresh tokens in a database with a user_id column or similar
-#. Change 
-#. token_in_blocklist_loader
-#. 
+#. Store all generated access and refresh tokens in a database, include a user_id column
+#. Add a "valid" boolean column. Update the `token_in_blocklist_loader` to respond based on this column
+#. Upon revoking a token, find all other tokens with the same user and created at the same time,
+   and mark them all as invalid

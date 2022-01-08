@@ -80,3 +80,10 @@ option when creating JWTs:
 .. code-block :: python
 
   create_access_token(identity, fresh=datetime.timedelta(minutes=15))
+
+
+Revoking Refresh Tokens
+~~~~~~~~~~~~~~~~~~~~~~~
+Note that when an access token is invalidated (e.g. logging a user out), the
+corresponding refresh token(s) must be revoked too.
+See :ref:`Handling Revoking Refresh Tokens` for details on how to handle this.

@@ -45,6 +45,7 @@ def verify_jwt_in_request(
     fresh: bool = False,
     refresh: bool = False,
     locations: LocationType = None,
+    verify_type: bool = False,
 ) -> Tuple[dict, dict]:
     """
     Verify that a valid JWT is present in the request, unless ``optional=True`` in
@@ -59,26 +60,28 @@ def verify_jwt_in_request(
         Defaults to ``False``.
 
     :param refresh:
-        If ``True``, require a refresh JWT to be verified.
+        If ``True``, requires a refresh JWT to access this endpoint. If ``False``,
+        requires an access JWT to access this endpoint. Defaults to ``False``
 
     :param locations:
         A location or list of locations to look for the JWT in this request, for
         example ``'headers'`` or ``['headers', 'cookies']``. Defaults to ``None``
         which indicates that JWTs will be looked for in the locations defined by the
         ``JWT_TOKEN_LOCATION`` configuration option.
+
+    :param verify_type:
+        If ``True``, the token type (access or refresh) will be checked according
+        to the ``refresh`` argument. If ``False``, type will not be checked and both
+        access and refresh tokens will be accepted.
     """
     if request.method in config.exempt_methods:
         return
 
     try:
-        if refresh:
-            jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
-                locations, fresh, refresh=True
-            )
-        else:
-            jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
-                locations, fresh
-            )
+        jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
+            locations, fresh, refresh=refresh, verify_type=verify_type
+        )
+
     except NoAuthorizationError:
         if not optional:
             raise
@@ -103,6 +106,7 @@ def jwt_required(
     fresh: bool = False,
     refresh: bool = False,
     locations: LocationType = None,
+    verify_type: bool = True,
 ):
     """
     A decorator to protect a Flask endpoint with JSON Web Tokens.
@@ -128,12 +132,17 @@ def jwt_required(
         example ``'headers'`` or ``['headers', 'cookies']``. Defaults to ``None``
         which indicates that JWTs will be looked for in the locations defined by the
         ``JWT_TOKEN_LOCATION`` configuration option.
+
+    :param verify_type:
+        If ``True``, the token type (access or refresh) will be checked according
+        to the ``refresh`` argument. If ``False``, type will not be checked and both
+        access and refresh tokens will be accepted.
     """
 
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
-            verify_jwt_in_request(optional, fresh, refresh, locations)
+            verify_jwt_in_request(optional, fresh, refresh, locations, verify_type)
 
             # Compatibility with flask < 2.0
             if hasattr(current_app, "ensure_sync") and callable(

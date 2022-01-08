@@ -33,3 +33,10 @@ revoked tokens, such as when it was revoked, who revoked it, can it be un-revoke
 etc. Here is an example using SQLAlchemy:
 
 .. literalinclude:: ../examples/blocklist_database.py
+
+Handling Revoking of Refresh Tokens
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It is very important to note that a user's refresh token must also be revoked
+when logging out; otherwise, this refresh token could just be used to generate
+a new access token. Usually this falls to the responsibility of the frontend,
+which must 

@@ -1,8 +1,15 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 
-from flask import Flask, jsonify
-from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
+from flask import Flask
+from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
+
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
 

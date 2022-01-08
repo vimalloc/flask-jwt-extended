@@ -29,7 +29,7 @@ Live (TTL) functionality when storing a JWT. Here is an example using redis:
 .. warning::
     Note that configuring redis to be disk-persistent is an absolutely necessity for
     production use. Otherwise, events like power outages or server crashes/reboots
-    would cause all formerly invalidated tokens to become valid again (assuming the
+    would cause all invalidated tokens to become valid again (assuming the
     secret key does not change). This is especially concering for long-lived
     refresh tokens, discussed below.
 
@@ -42,18 +42,18 @@ etc. Here is an example using SQLAlchemy:
 
 .. literalinclude:: ../examples/blocklist_database.py
 
-Handling Revoking of Refresh Tokens
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Revoking Refresh Tokens
+~~~~~~~~~~~~~~~~~~~~~~~
 It is critical to note that a user's refresh token must also be revoked
 when logging out; otherwise, this refresh token could just be used to generate
-a new access token. Usually this falls to the responsibility of the frontend 
+a new access token. Usually this falls to the responsibility of the frontend
 application, which must send two separate requests to the backend in order to
 revoke these tokens.
 
 This can be implemented via two separate routes marked with ``@jwt_required()``
 and ``@jwt_required(refresh=True)`` to revoke access and refresh tokens, respectively.
 However, it is more convenient to provide a single endpoint where the frontend
-can send a DELETE for each token. This can be done with the following:
+can send a DELETE for each token. Thee following is an example:
 
 .. code-block:: python
     @app.route("/logout", methods=["DELETE"])
@@ -101,13 +101,11 @@ Token type and user are not required and can be omitted. That being said, includ
 these columns can help to audit that the frontend is performing its revoking job
 correctly and revoking both tokens.
 
-
 An alternative, albeit much more complex, implementation is to invalidate all issued
 tokens for a user at once. To do this, all issued tokens must be tracked (by default,
-they verified by being validated against the secret key). A few steps would be
-required:
+they are not stored on the server). A few steps would be required:
 
 #. Store all generated access and refresh tokens in a database, include a user_id column
 #. Add a "valid" boolean column. Update the `token_in_blocklist_loader` to respond based on this column
 #. Upon revoking a token, find all other tokens with the same user and created at the same time,
-   and mark them all as invalid
+   (or all a user's tokens to log out on all devices) and mark each as invalid

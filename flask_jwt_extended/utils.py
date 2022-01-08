@@ -1,3 +1,6 @@
+import datetime
+from typing import Any
+
 import jwt
 from flask import _request_ctx_stack
 from werkzeug.local import LocalProxy
@@ -5,12 +8,11 @@ from werkzeug.local import LocalProxy
 from flask_jwt_extended.config import config
 from flask_jwt_extended.internal_utils import get_jwt_manager
 
-
 # Proxy to access the current user
 current_user = LocalProxy(lambda: get_current_user())
 
 
-def get_jwt():
+def get_jwt() -> dict:
     """
     In a protected endpoint, this will return the python dictionary which has
     the payload of the JWT that is accessing the endpoint. If no JWT is present
@@ -28,7 +30,7 @@ def get_jwt():
     return decoded_jwt
 
 
-def get_jwt_header():
+def get_jwt_header() -> dict:
     """
     In a protected endpoint, this will return the python dictionary which has
     the header of the JWT that is accessing the endpoint. If no JWT is present
@@ -66,7 +68,7 @@ def get_jwt_request_location():
     None is returned.
 
     :return:
-        The location of the JWT in the current request; e.g., cookies",
+        The location of the JWT in the current request; e.g., "cookies",
         "query-string", "headers", or "json"
     """
     location = getattr(_request_ctx_stack.top, "jwt_location", None)
@@ -97,7 +99,7 @@ def get_current_user():
     return jwt_user_dict["loaded_user"]
 
 
-def decode_token(encoded_token, csrf_value=None, allow_expired=False):
+def decode_token(encoded_token, csrf_value=None, allow_expired: bool = False) -> dict:
     """
     Returns the decoded token (python dict) from an encoded JWT. This does all
     the checks to insure that the decoded token is valid before returning it.
@@ -124,7 +126,7 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
 
 def create_access_token(
     identity,
-    fresh=False,
+    fresh: bool = False,
     expires_delta=None,
     additional_claims=None,
     additional_headers=None,
@@ -177,7 +179,10 @@ def create_access_token(
 
 
 def create_refresh_token(
-    identity, expires_delta=None, additional_claims=None, additional_headers=None
+    identity: Any,
+    expires_delta: datetime.timedelta = None,
+    additional_claims=None,
+    additional_headers=None,
 ):
     """
     Create a new refresh token.

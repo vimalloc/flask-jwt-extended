@@ -1,6 +1,9 @@
 import datetime
+from typing import Any
+from typing import Callable
 
 import jwt
+from flask import Flask
 from jwt import DecodeError
 from jwt import ExpiredSignatureError
 from jwt import InvalidAudienceError
@@ -49,7 +52,7 @@ class JWTManager(object):
     to your app in a factory function.
     """
 
-    def __init__(self, app=None):
+    def __init__(self, app: Flask = None) -> None:
         """
         Create the JWTManager instance. You can either pass a flask application
         in directly here to register this extension with the flask app, or
@@ -82,7 +85,7 @@ class JWTManager(object):
         if app is not None:
             self.init_app(app)
 
-    def init_app(self, app):
+    def init_app(self, app: Flask) -> None:
         """
         Register this extension with the flask app.
 
@@ -98,7 +101,7 @@ class JWTManager(object):
         self._set_default_configuration_options(app)
         self._set_error_handler_callbacks(app)
 
-    def _set_error_handler_callbacks(self, app):
+    def _set_error_handler_callbacks(self, app: Flask) -> None:
         @app.errorhandler(CSRFError)
         def handle_csrf_error(e):
             return self._unauthorized_callback(str(e))
@@ -164,7 +167,7 @@ class JWTManager(object):
             return self._invalid_token_callback(str(e))
 
     @staticmethod
-    def _set_default_configuration_options(app):
+    def _set_default_configuration_options(app: Flask) -> None:
         app.config.setdefault(
             "JWT_ACCESS_TOKEN_EXPIRES", datetime.timedelta(minutes=15)
         )
@@ -210,7 +213,7 @@ class JWTManager(object):
         app.config.setdefault("JWT_TOKEN_LOCATION", ("headers",))
         app.config.setdefault("JWT_ENCODE_NBF", True)
 
-    def additional_claims_loader(self, callback):
+    def additional_claims_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function used to add additional claims
         when creating a JWT. The claims returned by this function will be merged
@@ -227,7 +230,7 @@ class JWTManager(object):
         self._user_claims_callback = callback
         return callback
 
-    def additional_headers_loader(self, callback):
+    def additional_headers_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function used to add additional headers
         when creating a JWT. The headers returned by this function will be merged
@@ -244,7 +247,7 @@ class JWTManager(object):
         self._jwt_additional_header_callback = callback
         return callback
 
-    def decode_key_loader(self, callback):
+    def decode_key_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function for dynamically setting the JWT
         decode key based on the **UNVERIFIED** contents of the token. Think
@@ -265,7 +268,7 @@ class JWTManager(object):
         self._decode_key_callback = callback
         return callback
 
-    def encode_key_loader(self, callback):
+    def encode_key_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function for dynamically setting the JWT
         encode key based on the tokens identity. Think carefully before using this
@@ -281,7 +284,7 @@ class JWTManager(object):
         self._encode_key_callback = callback
         return callback
 
-    def expired_token_loader(self, callback):
+    def expired_token_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function for returning a custom
         response when an expired JWT is encountered.
@@ -297,7 +300,7 @@ class JWTManager(object):
         self._expired_token_callback = callback
         return callback
 
-    def invalid_token_loader(self, callback):
+    def invalid_token_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function for returning a custom
         response when an invalid JWT is encountered.
@@ -314,7 +317,7 @@ class JWTManager(object):
         self._invalid_token_callback = callback
         return callback
 
-    def needs_fresh_token_loader(self, callback):
+    def needs_fresh_token_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function for returning a custom
         response when a valid and non-fresh token is used on an endpoint
@@ -331,7 +334,7 @@ class JWTManager(object):
         self._needs_fresh_token_callback = callback
         return callback
 
-    def revoked_token_loader(self, callback):
+    def revoked_token_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function for returning a custom
         response when a revoked token is encountered.
@@ -347,7 +350,7 @@ class JWTManager(object):
         self._revoked_token_callback = callback
         return callback
 
-    def token_in_blocklist_loader(self, callback):
+    def token_in_blocklist_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function used to check if a JWT has
         been revoked.
@@ -364,7 +367,7 @@ class JWTManager(object):
         self._token_in_blocklist_callback = callback
         return callback
 
-    def token_verification_failed_loader(self, callback):
+    def token_verification_failed_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function used to return a custom
         response when the claims verification check fails.
@@ -380,7 +383,7 @@ class JWTManager(object):
         self._token_verification_failed_callback = callback
         return callback
 
-    def token_verification_loader(self, callback):
+    def token_verification_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function used for custom verification
         of a valid JWT.
@@ -397,7 +400,7 @@ class JWTManager(object):
         self._token_verification_callback = callback
         return callback
 
-    def unauthorized_loader(self, callback):
+    def unauthorized_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function used to return a custom
         response when no JWT is present.
@@ -411,7 +414,7 @@ class JWTManager(object):
         self._unauthorized_callback = callback
         return callback
 
-    def user_identity_loader(self, callback):
+    def user_identity_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function used to convert an identity to
         a JSON serializable format when creating JWTs. This is useful for
@@ -427,7 +430,7 @@ class JWTManager(object):
         self._user_identity_callback = callback
         return callback
 
-    def user_lookup_loader(self, callback):
+    def user_lookup_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function used to convert a JWT into
         a python object that can be used in a protected endpoint. This is useful
@@ -452,7 +455,7 @@ class JWTManager(object):
         self._user_lookup_callback = callback
         return callback
 
-    def user_lookup_error_loader(self, callback):
+    def user_lookup_error_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function used to return a custom
         response when loading a user via
@@ -471,11 +474,11 @@ class JWTManager(object):
 
     def _encode_jwt_from_config(
         self,
-        identity,
-        token_type,
+        identity: Any,
+        token_type: str,
         claims=None,
-        fresh=False,
-        expires_delta=None,
+        fresh: bool = False,
+        expires_delta: datetime.timedelta = None,
         headers=None,
     ):
         header_overrides = self._jwt_additional_header_callback(identity)
@@ -510,7 +513,7 @@ class JWTManager(object):
         )
 
     def _decode_jwt_from_config(
-        self, encoded_token, csrf_value=None, allow_expired=False
+        self, encoded_token, csrf_value=None, allow_expired: bool = False
     ):
         unverified_claims = jwt.decode(
             encoded_token,

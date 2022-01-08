@@ -358,3 +358,8 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
+# Fix warnings about refernce targets. See link:
+# https://stackoverflow.com/questions/11417221/
+# sphinx-autodoc-gives-warning-pyclass-reference-target-not-found-type-warning
+nitpick_ignore = [("py:class", "flask.app.Flask"), ("py:class", "datetime.timedelta")]

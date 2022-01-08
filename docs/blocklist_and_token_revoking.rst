@@ -110,9 +110,9 @@ Alternatively, there are a few ways to revoke both tokens at once:
 #. Embed the refresh token's jti in the access token. The revoke route should be authenticated
    with the access token. Upon revoking the access token, extract the refresh jti from it
    and invalidate both. This has the advantage of requiring no extra work from the frontend.
-#. Store all generated tokens jtis in a database whenever they are created. Have a column to represent
+#. Store every generated tokens jti in a database upon creation. Have a boolean column to represent
    whether it is valid or not, which the ``token_in_blocklist_loader`` should respond based upon.
-   Upon revoking a token, mark that token as invalid, as well as all other tokens from the same
+   Upon revoking a token, mark that token row as invalid, as well as all other tokens from the same
    user generated at the same time. This would also allow for a "log out everywhere" option where
    all tokens for a user are invalidated at once, which is otherwise not easily possibile
 

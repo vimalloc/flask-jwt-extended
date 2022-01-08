@@ -59,8 +59,8 @@ an access token. Here is an example using `HTTPie <https://httpie.io/>`_.
 
 .. warning::
 
-  Note that when an access token is invalidated (e.g. logging a user out), any 
-  corresponding refresh token(s) must be revoked too. See 
+  Note that when an access token is invalidated (e.g. logging a user out), any
+  corresponding refresh token(s) must be revoked too. See
   :ref:`Revoking Refresh Tokens` for details on how to handle this.
 
 

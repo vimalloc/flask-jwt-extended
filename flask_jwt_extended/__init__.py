@@ -10,7 +10,6 @@ from .utils import get_jwt
 from .utils import get_jwt_header
 from .utils import get_jwt_identity
 from .utils import get_jwt_request_location
-from .utils import get_token_type
 from .utils import get_unverified_jwt_headers
 from .utils import set_access_cookies
 from .utils import set_refresh_cookies

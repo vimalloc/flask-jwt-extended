@@ -253,19 +253,6 @@ def get_jti(encoded_token: str) -> str:
     return decode_token(encoded_token).get("jti")
 
 
-def get_token_type(encoded_token: str) -> str:
-    """
-    Returns the JTI (unique identifier) of an encoded JWT
-
-    :param encoded_token:
-        The encoded JWT to get the JTI from.
-
-    :return:
-        The JTI (unique identifier) of a JWT.
-    """
-    return decode_token(encoded_token).get("jti")
-
-
 def get_csrf_token(encoded_token: str) -> str:
     """
     Returns the CSRF double submit token from an encoded JWT.

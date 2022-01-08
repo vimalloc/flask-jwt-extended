@@ -2,8 +2,7 @@ import datetime
 from typing import Any
 
 import jwt
-from flask import _request_ctx_stack
-from flask import Response
+from flask import Response, _request_ctx_stack
 from werkzeug.local import LocalProxy
 
 from flask_jwt_extended.config import config
@@ -105,11 +104,11 @@ def decode_token(
 ) -> dict:
     """
     Returns the decoded token (python dict) from an encoded JWT. This does all
-    the checks to insure that the decoded token is valid before returning it.
+    the checks to ensure that the decoded token is valid before returning it.
 
     This will not fire the user loader callbacks, save the token for access
     in protected endpoints, checked if a token is revoked, etc. This is puerly
-    used to insure that a JWT is valid.
+    used to ensure that a JWT is valid.
 
     :param encoded_token:
         The encoded JWT to decode.

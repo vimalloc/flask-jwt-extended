@@ -1,10 +1,7 @@
 import pytest
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
 from tests.utils import get_jwt_manager
 
 
@@ -76,13 +73,13 @@ def test_custom_header_name(app):
     with app.test_request_context():
         access_token = create_access_token("username")
 
-    # Insure 'default' headers no longer work
+    # Ensure 'default' headers no longer work
     access_headers = {"Authorization": "Bearer {}".format(access_token)}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 401
     assert response.get_json() == {"msg": "Missing Foo Header"}
 
-    # Insure new headers do work
+    # Ensure new headers do work
     access_headers = {"Foo": "Bearer {}".format(access_token)}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
@@ -108,7 +105,7 @@ def test_custom_header_type(app):
     with app.test_request_context():
         access_token = create_access_token("username")
 
-    # Insure 'default' headers no longer work
+    # Ensure 'default' headers no longer work
     access_headers = {"Authorization": "Bearer {}".format(access_token)}
     response = test_client.get("/protected", headers=access_headers)
     error_msg = (
@@ -118,7 +115,7 @@ def test_custom_header_type(app):
     assert response.status_code == 401
     assert response.get_json() == {"msg": error_msg}
 
-    # Insure new headers do work
+    # Ensure new headers do work
     access_headers = {"Authorization": "JWT {}".format(access_token)}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
@@ -136,14 +133,14 @@ def test_custom_header_type(app):
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
-    # Insure new headers without a type also work
+    # Ensure new headers without a type also work
     app.config["JWT_HEADER_TYPE"] = ""
     access_headers = {"Authorization": access_token}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
-    # Insure header with too many parts fails
+    # Ensure header with too many parts fails
     app.config["JWT_HEADER_TYPE"] = ""
     access_headers = {"Authorization": "Bearer {}".format(access_token)}
     response = test_client.get("/protected", headers=access_headers)
@@ -156,7 +153,7 @@ def test_missing_headers(app):
     test_client = app.test_client()
     jwtM = get_jwt_manager(app)
 
-    # Insure 'default' no headers response
+    # Ensure 'default' no headers response
     response = test_client.get("/protected", headers=None)
     assert response.status_code == 401
     assert response.get_json() == {"msg": "Missing Authorization Header"}

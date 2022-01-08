@@ -1,17 +1,16 @@
 import pytest
-from flask import Flask
-from flask import jsonify
-from flask import request
-
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import create_refresh_token
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import set_access_cookies
-from flask_jwt_extended import set_refresh_cookies
-from flask_jwt_extended import unset_access_cookies
-from flask_jwt_extended import unset_jwt_cookies
-from flask_jwt_extended import unset_refresh_cookies
+from flask import Flask, jsonify, request
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    set_access_cookies,
+    set_refresh_cookies,
+    unset_access_cookies,
+    unset_jwt_cookies,
+    unset_refresh_cookies,
+)
 
 
 def _get_cookie_from_response(response, cookie_name):
@@ -301,17 +300,17 @@ def test_custom_csrf_methods(app, options):
     response = test_client.get(auth_url)
     csrf_token = _get_cookie_from_response(response, csrf_cookie_name)[csrf_cookie_name]
 
-    # Insure we can now do posts without csrf
+    # Ensure we can now do posts without csrf
     response = test_client.post(post_url)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
-    # Insure GET requests now fail without csrf
+    # Ensure GET requests now fail without csrf
     response = test_client.get(get_url)
     assert response.status_code == 401
     assert response.get_json() == {"msg": "Missing CSRF token"}
 
-    # Insure GET requests now succeed with csrf
+    # Ensure GET requests now succeed with csrf
     csrf_headers = {"X-CSRF-TOKEN": csrf_token}
     response = test_client.get(get_url, headers=csrf_headers)
     assert response.status_code == 200

@@ -1,28 +1,29 @@
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from dateutil.relativedelta import relativedelta
 from flask import Flask
-from jwt import DecodeError
-from jwt import ExpiredSignatureError
-from jwt import ImmatureSignatureError
-from jwt import InvalidAudienceError
-from jwt import InvalidIssuerError
-from jwt import InvalidSignatureError
-from jwt import MissingRequiredClaimError
-
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import create_refresh_token
-from flask_jwt_extended import decode_token
-from flask_jwt_extended import get_jti
-from flask_jwt_extended import get_unverified_jwt_headers
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    get_jti,
+    get_unverified_jwt_headers,
+)
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import JWTDecodeError
-from tests.utils import encode_token
-from tests.utils import get_jwt_manager
+from jwt import (
+    DecodeError,
+    ExpiredSignatureError,
+    ImmatureSignatureError,
+    InvalidAudienceError,
+    InvalidIssuerError,
+    InvalidSignatureError,
+    MissingRequiredClaimError,
+)
+
+from tests.utils import encode_token, get_jwt_manager
 
 
 @pytest.fixture(scope="function")
@@ -172,13 +173,13 @@ def test_nbf_token_in_future(app):
 def test_alternate_identity_claim(app, default_access_token):
     app.config["JWT_IDENTITY_CLAIM"] = "banana"
 
-    # Insure decoding fails if the claim isn't there
+    # Ensure decoding fails if the claim isn't there
     token = encode_token(app, default_access_token)
     with pytest.raises(JWTDecodeError):
         with app.test_request_context():
             decode_token(token)
 
-    # Insure the claim exists in the decoded jwt
+    # Ensure the claim exists in the decoded jwt
     del default_access_token["sub"]
     default_access_token["banana"] = "username"
     token = encode_token(app, default_access_token)

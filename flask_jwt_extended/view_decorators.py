@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timezone
 from functools import wraps
 from re import split
+from typing import Any
 from typing import Iterable
 from typing import Tuple
 from typing import Union
@@ -107,7 +108,7 @@ def jwt_required(
     refresh: bool = False,
     locations: LocationType = None,
     verify_type: bool = True,
-):
+) -> Any:
     """
     A decorator to protect a Flask endpoint with JSON Web Tokens.
 

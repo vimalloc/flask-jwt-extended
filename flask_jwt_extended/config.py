@@ -141,7 +141,7 @@ class _Config(object):
         return current_app.config["JWT_CSRF_IN_COOKIES"]
 
     @property
-    def access_csrf_cookie_name(self):
+    def access_csrf_cookie_name(self) -> str:
         return current_app.config["JWT_ACCESS_CSRF_COOKIE_NAME"]
 
     @property

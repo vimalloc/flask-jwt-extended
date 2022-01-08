@@ -7,6 +7,7 @@ http://flask-jwt-extended.readthedocs.io/en/latest/changing_default_behavior.htm
 http://flask-jwt-extended.readthedocs.io/en/latest/tokens_from_complex_object.html
 """
 from http import HTTPStatus
+from typing import Any
 
 from flask import jsonify
 from flask import Response
@@ -14,7 +15,7 @@ from flask import Response
 from flask_jwt_extended.config import config
 
 
-def default_additional_claims_callback(userdata) -> dict:
+def default_additional_claims_callback(userdata: Any) -> dict:
     """
     By default, we add no additional claims to the access tokens.
 
@@ -40,7 +41,7 @@ def default_jwt_headers_callback(default_headers) -> dict:
     return {}
 
 
-def default_user_identity_callback(userdata):
+def default_user_identity_callback(userdata: Any) -> Any:
     """
     By default, we use the passed in object directly as the jwt identity.
     See this for additional info:
@@ -138,7 +139,7 @@ def default_token_verification_failed_callback(
     )
 
 
-def default_decode_key_callback(jwt_header: dict, jwt_data: dict):
+def default_decode_key_callback(jwt_header: dict, jwt_data: dict) -> str:
     """
     By default, the decode key specified via the JWT_SECRET_KEY or
     JWT_PUBLIC_KEY settings will be used to decode all tokens
@@ -146,7 +147,7 @@ def default_decode_key_callback(jwt_header: dict, jwt_data: dict):
     return config.decode_key
 
 
-def default_encode_key_callback(identity):
+def default_encode_key_callback(identity: Any) -> str:
     """
     By default, the encode key specified via the JWT_SECRET_KEY or
     JWT_PRIVATE_KEY settings will be used to encode all tokens

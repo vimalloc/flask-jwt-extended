@@ -1,3 +1,5 @@
+from typing import Any
+
 from flask import current_app
 
 from flask_jwt_extended import JWTManager
@@ -21,7 +23,7 @@ def has_user_lookup() -> bool:
     return jwt_manager._user_lookup_callback is not None
 
 
-def user_lookup(*args, **kwargs):
+def user_lookup(*args, **kwargs) -> Any:
     jwt_manager = get_jwt_manager()
     return jwt_manager._user_lookup_callback(*args, **kwargs)
 

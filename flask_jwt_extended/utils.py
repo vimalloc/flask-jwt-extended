@@ -49,7 +49,7 @@ def get_jwt_header() -> dict:
     return decoded_header
 
 
-def get_jwt_identity():
+def get_jwt_identity() -> Any:
     """
     In a protected endpoint, this will return the identity of the JWT that is
     accessing the endpoint. If no JWT is present due to
@@ -76,7 +76,7 @@ def get_jwt_request_location() -> str:
     return location
 
 
-def get_current_user():
+def get_current_user() -> Any:
     """
     In a protected endpoint, this will return the user object for the JWT that
     is accessing the endpoint.
@@ -420,7 +420,7 @@ def unset_access_cookies(response: Response, domain: str = None) -> None:
         )
 
 
-def unset_refresh_cookies(response: Response, domain: str = None):
+def unset_refresh_cookies(response: Response, domain: str = None) -> None:
     """
     Modifiy a Flask Response to delete the cookie containing a refresh JWT.
     Also deletes the corresponding CSRF cookie if applicable.

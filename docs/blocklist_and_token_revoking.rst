@@ -56,6 +56,7 @@ However, it is more convenient to provide a single endpoint where the frontend
 can send a DELETE for each token. Thee following is an example:
 
 .. code-block:: python
+
     @app.route("/logout", methods=["DELETE"])
     @jwt_required(verify_type=False)
     def logout():
@@ -70,6 +71,7 @@ can send a DELETE for each token. Thee following is an example:
 or, for the database format:
 
 .. code-block:: python
+
     class TokenBlocklist(db.Model):
         id = db.Column(db.Integer, primary_key=True)
         jti = db.Column(db.String(36), nullable=False, index=True)

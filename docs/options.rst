@@ -93,6 +93,11 @@ General Options:
 
     **Do not reveal the secret key when posting questions or committing code.**
 
+    Note: there is ever a need to invalidate all issued tokens (e.g. a security flaw was found,
+    or the revoked token database was lost), this can be easily done by changing the JWT_SECRET_KEY
+    (or Flask's SECRET_KEY, if JWT_SECRET_KEY is unset).
+
+
     Default: ``None``
 
 

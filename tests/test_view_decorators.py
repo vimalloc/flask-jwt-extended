@@ -2,19 +2,18 @@ from datetime import timedelta
 
 import pytest
 from dateutil.relativedelta import relativedelta
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    get_jwt_identity,
+    jwt_required,
+    verify_jwt_in_request,
+)
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import create_refresh_token
-from flask_jwt_extended import decode_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import verify_jwt_in_request
-from tests.utils import encode_token
-from tests.utils import get_jwt_manager
-from tests.utils import make_headers
+from tests.utils import encode_token, get_jwt_manager, make_headers
 
 
 @pytest.fixture(scope="function")
@@ -45,6 +44,11 @@ def app():
             return jsonify(foo="baz")
         else:
             return jsonify(foo="bar")
+
+    @app.route("/no_typecheck_protected", methods=["GET"])
+    @jwt_required(verify_type=False)
+    def no_typecheck_protected():
+        return jsonify(foo="bar")
 
     return app
 
@@ -151,6 +155,26 @@ def test_refresh_jwt_required(app):
     response = test_client.get(url, headers=make_headers(refresh_token))
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
+
+
+def test_jwt_required_no_typecheck(app):
+    """Verify this route works with access or refresh tokens."""
+    url = "/no_typecheck_protected"
+
+    test_client = app.test_client()
+    with app.test_request_context():
+        access_token = create_access_token("username")
+        fresh_access_token = create_access_token("username", fresh=True)
+        refresh_token = create_refresh_token("username")
+
+    for token in (access_token, fresh_access_token, refresh_token):
+        response = test_client.get(url, headers=make_headers(token))
+        assert response.status_code == 200
+        assert response.get_json() == {"foo": "bar"}
+
+    response = test_client.get(url, headers=None)
+    assert response.status_code == 401
+    assert response.get_json() == {"msg": "Missing Authorization Header"}
 
 
 @pytest.mark.parametrize("delta_func", [timedelta, relativedelta])

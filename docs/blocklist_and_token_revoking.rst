@@ -53,7 +53,7 @@ revoke these tokens.
 This can be implemented via two separate routes marked with ``@jwt_required()``
 and ``@jwt_required(refresh=True)`` to revoke access and refresh tokens, respectively.
 However, it is more convenient to provide a single endpoint where the frontend
-can send a DELETE for each token. Thee following is an example:
+can send a DELETE for each token. The following is an example:
 
 .. code-block:: python
 
@@ -66,7 +66,7 @@ can send a DELETE for each token. Thee following is an example:
         jwt_redis_blocklist.set(jti, "", ex=ACCESS_EXPIRES)
 
         # Returns "Access token revoked" or "Refresh token revoked"
-        return jsonify(msg=f"{ttype.capitalize()} token revoked")
+        return jsonify(msg=f"{ttype.capitalize()} token successfully revoked")
 
 or, for the database format:
 
@@ -96,18 +96,27 @@ or, for the database format:
         now = datetime.now(timezone.utc)
         db.session.add(TokenBlocklist(jti=jti, type=ttype, created_at=now))
         db.session.commit()
-        return jsonify(msg=f"{ttype.capitalize()} token revoked")
+        return jsonify(msg=f"{ttype.capitalize()} token successfully revoked")
 
 
-Token type and user are not required and can be omitted. That being said, including
-these columns can help to audit that the frontend is performing its revoking job
-correctly and revoking both tokens.
+Token type and user columns are not required and can be omitted. That being said, including
+these can help to audit that the frontend is performing its revoking job correctly and revoking both tokens.
 
-An alternative, albeit much more complex, implementation is to invalidate all issued
-tokens for a user at once. To do this, all issued tokens must be tracked (by default,
-they are not stored on the server). A few steps would be required:
+Alternatively, there are a few ways to revoke both tokens at once:
 
-#. Store all generated access and refresh tokens in a database, include a user_id column
-#. Add a "valid" boolean column. Update the `token_in_blocklist_loader` to respond based on this column
-#. Upon revoking a token, find all other tokens with the same user and created at the same time,
-   (or all a user's tokens to log out on all devices) and mark each as invalid
+#. Send the access token in the header (per usual), and send the refresh token in
+   the DELETE request body. This saves a request but still needs frontend changes, so may not
+   be worth implementing
+#. Embed the refresh token's jti in the access token. The revoke route should be authenticated
+   with the access token. Upon revoking the access token, extract the refresh jti from it
+   and invalidate both. This has the advantage of requiring no extra work from the frontend.
+#. Store all generated tokens jtis in a database whenever they are created. Have a column to represent
+   whether it is valid or not, which the ``token_in_blocklist_loader`` should respond based upon.
+   Upon revoking a token, mark that token as invalid, as well as all other tokens from the same
+   user generated at the same time. This would also allow for a "log out everywhere" option where
+   all tokens for a user are invalidated at once, which is otherwise not easily possibile
+
+
+The best option of course depends and needs to be chosen based upon the circumstances. If there
+if ever a time where an unknown, untracked token needs to be immediately invalidated, this can
+be accomplished by changing the secret key.

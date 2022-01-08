@@ -362,4 +362,8 @@ texinfo_documents = [
 # Fix warnings about refernce targets. See link:
 # https://stackoverflow.com/questions/11417221/
 # sphinx-autodoc-gives-warning-pyclass-reference-target-not-found-type-warning
-nitpick_ignore = [("py:class", "flask.app.Flask"), ("py:class", "datetime.timedelta")]
+nitpick_ignore = [
+    ("py:class", "flask.app.Flask"),
+    ("py:class", "datetime.timedelta"),
+    ("py:class", "flask.wrappers.Response"),
+]

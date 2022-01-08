@@ -3,6 +3,7 @@ from typing import Any
 
 import jwt
 from flask import _request_ctx_stack
+from flask import Response
 from werkzeug.local import LocalProxy
 
 from flask_jwt_extended.config import config
@@ -60,7 +61,7 @@ def get_jwt_identity():
     return get_jwt().get(config.identity_claim_key, None)
 
 
-def get_jwt_request_location():
+def get_jwt_request_location() -> str:
     """
     In a protected endpoint, this will return the "location" at which the JWT
     that is accessing the endpoint was found--e.g., "cookies", "query-string",
@@ -99,7 +100,9 @@ def get_current_user():
     return jwt_user_dict["loaded_user"]
 
 
-def decode_token(encoded_token, csrf_value=None, allow_expired: bool = False) -> dict:
+def decode_token(
+    encoded_token: str, csrf_value: str = None, allow_expired: bool = False
+) -> dict:
     """
     Returns the decoded token (python dict) from an encoded JWT. This does all
     the checks to insure that the decoded token is valid before returning it.
@@ -125,9 +128,9 @@ def decode_token(encoded_token, csrf_value=None, allow_expired: bool = False) ->
 
 
 def create_access_token(
-    identity,
+    identity: Any,
     fresh: bool = False,
-    expires_delta=None,
+    expires_delta: datetime.timedelta = None,
     additional_claims=None,
     additional_headers=None,
 ):
@@ -224,7 +227,7 @@ def create_refresh_token(
     )
 
 
-def get_unverified_jwt_headers(encoded_token):
+def get_unverified_jwt_headers(encoded_token: str) -> dict:
     """
     Returns the Headers of an encoded JWT without verifying the signature of the JWT.
 
@@ -237,7 +240,7 @@ def get_unverified_jwt_headers(encoded_token):
     return jwt.get_unverified_header(encoded_token)
 
 
-def get_jti(encoded_token):
+def get_jti(encoded_token: str) -> str:
     """
     Returns the JTI (unique identifier) of an encoded JWT
 
@@ -250,7 +253,7 @@ def get_jti(encoded_token):
     return decode_token(encoded_token).get("jti")
 
 
-def get_csrf_token(encoded_token):
+def get_csrf_token(encoded_token: str) -> str:
     """
     Returns the CSRF double submit token from an encoded JWT.
 
@@ -264,7 +267,9 @@ def get_csrf_token(encoded_token):
     return token["csrf"]
 
 
-def set_access_cookies(response, encoded_access_token, max_age=None, domain=None):
+def set_access_cookies(
+    response: Response, encoded_access_token: str, max_age=None, domain=None
+) -> None:
     """
     Modifiy a Flask Response to set a cookie containing the access JWT.
     Also sets the corresponding CSRF cookies if ``JWT_CSRF_IN_COOKIES`` is ``True``
@@ -312,7 +317,12 @@ def set_access_cookies(response, encoded_access_token, max_age=None, domain=None
         )
 
 
-def set_refresh_cookies(response, encoded_refresh_token, max_age=None, domain=None):
+def set_refresh_cookies(
+    response: Response,
+    encoded_refresh_token: str,
+    max_age: int = None,
+    domain: str = None,
+) -> None:
     """
     Modifiy a Flask Response to set a cookie containing the refresh JWT.
     Also sets the corresponding CSRF cookies if ``JWT_CSRF_IN_COOKIES`` is ``True``
@@ -360,7 +370,7 @@ def set_refresh_cookies(response, encoded_refresh_token, max_age=None, domain=No
         )
 
 
-def unset_jwt_cookies(response, domain=None):
+def unset_jwt_cookies(response: Response, domain: str = None) -> None:
     """
     Modifiy a Flask Response to delete the cookies containing access or refresh
     JWTs.  Also deletes the corresponding CSRF cookies if applicable.
@@ -372,7 +382,7 @@ def unset_jwt_cookies(response, domain=None):
     unset_refresh_cookies(response, domain)
 
 
-def unset_access_cookies(response, domain=None):
+def unset_access_cookies(response: Response, domain: str = None) -> None:
     """
     Modifiy a Flask Response to delete the cookie containing an access JWT.
     Also deletes the corresponding CSRF cookie if applicable.
@@ -410,7 +420,7 @@ def unset_access_cookies(response, domain=None):
         )
 
 
-def unset_refresh_cookies(response, domain=None):
+def unset_refresh_cookies(response: Response, domain: str = None):
     """
     Modifiy a Flask Response to delete the cookie containing a refresh JWT.
     Also deletes the corresponding CSRF cookie if applicable.

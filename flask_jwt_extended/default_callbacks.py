@@ -6,6 +6,8 @@ loader decorators. For further information, check out the following links:
 http://flask-jwt-extended.readthedocs.io/en/latest/changing_default_behavior.html
 http://flask-jwt-extended.readthedocs.io/en/latest/tokens_from_complex_object.html
 """
+from http import HTTPStatus
+
 from flask import jsonify
 from flask import Response
 
@@ -57,7 +59,7 @@ def default_expired_token_callback(
     By default, if an expired token attempts to access a protected endpoint,
     we return a generic error message with a 401 status
     """
-    return jsonify({config.error_msg_key: "Token has expired"}), 401
+    return jsonify({config.error_msg_key: "Token has expired"}), HTTPStatus.UNAUTHORIZED
 
 
 def default_invalid_token_callback(error_string: str) -> Response:
@@ -67,7 +69,10 @@ def default_invalid_token_callback(error_string: str) -> Response:
 
     :param error_string: String indicating why the token is invalid
     """
-    return jsonify({config.error_msg_key: error_string}), 422
+    return (
+        jsonify({config.error_msg_key: error_string}),
+        HTTPStatus.UNPROCESSABLE_ENTITY,
+    )
 
 
 def default_unauthorized_callback(error_string: str) -> Response:
@@ -77,7 +82,7 @@ def default_unauthorized_callback(error_string: str) -> Response:
 
     :param error_string: String indicating why this request is unauthorized
     """
-    return jsonify({config.error_msg_key: error_string}), 401
+    return jsonify({config.error_msg_key: error_string}), HTTPStatus.UNAUTHORIZED
 
 
 def default_needs_fresh_token_callback(jwt_header: dict, jwt_data: dict) -> Response:
@@ -85,7 +90,10 @@ def default_needs_fresh_token_callback(jwt_header: dict, jwt_data: dict) -> Resp
     By default, if a non-fresh jwt is used to access a ```fresh_jwt_required```
     endpoint, we return a general error message with a 401 status code
     """
-    return jsonify({config.error_msg_key: "Fresh token required"}), 401
+    return (
+        jsonify({config.error_msg_key: "Fresh token required"}),
+        HTTPStatus.UNAUTHORIZED,
+    )
 
 
 def default_revoked_token_callback(jwt_header: dict, jwt_data: dict) -> Response:
@@ -93,7 +101,10 @@ def default_revoked_token_callback(jwt_header: dict, jwt_data: dict) -> Response
     By default, if a revoked token is used to access a protected endpoint, we
     return a general error message with a 401 status code
     """
-    return jsonify({config.error_msg_key: "Token has been revoked"}), 401
+    return (
+        jsonify({config.error_msg_key: "Token has been revoked"}),
+        HTTPStatus.UNAUTHORIZED,
+    )
 
 
 def default_user_lookup_error_callback(_jwt_header: dict, jwt_data: dict) -> Response:
@@ -103,8 +114,8 @@ def default_user_lookup_error_callback(_jwt_header: dict, jwt_data: dict) -> Res
     status code
     """
     identity = jwt_data[config.identity_claim_key]
-    result = {config.error_msg_key: "Error loading the user {}".format(identity)}
-    return jsonify(result), 401
+    result = {config.error_msg_key: f"Error loading the user {identity}"}
+    return jsonify(result), HTTPStatus.UNAUTHORIZED
 
 
 def default_token_verification_callback(_jwt_header: dict, _jwt_data: dict) -> bool:
@@ -121,7 +132,10 @@ def default_token_verification_failed_callback(
     By default, if the user claims verification failed, we return a generic
     error message with a 400 status code
     """
-    return jsonify({config.error_msg_key: "User claims verification failed"}), 400
+    return (
+        jsonify({config.error_msg_key: "User claims verification failed"}),
+        HTTPStatus.BAD_REQUEST,
+    )
 
 
 def default_decode_key_callback(jwt_header: dict, jwt_data: dict):

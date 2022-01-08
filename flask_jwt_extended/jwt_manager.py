@@ -480,7 +480,7 @@ class JWTManager(object):
         fresh: bool = False,
         expires_delta: datetime.timedelta = None,
         headers=None,
-    ):
+    ) -> str:
         header_overrides = self._jwt_additional_header_callback(identity)
         if headers is not None:
             header_overrides.update(headers)
@@ -513,8 +513,8 @@ class JWTManager(object):
         )
 
     def _decode_jwt_from_config(
-        self, encoded_token, csrf_value=None, allow_expired: bool = False
-    ):
+        self, encoded_token: str, csrf_value=None, allow_expired: bool = False
+    ) -> dict:
         unverified_claims = jwt.decode(
             encoded_token,
             algorithms=config.decode_algorithms,

@@ -26,7 +26,7 @@ def user_lookup(*args, **kwargs):
     return jwt_manager._user_lookup_callback(*args, **kwargs)
 
 
-def verify_token_type(decoded_token, refresh) -> None:
+def verify_token_type(decoded_token: dict, refresh: bool) -> None:
     if not refresh and decoded_token["type"] == "refresh":
         raise WrongTokenError("Only non-refresh tokens are allowed")
     elif refresh and decoded_token["type"] != "refresh":

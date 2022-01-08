@@ -95,3 +95,6 @@ ENV/
 
 # MacOS specific crap
 .DS_Store
+
+# Workspace
+.vscode/

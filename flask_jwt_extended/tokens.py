@@ -3,29 +3,33 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from hmac import compare_digest
+from typing import Any
+from typing import Iterable
+from typing import Union
 
 import jwt
+from flask.json import JSONEncoder
 
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import JWTDecodeError
 
 
 def _encode_jwt(
-    algorithm,
-    audience,
-    claim_overrides,
-    csrf,
-    expires_delta,
-    fresh,
+    algorithm: str,
+    audience: Union[str, Iterable[str]],
+    claim_overrides: dict,
+    csrf: bool,
+    expires_delta: timedelta,
+    fresh: bool,
     header_overrides,
-    identity,
-    identity_claim_key,
-    issuer,
-    json_encoder,
-    secret,
-    token_type,
-    nbf,
-):
+    identity: Any,
+    identity_claim_key: str,
+    issuer: str,
+    json_encoder: JSONEncoder,
+    secret: str,
+    token_type: str,
+    nbf: bool,
+) -> str:
     now = datetime.now(timezone.utc)
 
     if isinstance(fresh, timedelta):
@@ -67,17 +71,17 @@ def _encode_jwt(
 
 
 def _decode_jwt(
-    algorithms,
-    allow_expired,
-    audience,
-    csrf_value,
-    encoded_token,
+    algorithms: Iterable,
+    allow_expired: bool,
+    audience: Union[str, Iterable[str]],
+    csrf_value: str,
+    encoded_token: str,
     identity_claim_key,
-    issuer,
-    leeway,
-    secret,
-    verify_aud,
-):
+    issuer: str,
+    leeway: int,
+    secret: str,
+    verify_aud: bool,
+) -> dict:
     options = {"verify_aud": verify_aud}
     if allow_expired:
         options["verify_exp"] = False

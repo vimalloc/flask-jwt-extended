@@ -17,7 +17,7 @@ jwt = JWTManager(app)
 # response. Check the API documentation to see the required argument and return
 # values for other callback functions.
 @jwt.expired_token_loader
-def my_expired_token_callback(jwt_header, jwt_payload: dict):
+def my_expired_token_callback(jwt_header, jwt_payload):
     return jsonify(code="dave", err="I can't let you do that"), 401
 
 

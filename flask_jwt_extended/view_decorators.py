@@ -35,7 +35,9 @@ def _verify_token_is_fresh(jwt_header, jwt_data):
             raise FreshTokenRequired("Fresh token required", jwt_header, jwt_data)
 
 
-def verify_jwt_in_request(optional=False, fresh=False, refresh=False, locations=None):
+def verify_jwt_in_request(
+    optional: bool = False, fresh: bool = False, refresh: bool = False, locations=None
+):
     """
     Verify that a valid JWT is present in the request, unless ``optional=True`` in
     which case no JWT is also considered valid.
@@ -255,7 +257,9 @@ def _decode_jwt_from_json(refresh):
     return encoded_token, None
 
 
-def _decode_jwt_from_request(locations, fresh, refresh=False):
+def _decode_jwt_from_request(
+    locations, fresh, refresh: bool = False, verify_type: bool = True
+):
     # Figure out what locations to look for the JWT in this request
     if isinstance(locations, str):
         locations = [locations]
@@ -314,7 +318,9 @@ def _decode_jwt_from_request(locations, fresh, refresh=False):
             raise NoAuthorizationError(errors[0])
 
     # Additional verifications provided by this extension
-    verify_token_type(decoded_token, refresh)
+    if verify_type:
+        verify_token_type(decoded_token, refresh)
+
     if fresh:
         _verify_token_is_fresh(jwt_header, decoded_token)
     verify_token_not_blocklisted(jwt_header, decoded_token)

@@ -44,20 +44,16 @@ etc. Here is an example using SQLAlchemy:
 
 Handling Revoking of Refresh Tokens
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-It is very important to note that a user's refresh token must also be revoked
+It is critical to note that a user's refresh token must also be revoked
 when logging out; otherwise, this refresh token could just be used to generate
-a new access token. Usually this falls to the responsibility of the frontend,
-which must
+a new access token. Usually this falls to the responsibility of the frontend 
+application, which must send two separate requests to the backend in order to
+revoke these tokens.
 
-It is very important to note that a user's refresh token(s) must also be revoked
-when logging out; otherwise, this refresh token could just be used to generate
-a new access token. Usually this falls to the responsibility of the frontend,
-which should request 
-
-
-It is possible to use two different routes with ``@jwt_required()`` and
-``@jwt_required(refresh=True)`` to accomplish this. However, it is convenient to
-provide a single endpoint where both users 
+This can be implemented via two separate routes marked with ``@jwt_required()``
+and ``@jwt_required(refresh=True)`` to revoke access and refresh tokens, respectively.
+However, it is more convenient to provide a single endpoint where the frontend
+can send a DELETE for each token. This can be done with the following:
 
 .. code-block:: python
     @app.route("/logout", methods=["DELETE"])
@@ -77,13 +73,17 @@ or, for the database format:
     class TokenBlocklist(db.Model):
         id = db.Column(db.Integer, primary_key=True)
         jti = db.Column(db.String(36), nullable=False, index=True)
-        type = db.Column(db.Integer, nullable=False)
+        type = db.Column(db.String(16), nullable=False)
         user_id = db.Column(
-            db.ForeignKey('person.id')
+            db.ForeignKey('person.id'),
+            default=lambda: get_current_user().id,
             nullable=False,
-            default=lambda: get_current_user().id
-            )
-        created_at = db.Column(db.DateTime, nullable=False)
+        )
+        created_at = db.Column(
+            db.DateTime,
+            server_default=func.now(),
+            nullable=False,
+        )
 
     @app.route("/logout", methods=["DELETE"])
     @jwt_required(verify_type=False)

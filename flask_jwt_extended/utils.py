@@ -2,8 +2,7 @@ import datetime
 from typing import Any
 
 import jwt
-from flask import _request_ctx_stack
-from flask import Response
+from flask import Response, _request_ctx_stack
 from werkzeug.local import LocalProxy
 
 from flask_jwt_extended.config import config

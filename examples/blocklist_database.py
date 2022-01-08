@@ -1,15 +1,8 @@
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
 from flask_sqlalchemy import SQLAlchemy
-
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
 
@@ -28,9 +21,12 @@ db = SQLAlchemy(app)
 # This could be expanded to fit the needs of your application. For example,
 # it could track who revoked a JWT, when a token expires, notes for why a
 # JWT was revoked, an endpoint to un-revoked a JWT, etc.
+# Making jti an index can significantly speed up the search when there are
+# tens of thousands of records. Remember this query will happen for every
+# (protected) request,
 class TokenBlocklist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    jti = db.Column(db.String(36), nullable=False)
+    jti = db.Column(db.String(36), nullable=False, index=True)
     created_at = db.Column(db.DateTime, nullable=False)
 
 
@@ -39,6 +35,7 @@ class TokenBlocklist(db.Model):
 def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
     jti = jwt_payload["jti"]
     token = db.session.query(TokenBlocklist.id).filter_by(jti=jti).scalar()
+
     return token is not None
 
 

@@ -172,13 +172,13 @@ def test_nbf_token_in_future(app):
 def test_alternate_identity_claim(app, default_access_token):
     app.config["JWT_IDENTITY_CLAIM"] = "banana"
 
-    # Insure decoding fails if the claim isn't there
+    # Ensure decoding fails if the claim isn't there
     token = encode_token(app, default_access_token)
     with pytest.raises(JWTDecodeError):
         with app.test_request_context():
             decode_token(token)
 
-    # Insure the claim exists in the decoded jwt
+    # Ensure the claim exists in the decoded jwt
     del default_access_token["sub"]
     default_access_token["banana"] = "username"
     token = encode_token(app, default_access_token)

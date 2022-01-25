@@ -66,13 +66,13 @@ def test_custom_query_paramater(app):
     with app.test_request_context():
         access_token = create_access_token("username")
 
-    # Insure 'default' query paramaters no longer work
+    # Ensure 'default' query paramaters no longer work
     url = "/protected?jwt={}".format(access_token)
     response = test_client.get(url)
     assert response.status_code == 401
     assert response.get_json() == {"msg": "Missing 'foo' query paramater"}
 
-    # Insure new query_string does work
+    # Ensure new query_string does work
     url = "/protected?foo={}".format(access_token)
     response = test_client.get(url)
     assert response.status_code == 200
@@ -86,12 +86,12 @@ def test_missing_query_paramater(app):
     with app.test_request_context():
         access_token = create_access_token("username")
 
-    # Insure no query paramaters doesn't give a response
+    # Ensure no query paramaters doesn't give a response
     response = test_client.get("/protected")
     assert response.status_code == 401
     assert response.get_json() == {"msg": "Missing 'jwt' query paramater"}
 
-    # Insure headers don't work
+    # Ensure headers don't work
     access_headers = {"Authorization": "Bearer {}".format(access_token)}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 401

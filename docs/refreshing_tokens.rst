@@ -50,9 +50,18 @@ website (mobile, api only, etc).
 Making a request with a refresh token looks just like making a request with
 an access token. Here is an example using `HTTPie <https://httpie.io/>`_.
 
+
+
+
 .. code-block :: bash
 
  $ http POST :5000/refresh Authorization:"Bearer $REFRESH_TOKEN"
+
+.. warning::
+
+  Note that when an access token is invalidated (e.g. logging a user out), any
+  corresponding refresh token(s) must be revoked too. See
+  :ref:`Revoking Refresh Tokens` for details on how to handle this.
 
 
 Token Freshness Pattern

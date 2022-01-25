@@ -301,17 +301,17 @@ def test_custom_csrf_methods(app, options):
     response = test_client.get(auth_url)
     csrf_token = _get_cookie_from_response(response, csrf_cookie_name)[csrf_cookie_name]
 
-    # Insure we can now do posts without csrf
+    # Ensure we can now do posts without csrf
     response = test_client.post(post_url)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
-    # Insure GET requests now fail without csrf
+    # Ensure GET requests now fail without csrf
     response = test_client.get(get_url)
     assert response.status_code == 401
     assert response.get_json() == {"msg": "Missing CSRF token"}
 
-    # Insure GET requests now succeed with csrf
+    # Ensure GET requests now succeed with csrf
     csrf_headers = {"X-CSRF-TOKEN": csrf_token}
     response = test_client.get(get_url, headers=csrf_headers)
     assert response.status_code == 200

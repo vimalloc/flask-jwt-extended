@@ -60,7 +60,7 @@ class RevokedTokenError(JWTExtendedException):
     Error raised when a revoked token attempt to access a protected endpoint
     """
 
-    def __init__(self, jwt_header, jwt_data):
+    def __init__(self, jwt_header: dict, jwt_data: dict) -> None:
         super().__init__("Token has been revoked")
         self.jwt_header = jwt_header
         self.jwt_data = jwt_data
@@ -72,7 +72,7 @@ class FreshTokenRequired(JWTExtendedException):
     protected by fresh_jwt_required
     """
 
-    def __init__(self, message, jwt_header, jwt_data):
+    def __init__(self, message, jwt_header: dict, jwt_data: dict) -> None:
         super().__init__(message)
         self.jwt_header = jwt_header
         self.jwt_data = jwt_data
@@ -84,7 +84,7 @@ class UserLookupError(JWTExtendedException):
     that it cannot or will not load a user for the given identity.
     """
 
-    def __init__(self, message, jwt_header, jwt_data):
+    def __init__(self, message, jwt_header: dict, jwt_data: dict) -> None:
         super().__init__(message)
         self.jwt_header = jwt_header
         self.jwt_data = jwt_data
@@ -96,7 +96,7 @@ class UserClaimsVerificationError(JWTExtendedException):
     indicating that the expected user claims are invalid
     """
 
-    def __init__(self, message, jwt_header, jwt_data):
+    def __init__(self, message, jwt_header: dict, jwt_data: dict) -> None:
         super().__init__(message)
         self.jwt_header = jwt_header
         self.jwt_data = jwt_data

@@ -57,13 +57,13 @@ def test_asymmetric_cropto(app):
         app.config["JWT_ALGORITHM"] = "RS256"
         rs256_token = create_access_token("username")
 
-    # Insure the symmetric token does not work now
+    # Ensure the symmetric token does not work now
     access_headers = {"Authorization": "Bearer {}".format(hs256_token)}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 422
     assert response.get_json() == {"msg": "The specified alg value is not allowed"}
 
-    # Insure the asymmetric token does work
+    # Ensure the asymmetric token does work
     access_headers = {"Authorization": "Bearer {}".format(rs256_token)}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200

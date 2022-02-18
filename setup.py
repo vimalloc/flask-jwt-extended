@@ -27,8 +27,9 @@ setup(
     platforms="any",
     install_requires=[
         "Werkzeug>=0.14",  # Needed for SameSite cookie functionality
-        "Flask>=1.0,<3.0",
+        "Flask>=2.0,<3.0",
         "PyJWT>=2.0,<3.0",
+        "typing_extensions>=3.7.4; python_version<'3.8'",  # typing.Literal
     ],
     extras_require={"asymmetric_crypto": ["cryptography>=35.0.0"]},
     python_requires=">=3.6,<4",

@@ -3,7 +3,8 @@ from datetime import timezone
 from functools import wraps
 from re import split
 from typing import Any
-from typing import Iterable
+from typing import Optional
+from typing import Sequence
 from typing import Tuple
 from typing import Union
 
@@ -27,7 +28,7 @@ from flask_jwt_extended.internal_utils import verify_token_type
 from flask_jwt_extended.utils import decode_token
 from flask_jwt_extended.utils import get_unverified_jwt_headers
 
-LocationType = Union[str, Iterable]
+LocationType = Union[str, Sequence, None]
 
 
 def _verify_token_is_fresh(jwt_header: dict, jwt_data: dict) -> None:
@@ -47,7 +48,7 @@ def verify_jwt_in_request(
     refresh: bool = False,
     locations: LocationType = None,
     verify_type: bool = False,
-) -> Tuple[dict, dict]:
+) -> Optional[Tuple[dict, dict]]:
     """
     Verify that a valid JWT is present in the request, unless ``optional=True`` in
     which case no JWT is also considered valid.
@@ -74,9 +75,15 @@ def verify_jwt_in_request(
         If ``True``, the token type (access or refresh) will be checked according
         to the ``refresh`` argument. If ``False``, type will not be checked and both
         access and refresh tokens will be accepted.
+
+    :return:
+        A tuple containing the jwt_header and the jwt_data if a valid JWT is
+        present in the request. If ``optional=True`` and no JWT is in the request,
+        ``None`` will be returned instead. Raise an exception if an invalid JWT
+        is in the request.
     """
     if request.method in config.exempt_methods:
-        return
+        return None
 
     try:
         jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
@@ -90,7 +97,7 @@ def verify_jwt_in_request(
         _request_ctx_stack.top.jwt_header = {}
         _request_ctx_stack.top.jwt_user = {"loaded_user": None}
         _request_ctx_stack.top.jwt_location = None
-        return
+        return None
 
     # Save these at the very end so that they are only saved in the requet
     # context if the token is valid and all callbacks succeed
@@ -144,21 +151,14 @@ def jwt_required(
         @wraps(fn)
         def decorator(*args, **kwargs):
             verify_jwt_in_request(optional, fresh, refresh, locations, verify_type)
-
-            # Compatibility with flask < 2.0
-            if hasattr(current_app, "ensure_sync") and callable(
-                getattr(current_app, "ensure_sync", None)
-            ):
-                return current_app.ensure_sync(fn)(*args, **kwargs)
-
-            return fn(*args, **kwargs)  # pragma: no cover
+            return current_app.ensure_sync(fn)(*args, **kwargs)
 
         return decorator
 
     return wrapper
 
 
-def _load_user(jwt_header: dict, jwt_data: dict) -> dict:
+def _load_user(jwt_header: dict, jwt_data: dict) -> Optional[dict]:
     if not has_user_lookup():
         return None
 
@@ -170,7 +170,7 @@ def _load_user(jwt_header: dict, jwt_data: dict) -> dict:
     return {"loaded_user": user}
 
 
-def _decode_jwt_from_headers() -> Tuple[str, str]:
+def _decode_jwt_from_headers() -> Tuple[str, None]:
     header_name = config.header_name
     header_type = config.header_type
 
@@ -214,7 +214,7 @@ def _decode_jwt_from_headers() -> Tuple[str, str]:
     return encoded_token, None
 
 
-def _decode_jwt_from_cookies(refresh: bool) -> Tuple[str, str]:
+def _decode_jwt_from_cookies(refresh: bool) -> Tuple[str, Optional[str]]:
     if refresh:
         cookie_key = config.refresh_cookie_name
         csrf_header_key = config.refresh_csrf_header_name
@@ -240,7 +240,7 @@ def _decode_jwt_from_cookies(refresh: bool) -> Tuple[str, str]:
     return encoded_token, csrf_value
 
 
-def _decode_jwt_from_query_string() -> Tuple[str, str]:
+def _decode_jwt_from_query_string() -> Tuple[str, None]:
     param_name = config.query_string_name
     prefix = config.query_string_value_prefix
 
@@ -258,9 +258,8 @@ def _decode_jwt_from_query_string() -> Tuple[str, str]:
     return encoded_token, None
 
 
-def _decode_jwt_from_json(refresh: bool) -> Tuple[str, str]:
-    content_type = request.content_type or ""
-    if not content_type.startswith("application/json"):
+def _decode_jwt_from_json(refresh: bool) -> Tuple[str, None]:
+    if not request.is_json:
         raise NoAuthorizationError("Invalid content-type. Must be application/json.")
 
     if refresh:
@@ -269,7 +268,7 @@ def _decode_jwt_from_json(refresh: bool) -> Tuple[str, str]:
         token_key = config.json_key
 
     try:
-        encoded_token = request.json.get(token_key, None)
+        encoded_token = request.json and request.json.get(token_key, None)
         if not encoded_token:
             raise BadRequest()
     except BadRequest:
@@ -318,8 +317,6 @@ def _decode_jwt_from_request(
     # in one place to be valid (not every location).
     errors = []
     decoded_token = None
-    jwt_header = None
-    jwt_location = None
     for location, get_encoded_token_function in get_encoded_token_functions:
         try:
             encoded_token, csrf_token = get_encoded_token_function()

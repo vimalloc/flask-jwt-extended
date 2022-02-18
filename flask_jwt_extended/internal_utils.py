@@ -25,7 +25,9 @@ def has_user_lookup() -> bool:
 
 def user_lookup(*args, **kwargs) -> Any:
     jwt_manager = get_jwt_manager()
-    return jwt_manager._user_lookup_callback(*args, **kwargs)
+    return jwt_manager._user_lookup_callback and jwt_manager._user_lookup_callback(
+        *args, **kwargs
+    )
 
 
 def verify_token_type(decoded_token: dict, refresh: bool) -> None:

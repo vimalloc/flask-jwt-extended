@@ -10,7 +10,7 @@ from http import HTTPStatus
 from typing import Any
 
 from flask import jsonify
-from flask import Response
+from flask.typing import ResponseReturnValue
 
 from flask_jwt_extended.config import config
 
@@ -55,7 +55,7 @@ def default_user_identity_callback(userdata: Any) -> Any:
 
 def default_expired_token_callback(
     _expired_jwt_header: dict, _expired_jwt_data: dict
-) -> Response:
+) -> ResponseReturnValue:
     """
     By default, if an expired token attempts to access a protected endpoint,
     we return a generic error message with a 401 status
@@ -63,7 +63,7 @@ def default_expired_token_callback(
     return jsonify({config.error_msg_key: "Token has expired"}), HTTPStatus.UNAUTHORIZED
 
 
-def default_invalid_token_callback(error_string: str) -> Response:
+def default_invalid_token_callback(error_string: str) -> ResponseReturnValue:
     """
     By default, if an invalid token attempts to access a protected endpoint, we
     return the error string for why it is not valid with a 422 status code
@@ -76,7 +76,7 @@ def default_invalid_token_callback(error_string: str) -> Response:
     )
 
 
-def default_unauthorized_callback(error_string: str) -> Response:
+def default_unauthorized_callback(error_string: str) -> ResponseReturnValue:
     """
     By default, if a protected endpoint is accessed without a JWT, we return
     the error string indicating why this is unauthorized, with a 401 status code
@@ -86,7 +86,9 @@ def default_unauthorized_callback(error_string: str) -> Response:
     return jsonify({config.error_msg_key: error_string}), HTTPStatus.UNAUTHORIZED
 
 
-def default_needs_fresh_token_callback(jwt_header: dict, jwt_data: dict) -> Response:
+def default_needs_fresh_token_callback(
+    jwt_header: dict, jwt_data: dict
+) -> ResponseReturnValue:
     """
     By default, if a non-fresh jwt is used to access a ```fresh_jwt_required```
     endpoint, we return a general error message with a 401 status code
@@ -97,7 +99,9 @@ def default_needs_fresh_token_callback(jwt_header: dict, jwt_data: dict) -> Resp
     )
 
 
-def default_revoked_token_callback(jwt_header: dict, jwt_data: dict) -> Response:
+def default_revoked_token_callback(
+    jwt_header: dict, jwt_data: dict
+) -> ResponseReturnValue:
     """
     By default, if a revoked token is used to access a protected endpoint, we
     return a general error message with a 401 status code
@@ -108,7 +112,9 @@ def default_revoked_token_callback(jwt_header: dict, jwt_data: dict) -> Response
     )
 
 
-def default_user_lookup_error_callback(_jwt_header: dict, jwt_data: dict) -> Response:
+def default_user_lookup_error_callback(
+    _jwt_header: dict, jwt_data: dict
+) -> ResponseReturnValue:
     """
     By default, if a user_lookup callback is defined and the callback
     function returns None, we return a general error message with a 401
@@ -128,7 +134,7 @@ def default_token_verification_callback(_jwt_header: dict, _jwt_data: dict) -> b
 
 def default_token_verification_failed_callback(
     _jwt_header: dict, _jwt_data: dict
-) -> Response:
+) -> ResponseReturnValue:
     """
     By default, if the user claims verification failed, we return a generic
     error message with a 400 status code

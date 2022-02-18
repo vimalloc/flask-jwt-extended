@@ -3,11 +3,16 @@ from datetime import timedelta
 from datetime import timezone
 from typing import Iterable
 from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Type
 from typing import Union
 
 from flask import current_app
 from flask.json import JSONEncoder
 from jwt.algorithms import requires_cryptography
+
+from flask_jwt_extended.typing import ExpiresDelta
 
 
 class _Config(object):
@@ -34,7 +39,7 @@ class _Config(object):
         return self._public_key if self.is_asymmetric else self._secret_key
 
     @property
-    def token_location(self) -> Iterable[str]:
+    def token_location(self) -> Sequence[str]:
         locations = current_app.config["JWT_TOKEN_LOCATION"]
         if isinstance(locations, str):
             locations = (locations,)
@@ -177,12 +182,14 @@ class _Config(object):
         return current_app.config["JWT_REFRESH_CSRF_FIELD_NAME"]
 
     @property
-    def access_expires(self) -> datetime:
+    def access_expires(self) -> ExpiresDelta:
         delta = current_app.config["JWT_ACCESS_TOKEN_EXPIRES"]
         if type(delta) is int:
             delta = timedelta(seconds=delta)
         if delta is not False:
             try:
+                # Basically runtime typechecking. Probably a better way to do
+                # this with proper type checking
                 delta + datetime.now(timezone.utc)
             except TypeError as e:
                 err = (
@@ -192,11 +199,13 @@ class _Config(object):
         return delta
 
     @property
-    def refresh_expires(self) -> datetime:
+    def refresh_expires(self) -> ExpiresDelta:
         delta = current_app.config["JWT_REFRESH_TOKEN_EXPIRES"]
         if type(delta) is int:
             delta = timedelta(seconds=delta)
         if delta is not False:
+            # Basically runtime typechecking. Probably a better way to do
+            # this with proper type checking
             try:
                 delta + datetime.now(timezone.utc)
             except TypeError as e:
@@ -255,7 +264,7 @@ class _Config(object):
         return key
 
     @property
-    def cookie_max_age(self) -> int:
+    def cookie_max_age(self) -> Optional[int]:
         # Returns the appropiate value for max_age for flask set_cookies. If
         # session cookie is true, return None, otherwise return a number of
         # seconds 1 year in the future
@@ -274,7 +283,7 @@ class _Config(object):
         return current_app.config["JWT_ERROR_MESSAGE_KEY"]
 
     @property
-    def json_encoder(self) -> JSONEncoder:
+    def json_encoder(self) -> Type[JSONEncoder]:
         return current_app.json_encoder
 
     @property

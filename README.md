@@ -52,8 +52,10 @@ tox
 A subset of checks can also be ran by adding an argument to tox. The available
 arguments are:
 
--   py36, py37, py38, py39, pypy3
+-   py36, py37, py38, py39, py310, pypy3
     -   Run unit tests on the given python version
+-   mypy
+    -   Run mypy type checking  
 -   coverage
     -   Run a code coverage check
 -   docs

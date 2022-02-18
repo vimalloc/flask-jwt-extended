@@ -151,14 +151,7 @@ def jwt_required(
         @wraps(fn)
         def decorator(*args, **kwargs):
             verify_jwt_in_request(optional, fresh, refresh, locations, verify_type)
-
-            # Compatibility with flask < 2.0
-            if hasattr(current_app, "ensure_sync") and callable(
-                getattr(current_app, "ensure_sync", None)
-            ):
-                return current_app.ensure_sync(fn)(*args, **kwargs)
-
-            return fn(*args, **kwargs)  # pragma: no cover
+            return current_app.ensure_sync(fn)(*args, **kwargs)
 
         return decorator
 

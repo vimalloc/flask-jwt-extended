@@ -1,6 +1,9 @@
 import datetime
 from typing import Any
 from typing import Callable
+from typing import Literal
+from typing import Optional
+from typing import Union
 
 import jwt
 from flask import Flask
@@ -75,7 +78,7 @@ class JWTManager(object):
         self._unauthorized_callback = default_unauthorized_callback
         self._user_claims_callback = default_additional_claims_callback
         self._user_identity_callback = default_user_identity_callback
-        self._user_lookup_callback = None
+        self._user_lookup_callback: Optional[Callable] = None
         self._user_lookup_error_callback = default_user_lookup_error_callback
         self._token_verification_failed_callback = (
             default_token_verification_failed_callback
@@ -478,7 +481,7 @@ class JWTManager(object):
         token_type: str,
         claims=None,
         fresh: bool = False,
-        expires_delta: datetime.timedelta = None,
+        expires_delta: Union[Literal[False], datetime.timedelta] = None,
         headers=None,
     ) -> str:
         header_overrides = self._jwt_additional_header_callback(identity)
@@ -538,6 +541,9 @@ class JWTManager(object):
         try:
             return _decode_jwt(**kwargs, allow_expired=allow_expired)
         except ExpiredSignatureError as e:
-            e.jwt_header = unverified_headers
-            e.jwt_data = _decode_jwt(**kwargs, allow_expired=True)
+            # TODO: If we ever do another breaking change, don't raise this pyjwt
+            #       error directly, instead raise a custom error of ours from this
+            #       error.
+            e.jwt_header = unverified_headers  # type: ignore
+            e.jwt_data = _decode_jwt(**kwargs, allow_expired=True)  # type: ignore
             raise

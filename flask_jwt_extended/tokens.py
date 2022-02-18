@@ -5,6 +5,9 @@ from datetime import timezone
 from hmac import compare_digest
 from typing import Any
 from typing import Iterable
+from typing import List
+from typing import Literal
+from typing import Type
 from typing import Union
 
 import jwt
@@ -19,13 +22,13 @@ def _encode_jwt(
     audience: Union[str, Iterable[str]],
     claim_overrides: dict,
     csrf: bool,
-    expires_delta: timedelta,
+    expires_delta: Union[Literal[False], timedelta],
     fresh: bool,
     header_overrides: dict,
     identity: Any,
     identity_claim_key: str,
     issuer: str,
-    json_encoder: JSONEncoder,
+    json_encoder: Type[JSONEncoder],
     secret: str,
     token_type: str,
     nbf: bool,
@@ -65,13 +68,13 @@ def _encode_jwt(
         token_data,
         secret,
         algorithm,
-        json_encoder=json_encoder,
+        json_encoder=json_encoder,  # type: ignore
         headers=header_overrides,
     )
 
 
 def _decode_jwt(
-    algorithms: Iterable,
+    algorithms: List,
     allow_expired: bool,
     audience: Union[str, Iterable[str]],
     csrf_value: str,

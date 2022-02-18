@@ -1,5 +1,6 @@
 import datetime
 from typing import Any
+from typing import Optional
 
 import jwt
 from flask import _request_ctx_stack
@@ -61,7 +62,7 @@ def get_jwt_identity() -> Any:
     return get_jwt().get(config.identity_claim_key, None)
 
 
-def get_jwt_request_location() -> str:
+def get_jwt_request_location() -> Optional[str]:
     """
     In a protected endpoint, this will return the "location" at which the JWT
     that is accessing the endpoint was found--e.g., "cookies", "query-string",
@@ -72,8 +73,7 @@ def get_jwt_request_location() -> str:
         The location of the JWT in the current request; e.g., "cookies",
         "query-string", "headers", or "json"
     """
-    location = getattr(_request_ctx_stack.top, "jwt_location", None)
-    return location
+    return getattr(_request_ctx_stack.top, "jwt_location", None)
 
 
 def get_current_user() -> Any:
@@ -240,7 +240,7 @@ def get_unverified_jwt_headers(encoded_token: str) -> dict:
     return jwt.get_unverified_header(encoded_token)
 
 
-def get_jti(encoded_token: str) -> str:
+def get_jti(encoded_token: str) -> Optional[str]:
     """
     Returns the JTI (unique identifier) of an encoded JWT
 
@@ -248,7 +248,7 @@ def get_jti(encoded_token: str) -> str:
         The encoded JWT to get the JTI from.
 
     :return:
-        The JTI (unique identifier) of a JWT.
+        The JTI (unique identifier) of a JWT, if it is present.
     """
     return decode_token(encoded_token).get("jti")
 

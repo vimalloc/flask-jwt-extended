@@ -1,9 +1,7 @@
 import datetime
 from typing import Any
 from typing import Callable
-from typing import Literal
 from typing import Optional
-from typing import Union
 
 import jwt
 from flask import Flask
@@ -43,6 +41,7 @@ from flask_jwt_extended.exceptions import UserLookupError
 from flask_jwt_extended.exceptions import WrongTokenError
 from flask_jwt_extended.tokens import _decode_jwt
 from flask_jwt_extended.tokens import _encode_jwt
+from flask_jwt_extended.typing import ExpiresDelta
 
 
 class JWTManager(object):
@@ -481,7 +480,7 @@ class JWTManager(object):
         token_type: str,
         claims=None,
         fresh: bool = False,
-        expires_delta: Union[Literal[False], datetime.timedelta] = None,
+        expires_delta: ExpiresDelta = None,
         headers=None,
     ) -> str:
         header_overrides = self._jwt_additional_header_callback(identity)

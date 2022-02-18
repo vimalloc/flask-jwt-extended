@@ -6,7 +6,6 @@ from hmac import compare_digest
 from typing import Any
 from typing import Iterable
 from typing import List
-from typing import Literal
 from typing import Type
 from typing import Union
 
@@ -15,6 +14,7 @@ from flask.json import JSONEncoder
 
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import JWTDecodeError
+from flask_jwt_extended.typing import ExpiresDelta
 
 
 def _encode_jwt(
@@ -22,7 +22,7 @@ def _encode_jwt(
     audience: Union[str, Iterable[str]],
     claim_overrides: dict,
     csrf: bool,
-    expires_delta: Union[Literal[False], timedelta],
+    expires_delta: ExpiresDelta,
     fresh: bool,
     header_overrides: dict,
     identity: Any,

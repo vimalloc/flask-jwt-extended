@@ -1,10 +1,8 @@
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
-from typing import Any
 from typing import Iterable
 from typing import List
-from typing import Literal
 from typing import Optional
 from typing import Sequence
 from typing import Type
@@ -13,6 +11,8 @@ from typing import Union
 from flask import current_app
 from flask.json import JSONEncoder
 from jwt.algorithms import requires_cryptography
+
+from flask_jwt_extended.typing import ExpiresDelta
 
 
 class _Config(object):
@@ -182,7 +182,7 @@ class _Config(object):
         return current_app.config["JWT_REFRESH_CSRF_FIELD_NAME"]
 
     @property
-    def access_expires(self) -> Union[Literal[False], Any]:
+    def access_expires(self) -> ExpiresDelta:
         delta = current_app.config["JWT_ACCESS_TOKEN_EXPIRES"]
         if type(delta) is int:
             delta = timedelta(seconds=delta)
@@ -199,7 +199,7 @@ class _Config(object):
         return delta
 
     @property
-    def refresh_expires(self) -> Union[Literal[False], Any]:
+    def refresh_expires(self) -> ExpiresDelta:
         delta = current_app.config["JWT_REFRESH_TOKEN_EXPIRES"]
         if type(delta) is int:
             delta = timedelta(seconds=delta)

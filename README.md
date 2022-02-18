@@ -55,7 +55,7 @@ arguments are:
 -   py36, py37, py38, py39, py310, pypy3
     -   Run unit tests on the given python version
 -   mypy
-    -   Run mypy type checking  
+    -   Run mypy type checking
 -   coverage
     -   Run a code coverage check
 -   docs

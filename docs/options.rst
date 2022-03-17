@@ -44,7 +44,7 @@ General Options:
 
 .. py:data:: JWT_REFRESH_TOKEN_EXPIRES
 
-    How long an access token should be valid before it expires. This can be a
+    How long a refresh token should be valid before it expires. This can be a
     `datetime.timedelta <https://docs.python.org/3/library/datetime.html#timedelta-objects>`_,
     `dateutil.relativedelta <https://dateutil.readthedocs.io/en/stable/relativedelta.html>`_,
     or a number of seconds (``Integer``).

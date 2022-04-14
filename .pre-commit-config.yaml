@@ -6,7 +6,7 @@ repos:
         name: Reorder Python imports (src, tests, examples)
         args: ["--application-directories", ".:src"]
   - repo: https://github.com/python/black
-    rev: 19.3b0
+    rev: 22.3.0
     hooks:
       - id: black
   - repo: https://gitlab.com/pycqa/flake8

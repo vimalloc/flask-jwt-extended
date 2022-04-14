@@ -55,9 +55,9 @@ def app_with_locations():
 
 
 def test_header_access(app, app_with_locations):
-    for app in (app, app_with_locations):
+    for test_app in (app, app_with_locations):
         test_client = app.test_client()
-        with app.test_request_context():
+        with test_app.test_request_context():
             access_token = create_access_token("username")
 
         access_headers = {"Authorization": "Bearer {}".format(access_token)}
@@ -67,8 +67,8 @@ def test_header_access(app, app_with_locations):
 
 
 def test_cookie_access(app, app_with_locations):
-    for app in (app, app_with_locations):
-        test_client = app.test_client()
+    for test_app in (app, app_with_locations):
+        test_client = test_app.test_client()
         test_client.get("/cookie_login")
         response = test_client.get("/protected")
         assert response.status_code == 200
@@ -76,9 +76,9 @@ def test_cookie_access(app, app_with_locations):
 
 
 def test_query_string_access(app, app_with_locations):
-    for app in (app, app_with_locations):
-        test_client = app.test_client()
-        with app.test_request_context():
+    for test_app in (app, app_with_locations):
+        test_client = test_app.test_client()
+        with test_app.test_request_context():
             access_token = create_access_token("username")
 
         url = "/protected?jwt={}".format(access_token)
@@ -88,9 +88,9 @@ def test_query_string_access(app, app_with_locations):
 
 
 def test_json_access(app, app_with_locations):
-    for app in (app, app_with_locations):
-        test_client = app.test_client()
-        with app.test_request_context():
+    for test_app in (app, app_with_locations):
+        test_client = test_app.test_client()
+        with test_app.test_request_context():
             access_token = create_access_token("username")
         data = {"access_token": access_token}
         response = test_client.post("/protected", json=data)

@@ -135,7 +135,7 @@ def test_no_jwt_in_request(app, options):
     ],
 )
 def test_order_of_jwt_locations_in_request(app, options):
-    """ test order doesn't matter if at least one valid token is set"""
+    """test order doesn't matter if at least one valid token is set"""
     token_locations, status_code, expected_err, expected_dict = options
     app.config["JWT_TOKEN_LOCATION"] = token_locations
     test_client = app.test_client()
@@ -157,7 +157,7 @@ def test_order_of_jwt_locations_in_request(app, options):
     ],
 )
 def test_order_of_jwt_locations_with_one_invalid_token_in_request(app, options):
-    """ test order doesn't matter if at least one valid token is set"""
+    """test order doesn't matter if at least one valid token is set"""
     token_locations, status_code, expected_err, expected_dict = options
     app.config["JWT_TOKEN_LOCATION"] = token_locations
     test_client = app.test_client()

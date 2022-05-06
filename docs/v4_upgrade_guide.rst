@@ -12,7 +12,7 @@ Encoded JWT Changes (IMPORTANT)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - The ``JWT_USER_CLAIMS`` configuration option has been removed. Now when creating
   JWTs with additional claims, those claims are put on the top level of the token,
-  insetad of inside the the nested ``user_claims`` dictionary. This has the very
+  instead of inside the the nested ``user_claims`` dictionary. This has the very
   important benefit of allowing you to override reserved claims (such as ``nbf``)
   which was not previously possible in this extension.
 
@@ -21,7 +21,7 @@ Encoded JWT Changes (IMPORTANT)
   This has the unfortunate side effect that any existing JWTs your application is
   using will not work correctly if they utilize additional claims. We **strongly**
   suggest changing your secret key to force all users to get the new format of
-  JWTs. If that is not feasible for your appilication you could build a shim to
+  JWTs. If that is not feasible for your application you could build a shim to
   handle both the old JWTs which store additional claims in the ``user_claims``
   key, and the new format where additional claims are now stored at the top
   level, until all the JWTs have had a chance to cycle to the new format.

@@ -1,2 +1,2 @@
-include LICENSE README.md requirements.txt tox.ini
+include LICENSE README.md requirements.txt tox.ini flask_jwt_extended/py.typed
 recursive-include tests *.py

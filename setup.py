@@ -23,6 +23,9 @@ setup(
     long_description_content_type="text/markdown",
     keywords=["flask", "jwt", "json web token"],
     packages=["flask_jwt_extended"],
+    package_data={
+        "flask_jwt_extended": ["py.typed"],
+    },
     zip_safe=False,
     platforms="any",
     install_requires=[

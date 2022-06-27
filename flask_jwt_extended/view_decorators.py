@@ -47,7 +47,7 @@ def verify_jwt_in_request(
     fresh: bool = False,
     refresh: bool = False,
     locations: LocationType = None,
-    verify_type: bool = False,
+    verify_type: bool = True,
 ) -> Optional[Tuple[dict, dict]]:
     """
     Verify that a valid JWT is present in the request, unless ``optional=True`` in

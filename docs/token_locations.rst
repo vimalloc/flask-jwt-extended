@@ -115,7 +115,7 @@ out as invalid too. Lets look at how to do that:
 Note that there are additional CSRF options, such as looking for the double
 submit token in a form, changing cookie paths, etc, that can be used to
 tailor things to the needs of your application. See
-:ref:`Cross Site Request Forgery Options` for details.
+:ref:`Cross Site Request Forgery Options:` for details.
 
 
 Query String

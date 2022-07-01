@@ -8,24 +8,73 @@ For example:
 
   app.config["OPTION_NAME"] = option_value
 
+Overview:
+~~~~~~~~~
+
+- `General Options:`_
+
+  * `JWT_ACCESS_TOKEN_EXPIRES`_
+  * `JWT_ALGORITHM`_
+  * `JWT_DECODE_ALGORITHMS`_
+  * `JWT_DECODE_AUDIENCE`_
+  * `JWT_DECODE_ISSUER`_
+  * `JWT_DECODE_LEEWAY`_
+  * `JWT_ENCODE_AUDIENCE`_
+  * `JWT_ENCODE_ISSUER`_
+  * `JWT_ENCODE_NBF`_
+  * `JWT_ERROR_MESSAGE_KEY`_
+  * `JWT_IDENTITY_CLAIM`_
+  * `JWT_PRIVATE_KEY`_
+  * `JWT_PUBLIC_KEY`_
+  * `JWT_REFRESH_TOKEN_EXPIRES`_
+  * `JWT_SECRET_KEY`_
+  * `JWT_TOKEN_LOCATION`_
+
+- `Header Options:`_
+
+  * `JWT_HEADER_NAME`_
+  * `JWT_HEADER_TYPE`_
+
+- `Cookie Options:`_
+
+  * `JWT_ACCESS_COOKIE_NAME`_
+  * `JWT_ACCESS_COOKIE_PATH`_
+  * `JWT_COOKIE_CSRF_PROTECT`_
+  * `JWT_COOKIE_DOMAIN`_
+  * `JWT_COOKIE_SAMESITE`_
+  * `JWT_COOKIE_SECURE`_
+  * `JWT_REFRESH_COOKIE_NAME`_
+  * `JWT_REFRESH_COOKIE_PATH`_
+  * `JWT_SESSION_COOKIE`_
+
+- `Cross Site Request Forgery Options:`_
+
+  * `JWT_ACCESS_CSRF_COOKIE_NAME`_
+  * `JWT_ACCESS_CSRF_COOKIE_PATH`_
+  * `JWT_ACCESS_CSRF_FIELD_NAME`_
+  * `JWT_ACCESS_CSRF_HEADER_NAME`_
+  * `JWT_CSRF_CHECK_FORM`_
+  * `JWT_CSRF_IN_COOKIES`_
+  * `JWT_CSRF_METHODS`_
+  * `JWT_REFRESH_CSRF_COOKIE_NAME`_
+  * `JWT_REFRESH_CSRF_COOKIE_PATH`_
+  * `JWT_REFRESH_CSRF_FIELD_NAME`_
+  * `JWT_REFRESH_CSRF_HEADER_NAME`_
+
+- `Query String Options:`_
+
+  * `JWT_QUERY_STRING_NAME`_
+  * `JWT_QUERY_STRING_VALUE_PREFIX`_
+
+- `JSON Body Options:`_
+
+  * `JWT_JSON_KEY`_
+  * `JWT_REFRESH_JSON_KEY`_
+
 General Options:
 ~~~~~~~~~~~~~~~~
 
-.. py:data:: JWT_TOKEN_LOCATION
-
-    Where to look for a JWT when processing a request. The available options
-    are ``"headers"``, ``"cookies"``, ``"query_string"``, and ``"json"``.
-
-    You can pass in a list to check more then one location, for example
-    ``["headers", "cookies"]``. The order of the list sets the precedence of
-    where JWTs will be looked for.
-
-    This can be overridden on a per-route basis by using the ``locations``
-    argument in :func:`flask_jwt_extended.jwt_required`.
-
-    Default: ``"headers"``
-
-
+.. _JWT_ACCESS_TOKEN_EXPIRES:
 .. py:data:: JWT_ACCESS_TOKEN_EXPIRES
 
     How long an access token should be valid before it expires. This can be a
@@ -42,6 +91,113 @@ General Options:
     Default: ``datetime.timedelta(minutes=15)``
 
 
+.. _JWT_ALGORITHM:
+.. py:data:: JWT_ALGORITHM
+
+    Which algorithm to sign the JWT with. See `PyJWT <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
+    for the available algorithms.
+
+    Default: ``"HS256"``
+
+
+.. _JWT_DECODE_ALGORITHMS:
+.. py:data:: JWT_DECODE_ALGORITHMS
+
+    Which algorithms to use when decoding a JWT. See `PyJWT <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
+    for the available algorithms.
+
+    By default this will always be the same algorithm that is defined in ``JWT_ALGORITHM``.
+
+    Default: ``["HS256"]``
+
+
+.. _JWT_DECODE_AUDIENCE:
+.. py:data:: JWT_DECODE_AUDIENCE
+
+    The string or list of audiences (``aud``) expected in a JWT when decoding it.
+
+    Default: ``None``
+
+
+.. _JWT_DECODE_ISSUER:
+.. py:data:: JWT_DECODE_ISSUER
+
+    The issuer (``iss``) you expect in a JWT when decoding it.
+
+    Default: ``None``
+
+
+.. _JWT_DECODE_LEEWAY:
+.. py:data:: JWT_DECODE_LEEWAY
+
+    The number of seconds a token will be considered valid before the Not Before
+    Time (`nbf) and after the Expires Time (`exp`). This can be useful when
+    dealing with clock drift between clients.
+
+    Default: ``0``
+
+
+.. _JWT_ENCODE_AUDIENCE:
+.. py:data:: JWT_ENCODE_AUDIENCE
+
+    The string or list of audiences (``aud``) for created JWTs.
+
+    Default: ``None``
+
+
+.. _JWT_ENCODE_ISSUER:
+.. py:data:: JWT_ENCODE_ISSUER
+
+    The issuer (``iss``) for created JWTs.
+
+    Default: ``None``
+
+
+.. _JWT_ENCODE_NBF:
+.. py:data:: JWT_ENCODE_NBF
+
+    The not before (``nbf``) claim which defines that a JWT MUST NOT be accepted for processing during decode.
+
+    Default: ``True``
+
+
+.. _JWT_ERROR_MESSAGE_KEY:
+.. py:data:: JWT_ERROR_MESSAGE_KEY
+
+    The key for error messages in a JSON response returned by this extension.
+
+    Default: ``"msg"``
+
+
+.. _JWT_IDENTITY_CLAIM:
+.. py:data:: JWT_IDENTITY_CLAIM
+
+    The claim in a JWT that is used as the source of identity.
+
+    Default: ``"sub"``
+
+
+.. _JWT_PRIVATE_KEY:
+.. py:data:: JWT_PRIVATE_KEY
+
+    The secret key used to encode JWTs when using an asymmetric signing
+    algorithm (such as ``RS*`` or ``ES*``). The key must be in PEM format.
+
+    **Do not reveal the secret key when posting questions or committing code.**
+
+    Default: ``None``
+
+
+.. _JWT_PUBLIC_KEY:
+.. py:data:: JWT_PUBLIC_KEY
+
+    The secret key used to decode JWTs when using an asymmetric signing
+    algorithm (such as ``RS*`` or ``ES*``). The key must be in PEM format.
+
+    Default: ``None``
+
+
+.. _JWT_REFRESH_TOKEN_EXPIRES:
 .. py:data:: JWT_REFRESH_TOKEN_EXPIRES
 
     How long a refresh token should be valid before it expires. This can be a
@@ -58,24 +214,7 @@ General Options:
     Default: ``datetime.timedelta(days=30)``
 
 
-.. py:data:: JWT_ALGORITHM
-
-    Which algorithm to sign the JWT with. See `PyJWT <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
-    for the available algorithms.
-
-    Default: ``"HS256"``
-
-
-.. py:data:: JWT_DECODE_ALGORITHMS
-
-    Which algorithms to use when decoding a JWT. See `PyJWT <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
-    for the available algorithms.
-
-    By default this will always be the same algorithm that is defined in ``JWT_ALGORITHM``.
-
-    Default: ``["HS256"]``
-
-
+.. _JWT_SECRET_KEY:
 .. py:data:: JWT_SECRET_KEY
 
     The secret key used to encode and decode JWTs when using a symmetric signing
@@ -101,86 +240,27 @@ General Options:
     Default: ``None``
 
 
-.. py:data:: JWT_PRIVATE_KEY
+.. _JWT_TOKEN_LOCATION:
+.. py:data:: JWT_TOKEN_LOCATION
 
-    The secret key used to encode JWTs when using an asymmetric signing
-    algorithm (such as ``RS*`` or ``ES*``). The key must be in PEM format.
+    Where to look for a JWT when processing a request. The available options
+    are ``"headers"``, ``"cookies"``, ``"query_string"``, and ``"json"``.
 
-    **Do not reveal the secret key when posting questions or committing code.**
+    You can pass in a list to check more then one location, for example
+    ``["headers", "cookies"]``. The order of the list sets the precedence of
+    where JWTs will be looked for.
 
-    Default: ``None``
+    This can be overridden on a per-route basis by using the ``locations``
+    argument in :func:`flask_jwt_extended.jwt_required`.
 
-
-.. py:data:: JWT_PUBLIC_KEY
-
-    The secret key used to decode JWTs when using an asymmetric signing
-    algorithm (such as ``RS*`` or ``ES*``). The key must be in PEM format.
-
-    Default: ``None``
-
-
-.. py:data:: JWT_DECODE_AUDIENCE
-
-    The string or list of audiences (``aud``) expected in a JWT when decoding it.
-
-    Default: ``None``
-
-
-.. py:data:: JWT_ENCODE_AUDIENCE
-
-    The string or list of audiences (``aud``) for created JWTs.
-
-    Default: ``None``
-
-
-.. py:data:: JWT_DECODE_ISSUER
-
-    The issuer (``iss``) you expect in a JWT when decoding it.
-
-    Default: ``None``
-
-
-.. py:data:: JWT_ENCODE_ISSUER
-
-    The issuer (``iss``) for created JWTs.
-
-    Default: ``None``
-
-
-.. py:data:: JWT_ENCODE_NBF
-
-    The not before (``nbf``) claim which defines that a JWT MUST NOT be accepted for processing during decode.
-
-    Default: ``True``
-
-
-.. py:data:: JWT_DECODE_LEEWAY
-
-    The number of seconds a token will be considered valid before the Not Before
-    Time (`nbf) and after the Expires Time (`exp`). This can be useful when
-    dealing with clock drift between clients.
-
-    Default: ``0``
-
-
-.. py:data:: JWT_IDENTITY_CLAIM
-
-    The claim in a JWT that is used as the source of identity.
-
-    Default: ``"sub"``
-
-
-.. py:data:: JWT_ERROR_MESSAGE_KEY
-
-    The key for error messages in a JSON response returned by this extension.
-
-    Default: ``"msg"``
+    Default: ``"headers"``
 
 
 Header Options:
 ~~~~~~~~~~~~~~~
 These are only applicable if a route is configured to accept JWTs via headers.
 
+.. _JWT_HEADER_NAME:
 .. py:data:: JWT_HEADER_NAME
 
     What header should contain the JWT in a request
@@ -188,6 +268,7 @@ These are only applicable if a route is configured to accept JWTs via headers.
     Default: ``"Authorization"``
 
 
+.. _JWT_HEADER_TYPE:
 .. py:data:: JWT_HEADER_TYPE
 
     What type of header the JWT is in. If this is an empty string, the header
@@ -200,17 +281,45 @@ Cookie Options:
 ~~~~~~~~~~~~~~~
 These are only applicable if a route is configured to accept JWTs via cookies.
 
-.. py:data:: JWT_COOKIE_SECURE
+.. _JWT_ACCESS_COOKIE_NAME:
+.. py:data:: JWT_ACCESS_COOKIE_NAME
 
-    Controls if the ``secure`` flag should be placed on cookies created by this
-    extension. If a cookie is marked as ``secure`` it will only be sent by the
-    web browser over an HTTPS connection.
+    The name of the cookie that will hold the access token.
 
-    **This should always be True in production.**
-
-    Default: ``False``
+    Default: ``"access_token_cookie"``
 
 
+.. _JWT_ACCESS_COOKIE_PATH:
+.. py:data:: JWT_ACCESS_COOKIE_PATH
+
+    The path for the access cookies
+
+    Default: ``"/"``
+
+
+.. _JWT_COOKIE_CSRF_PROTECT:
+.. py:data:: JWT_COOKIE_CSRF_PROTECT
+
+    Controls if Cross Site Request Forgery (CSRF) protection is enabled when using
+    cookies.
+
+    **This should always be True in production**
+
+    Default: ``True``
+
+
+.. _JWT_COOKIE_DOMAIN:
+.. py:data:: JWT_COOKIE_DOMAIN
+
+    Value to use for cross domain cookies. For example, if ``JWT_COOKIE_DOMAIN`` is
+    ``".example.com"``, the cookies will be set so they are readable by the domains
+    www.example.com, foo.example.com etc. Otherwise, a cookie will only be
+    readable by the domain that set it.
+
+    Default: ``None``
+
+
+.. _JWT_COOKIE_SAMESITE:
 .. py:data:: JWT_COOKIE_SAMESITE
 
     Controls how the cookies should be sent in a cross-site browsing context.
@@ -225,13 +334,19 @@ These are only applicable if a route is configured to accept JWTs via cookies.
     Default: ``None``, which is treated as ``"Lax"`` by browsers.
 
 
-.. py:data:: JWT_ACCESS_COOKIE_NAME
+.. _JWT_COOKIE_SECURE:
+.. py:data:: JWT_COOKIE_SECURE
 
-    The name of the cookie that will hold the access token.
+    Controls if the ``secure`` flag should be placed on cookies created by this
+    extension. If a cookie is marked as ``secure`` it will only be sent by the
+    web browser over an HTTPS connection.
 
-    Default: ``"access_token_cookie"``
+    **This should always be True in production.**
+
+    Default: ``False``
 
 
+.. _JWT_REFRESH_COOKIE_NAME:
 .. py:data:: JWT_REFRESH_COOKIE_NAME
 
     The name of the cookie that will hold the refresh token.
@@ -242,13 +357,7 @@ These are only applicable if a route is configured to accept JWTs via cookies.
     Default: ``"refresh_token_cookie"``
 
 
-.. py:data:: JWT_ACCESS_COOKIE_PATH
-
-    The path for the access cookies
-
-    Default: ``"/"``
-
-
+.. _JWT_REFRESH_COOKIE_PATH:
 .. py:data:: JWT_REFRESH_COOKIE_PATH
 
     The path for the refresh cookies
@@ -259,16 +368,7 @@ These are only applicable if a route is configured to accept JWTs via cookies.
     Default: ``"/"``
 
 
-.. py:data:: JWT_COOKIE_DOMAIN
-
-    Value to use for cross domain cookies. For example, if ``JWT_COOKIE_DOMAIN`` is
-    ``".example.com"``, the cookies will be set so they are readable by the domains
-    www.example.com, foo.example.com etc. Otherwise, a cookie will only be
-    readable by the domain that set it.
-
-    Default: ``None``
-
-
+.. _JWT_SESSION_COOKIE:
 .. py:data:: JWT_SESSION_COOKIE
 
     Controls if the cookies will be set as session cookies, which are deleted when
@@ -277,29 +377,38 @@ These are only applicable if a route is configured to accept JWTs via cookies.
     Default: ``True``
 
 
-.. py:data:: JWT_COOKIE_CSRF_PROTECT
-
-    Controls if Cross Site Request Forgery (CSRF) protection is enabled when using
-    cookies.
-
-    **This should always be True in production**
-
-    Default: ``True``
-
-
-Cross Site Request Forgery Options
+Cross Site Request Forgery Options:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 These are only applicable if a route is configured to accept JWTs via cookies and
 ``JWT_COOKIE_CSRF_PROTECT`` is ``True``.
 
+.. _JWT_ACCESS_CSRF_COOKIE_NAME:
+.. py:data:: JWT_ACCESS_CSRF_COOKIE_NAME
 
-.. py:data:: JWT_CSRF_METHODS
+    The name of the cookie that contains the CSRF double submit token. Only
+    applicable if ``JWT_CSRF_IN_COOKIES`` is ``True``
 
-    A list of HTTP methods that we should do CSRF checks on.
-
-    Default: ``["POST", "PUT", "PATCH", "DELETE"]``
+    Default: ``csrf_access_token``
 
 
+.. _JWT_ACCESS_CSRF_COOKIE_PATH:
+.. py:data:: JWT_ACCESS_CSRF_COOKIE_PATH
+
+    The path of the access CSRF double submit cookie.
+
+    Default: ``"/"``
+
+
+.. _JWT_ACCESS_CSRF_FIELD_NAME:
+.. py:data:: JWT_ACCESS_CSRF_FIELD_NAME
+
+    Name of the form field that should contain the CSRF double submit token for
+    an access token. Only applicable if ``JWT_CSRF_CHECK_FORM`` is ``True``
+
+    Default: ``"csrf_token"``
+
+
+.. _JWT_ACCESS_CSRF_HEADER_NAME:
 .. py:data:: JWT_ACCESS_CSRF_HEADER_NAME
 
     The name of the header on an incoming request that should contain the CSRF
@@ -308,17 +417,15 @@ These are only applicable if a route is configured to accept JWTs via cookies an
     Default: ``"X-CSRF-TOKEN"``
 
 
-.. py:data:: JWT_REFRESH_CSRF_HEADER_NAME
+.. _JWT_CSRF_CHECK_FORM:
+.. py:data:: JWT_CSRF_CHECK_FORM
 
-    The name of the header on an incoming request that should contain the CSRF
-    double submit token.
+    Controls if form data should also be check for the CSRF double submit token.
 
-    Note: We generally do not recommend using refresh tokens with cookies. See
-    :ref:`Implicit Refreshing With Cookies`.
-
-    Default: ``"X-CSRF-TOKEN"``
+    Default: ``False``
 
 
+.. _JWT_CSRF_IN_COOKIES:
 .. py:data:: JWT_CSRF_IN_COOKIES
 
     Controls if the CSRF double submit token will be stored in additional cookies.
@@ -329,14 +436,15 @@ These are only applicable if a route is configured to accept JWTs via cookies an
     Default: ``True``
 
 
-.. py:data:: JWT_ACCESS_CSRF_COOKIE_NAME
+.. _JWT_CSRF_METHODS:
+.. py:data:: JWT_CSRF_METHODS
 
-    The name of the cookie that contains the CSRF double submit token. Only
-    applicable if ``JWT_CSRF_IN_COOKIES`` is ``True``
+    A list of HTTP methods that we should do CSRF checks on.
 
-    Default: ``csrf_access_token``
+    Default: ``["POST", "PUT", "PATCH", "DELETE"]``
 
 
+.. _JWT_REFRESH_CSRF_COOKIE_NAME:
 .. py:data:: JWT_REFRESH_CSRF_COOKIE_NAME
 
     The name of the cookie that contains the CSRF double submit token. Only
@@ -348,13 +456,7 @@ These are only applicable if a route is configured to accept JWTs via cookies an
     Default: ``csrf_refresh_token``
 
 
-.. py:data:: JWT_ACCESS_CSRF_COOKIE_PATH
-
-    The path of the access CSRF double submit cookie.
-
-    Default: ``"/"``
-
-
+.. _JWT_REFRESH_CSRF_COOKIE_PATH:
 .. py:data:: JWT_REFRESH_CSRF_COOKIE_PATH
 
     The path of the refresh CSRF double submit cookie.
@@ -365,21 +467,7 @@ These are only applicable if a route is configured to accept JWTs via cookies an
     Default: ``"/"``
 
 
-.. py:data:: JWT_CSRF_CHECK_FORM
-
-    Controls if form data should also be check for the CSRF double submit token.
-
-    Default: ``False``
-
-
-.. py:data:: JWT_ACCESS_CSRF_FIELD_NAME
-
-    Name of the form field that should contain the CSRF double submit token for
-    an access token. Only applicable if ``JWT_CSRF_CHECK_FORM`` is ``True``
-
-    Default: ``"csrf_token"``
-
-
+.. _JWT_REFRESH_CSRF_FIELD_NAME:
 .. py:data:: JWT_REFRESH_CSRF_FIELD_NAME
 
     Name of the form field that should contain the CSRF double submit token for
@@ -391,10 +479,23 @@ These are only applicable if a route is configured to accept JWTs via cookies an
     Default: ``"csrf_token"``
 
 
+.. _JWT_REFRESH_CSRF_HEADER_NAME:
+.. py:data:: JWT_REFRESH_CSRF_HEADER_NAME
+
+    The name of the header on an incoming request that should contain the CSRF
+    double submit token.
+
+    Note: We generally do not recommend using refresh tokens with cookies. See
+    :ref:`Implicit Refreshing With Cookies`.
+
+    Default: ``"X-CSRF-TOKEN"``
+
+
 Query String Options:
 ~~~~~~~~~~~~~~~~~~~~~
 These are only applicable if a route is configured to accept JWTs via query string.
 
+.. _JWT_QUERY_STRING_NAME:
 .. py:data:: JWT_QUERY_STRING_NAME
 
     What query string parameter should contain the JWT.
@@ -402,6 +503,7 @@ These are only applicable if a route is configured to accept JWTs via query stri
     Default: ``"jwt"``
 
 
+.. _JWT_QUERY_STRING_VALUE_PREFIX:
 .. py:data:: JWT_QUERY_STRING_VALUE_PREFIX
 
     An optional prefix string that should show up before the JWT in a
@@ -417,6 +519,7 @@ JSON Body Options:
 ~~~~~~~~~~~~~~~~~~
 These are only applicable if a route is configured to accept JWTs via the JSON body.
 
+.. _JWT_JSON_KEY:
 .. py:data:: JWT_JSON_KEY
 
     What key should contain the access token in the JSON body of a request.
@@ -424,6 +527,7 @@ These are only applicable if a route is configured to accept JWTs via the JSON b
     Default: ``"access_token"``
 
 
+.. _JWT_REFRESH_JSON_KEY:
 .. py:data:: JWT_REFRESH_JSON_KEY
 
     What key should contain the refresh token in the JSON body of a request.

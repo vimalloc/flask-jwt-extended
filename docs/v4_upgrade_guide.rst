@@ -124,6 +124,8 @@ API Changes
   will now always be put in the JWT regardless of if it is an access or refresh
   tokens. If you don't want additional claims in your refresh tokens, do not
   include any additional claims when creating the refresh token.
+-  Removed ``UserLoadError`` from ``flask_jwt_extended.exceptions``. Use ``UserLookupError`` instead.
+
 
 New Stuff
 ~~~~~~~~~

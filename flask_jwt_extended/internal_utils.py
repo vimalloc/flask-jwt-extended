@@ -1,14 +1,17 @@
 from typing import Any
+from typing import TYPE_CHECKING
 
 from flask import current_app
 
-from flask_jwt_extended import JWTManager
 from flask_jwt_extended.exceptions import RevokedTokenError
 from flask_jwt_extended.exceptions import UserClaimsVerificationError
 from flask_jwt_extended.exceptions import WrongTokenError
 
+if TYPE_CHECKING:  # pragma: no cover
+    from flask_jwt_extended import JWTManager
 
-def get_jwt_manager() -> JWTManager:
+
+def get_jwt_manager() -> "JWTManager":
     try:
         return current_app.extensions["flask-jwt-extended"]
     except KeyError:  # pragma: no cover

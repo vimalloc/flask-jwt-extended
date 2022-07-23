@@ -456,3 +456,7 @@ def unset_refresh_cookies(response: Response, domain: str = None) -> None:
             path=config.refresh_csrf_cookie_path,
             samesite=config.cookie_samesite,
         )
+
+
+def current_user_context_processor() -> Any:
+    return {"current_user": get_current_user()}

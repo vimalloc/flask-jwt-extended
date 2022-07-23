@@ -42,6 +42,7 @@ from flask_jwt_extended.exceptions import WrongTokenError
 from flask_jwt_extended.tokens import _decode_jwt
 from flask_jwt_extended.tokens import _encode_jwt
 from flask_jwt_extended.typing import ExpiresDelta
+from flask_jwt_extended.utils import current_user_context_processor
 
 
 class JWTManager(object):
@@ -54,7 +55,7 @@ class JWTManager(object):
     to your app in a factory function.
     """
 
-    def __init__(self, app: Flask = None) -> None:
+    def __init__(self, app: Flask = None, add_context_processor: bool = False) -> None:
         """
         Create the JWTManager instance. You can either pass a flask application
         in directly here to register this extension with the flask app, or
@@ -62,6 +63,10 @@ class JWTManager(object):
 
         :param app:
             The Flask Application object
+        :param add_context_processor:
+            Controls if `current_user` is should be added to flasks template
+            context (and thus be available for use in Jinja templates). Defaults
+            to ``True``.
         """
         # Register the default error handler callback methods. These can be
         # overridden with the appropriate loader decorators
@@ -85,19 +90,26 @@ class JWTManager(object):
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
-            self.init_app(app)
+            self.init_app(app, add_context_processor)
 
-    def init_app(self, app: Flask) -> None:
+    def init_app(self, app: Flask, add_context_processor: bool = False) -> None:
         """
         Register this extension with the flask app.
 
         :param app:
             The Flask Application object
+        :param add_context_processor:
+            Controls if `current_user` is should be added to flasks template
+            context (and thus be available for use in Jinja templates). Defaults
+            to ``True``.
         """
         # Save this so we can use it later in the extension
         if not hasattr(app, "extensions"):  # pragma: no cover
             app.extensions = {}
         app.extensions["flask-jwt-extended"] = self
+
+        if add_context_processor:
+            app.context_processor(current_user_context_processor)
 
         # Set all the default configurations for this extension
         self._set_default_configuration_options(app)

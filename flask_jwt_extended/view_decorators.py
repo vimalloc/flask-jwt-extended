@@ -85,6 +85,10 @@ def verify_jwt_in_request(
     if request.method in config.exempt_methods:
         return None
 
+    # Should be impossible to hit, this makes mypy checks happy
+    if not _request_ctx_stack.top:  # pragma: no cover
+        raise RuntimeError("No _request_ctx_stack.top present, aborting")
+
     try:
         jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
             locations, fresh, refresh=refresh, verify_type=verify_type

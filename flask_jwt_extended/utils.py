@@ -11,7 +11,7 @@ from flask_jwt_extended.config import config
 from flask_jwt_extended.internal_utils import get_jwt_manager
 
 # Proxy to access the current user
-current_user = LocalProxy(lambda: get_current_user())
+current_user: Any = LocalProxy(lambda: get_current_user())
 
 
 def get_jwt() -> dict:

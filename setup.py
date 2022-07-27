@@ -35,7 +35,7 @@ setup(
         "typing_extensions>=3.7.4; python_version<'3.8'",  # typing.Literal
     ],
     extras_require={"asymmetric_crypto": ["cryptography>=3.3.1"]},
-    python_requires=">=3.6,<4",
+    python_requires=">=3.7,<4",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",

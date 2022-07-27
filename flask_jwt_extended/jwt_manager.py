@@ -66,7 +66,7 @@ class JWTManager(object):
         :param add_context_processor:
             Controls if `current_user` is should be added to flasks template
             context (and thus be available for use in Jinja templates). Defaults
-            to ``True``.
+            to ``False``.
         """
         # Register the default error handler callback methods. These can be
         # overridden with the appropriate loader decorators
@@ -101,7 +101,7 @@ class JWTManager(object):
         :param add_context_processor:
             Controls if `current_user` is should be added to flasks template
             context (and thus be available for use in Jinja templates). Defaults
-            to ``True``.
+            to ``False``.
         """
         # Save this so we can use it later in the extension
         if not hasattr(app, "extensions"):  # pragma: no cover

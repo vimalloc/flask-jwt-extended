@@ -3,7 +3,6 @@ from datetime import timedelta
 import pytest
 from dateutil.relativedelta import relativedelta
 from flask import Flask
-from flask.json import JSONEncoder
 
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended.config import config
@@ -65,8 +64,6 @@ def test_default_configs(app):
 
         assert config.identity_claim_key == "sub"
 
-        assert config.json_encoder is app.json_encoder
-
         assert config.error_msg_key == "msg"
 
 
@@ -112,11 +109,6 @@ def test_override_configs(app, delta_func):
 
     app.config["JWT_ERROR_MESSAGE_KEY"] = "message"
 
-    class CustomJSONEncoder(JSONEncoder):
-        pass
-
-    app.json_encoder = CustomJSONEncoder
-
     with app.test_request_context():
         assert config.token_location == ["cookies", "query_string", "json"]
         assert config.jwt_in_query_string is True
@@ -161,8 +153,6 @@ def test_override_configs(app, delta_func):
         assert config.cookie_max_age == 31540000
 
         assert config.identity_claim_key == "foo"
-
-        assert config.json_encoder is CustomJSONEncoder
 
         assert config.error_msg_key == "message"
 

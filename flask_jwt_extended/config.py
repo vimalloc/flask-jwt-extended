@@ -1,8 +1,6 @@
-import json
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
-from typing import Any
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -11,35 +9,10 @@ from typing import Type
 from typing import Union
 
 from flask import current_app
-from flask.json.provider import _default
 from jwt.algorithms import requires_cryptography
 
+from flask_jwt_extended.json_encoder import JSONEncoder
 from flask_jwt_extended.typing import ExpiresDelta
-
-
-class JSONEncoder(json.JSONEncoder):
-    """The default JSON encoder. Handles extra types compared to the
-    built-in :class:`json.JSONEncoder`.
-
-    -   :class:`datetime.datetime` and :class:`datetime.date` are
-        serialized to :rfc:`822` strings. This is the same as the HTTP
-        date format.
-    -   :class:`decimal.Decimal` is serialized to a string.
-    -   :class:`uuid.UUID` is serialized to a string.
-    -   :class:`dataclasses.dataclass` is passed to
-        :func:`dataclasses.asdict`.
-    -   :class:`~markupsafe.Markup` (or any object with a ``__html__``
-        method) will call the ``__html__`` method to get a string.
-
-    """
-
-    def default(self, o: Any) -> Any:
-        """Convert ``o`` to a JSON serializable type. See
-        :meth:`json.JSONEncoder.default`. Python does not support
-        overriding how basic types like ``str`` or ``list`` are
-        serialized, they are handled before this method.
-        """
-        return _default(o)
 
 
 class _Config(object):

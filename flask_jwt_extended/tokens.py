@@ -10,10 +10,10 @@ from typing import Type
 from typing import Union
 
 import jwt
-from flask.json import JSONEncoder
 
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import JWTDecodeError
+from flask_jwt_extended.json_encoder import JSONEncoder
 from flask_jwt_extended.typing import ExpiresDelta
 
 

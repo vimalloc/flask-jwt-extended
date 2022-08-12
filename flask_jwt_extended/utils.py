@@ -23,7 +23,7 @@ def get_jwt() -> dict:
     :return:
         The payload (claims) of the JWT in the current request
     """
-    decoded_jwt = getattr(g, "_jwt_extended_jwt", None)
+    decoded_jwt = g.get("_jwt_extended_jwt", None)
     if decoded_jwt is None:
         raise RuntimeError(
             "You must call `@jwt_required()` or `verify_jwt_in_request()` "
@@ -41,7 +41,7 @@ def get_jwt_header() -> dict:
     :return:
         The headers of the JWT in the current request
     """
-    decoded_header = getattr(g, "_jwt_extended_jwt_header", None)
+    decoded_header = g.get("_jwt_extended_jwt_header", None)
     if decoded_header is None:
         raise RuntimeError(
             "You must call `@jwt_required()` or `verify_jwt_in_request()` "
@@ -73,7 +73,7 @@ def get_jwt_request_location() -> Optional[str]:
         The location of the JWT in the current request; e.g., "cookies",
         "query-string", "headers", or "json"
     """
-    return getattr(g, "_jwt_extended_jwt_location", None)
+    return g.get("_jwt_extended_jwt_location", None)
 
 
 def get_current_user() -> Any:
@@ -91,7 +91,7 @@ def get_current_user() -> Any:
         The current user object for the JWT in the current request
     """
     get_jwt()  # Raise an error if not in a decorated context
-    jwt_user_dict = getattr(g, "_jwt_extended_jwt_user", None)
+    jwt_user_dict = g.get("_jwt_extended_jwt_user", None)
     if jwt_user_dict is None:
         raise RuntimeError(
             "You must provide a `@jwt.user_lookup_loader` callback to use "

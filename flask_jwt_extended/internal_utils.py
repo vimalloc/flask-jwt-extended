@@ -66,6 +66,18 @@ def custom_verification_for_token(jwt_header: dict, jwt_data: dict) -> None:
         raise UserClaimsVerificationError(error_msg, jwt_header, jwt_data)
 
 
+class JSONEncoder(json.JSONEncoder):
+    """A JSON encoder which uses the app.json_provider_class for the default"""
+
+    def default(self, o: Any) -> Any:
+        # If the registered JSON provider does not implement a default classmethod
+        # use the method defined by the DefaultJSONProvider
+        default = getattr(
+            current_app.json_provider_class, "default", DefaultJSONProvider.default
+        )
+        return default(o)
+
+
 def get_json_encoder(app: Flask) -> Type[json.JSONEncoder]:
     """Get the JSON Encoder for the provided flask app
 
@@ -82,13 +94,5 @@ def get_json_encoder(app: Flask) -> Type[json.JSONEncoder]:
     """
     if not HAS_JSON_PROVIDER:  # pragma: no cover
         return app.json_encoder
-
-    # If the registered JSON provider does not implement a default classmethod
-    # use the method defined by the DefaultJSONProvider
-    default = getattr(app.json_provider_class, "default", DefaultJSONProvider.default)
-
-    class JSONEncoder(json.JSONEncoder):
-        def default(self, o: Any) -> Any:
-            return default(o)  # pragma: no cover
 
     return JSONEncoder

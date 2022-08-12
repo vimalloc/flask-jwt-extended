@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from hmac import compare_digest
+from json import JSONEncoder
 from typing import Any
 from typing import Iterable
 from typing import List
@@ -13,7 +14,6 @@ import jwt
 
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import JWTDecodeError
-from flask_jwt_extended.json_encoder import JSONEncoder
 from flask_jwt_extended.typing import ExpiresDelta
 
 

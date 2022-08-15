@@ -22,3 +22,5 @@ jobs:
         run: pip install tox
       - name: Run Tox
         run: tox -e py
+      - name: Run Tox Flask==2.1
+        run: tox -e flask21

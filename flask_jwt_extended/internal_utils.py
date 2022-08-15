@@ -1,11 +1,24 @@
+import json
 from typing import Any
+from typing import Type
 from typing import TYPE_CHECKING
 
 from flask import current_app
+from flask import Flask
 
 from flask_jwt_extended.exceptions import RevokedTokenError
 from flask_jwt_extended.exceptions import UserClaimsVerificationError
 from flask_jwt_extended.exceptions import WrongTokenError
+
+try:
+    from flask.json.provider import DefaultJSONProvider
+
+    HAS_JSON_PROVIDER = True
+except ModuleNotFoundError:  # pragma: no cover
+    # The flask.json.provider module was added in Flask 2.2.
+    # Further details are handled in get_json_encoder.
+    HAS_JSON_PROVIDER = False
+
 
 if TYPE_CHECKING:  # pragma: no cover
     from flask_jwt_extended import JWTManager
@@ -51,3 +64,35 @@ def custom_verification_for_token(jwt_header: dict, jwt_data: dict) -> None:
     if not jwt_manager._token_verification_callback(jwt_header, jwt_data):
         error_msg = "User claims verification failed"
         raise UserClaimsVerificationError(error_msg, jwt_header, jwt_data)
+
+
+class JSONEncoder(json.JSONEncoder):
+    """A JSON encoder which uses the app.json_provider_class for the default"""
+
+    def default(self, o: Any) -> Any:
+        # If the registered JSON provider does not implement a default classmethod
+        # use the method defined by the DefaultJSONProvider
+        default = getattr(
+            current_app.json_provider_class, "default", DefaultJSONProvider.default
+        )
+        return default(o)
+
+
+def get_json_encoder(app: Flask) -> Type[json.JSONEncoder]:
+    """Get the JSON Encoder for the provided flask app
+
+    Starting with flask version 2.2 the flask application provides a
+    interface to register a custom JSON Encoder/Decoder under the json_provider_class.
+    As this interface is not compatible with the standard JSONEncoder, the `default`
+    method of the class is wrapped.
+
+    Lookup Order:
+      - app.json_encoder - For Flask < 2.2
+      - app.json_provider_class.default
+      - flask.json.provider.DefaultJSONProvider.default
+
+    """
+    if not HAS_JSON_PROVIDER:  # pragma: no cover
+        return app.json_encoder
+
+    return JSONEncoder

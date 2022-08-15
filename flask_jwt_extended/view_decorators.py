@@ -8,8 +8,8 @@ from typing import Sequence
 from typing import Tuple
 from typing import Union
 
-from flask import _request_ctx_stack
 from flask import current_app
+from flask import g
 from flask import request
 from werkzeug.exceptions import BadRequest
 
@@ -85,10 +85,6 @@ def verify_jwt_in_request(
     if request.method in config.exempt_methods:
         return None
 
-    # Should be impossible to hit, this makes mypy checks happy
-    if not _request_ctx_stack.top:  # pragma: no cover
-        raise RuntimeError("No _request_ctx_stack.top present, aborting")
-
     try:
         jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
             locations, fresh, refresh=refresh, verify_type=verify_type
@@ -97,18 +93,18 @@ def verify_jwt_in_request(
     except NoAuthorizationError:
         if not optional:
             raise
-        _request_ctx_stack.top.jwt = {}
-        _request_ctx_stack.top.jwt_header = {}
-        _request_ctx_stack.top.jwt_user = {"loaded_user": None}
-        _request_ctx_stack.top.jwt_location = None
+        g._jwt_extended_jwt = {}
+        g._jwt_extended_jwt_header = {}
+        g._jwt_extended_jwt_user = {"loaded_user": None}
+        g._jwt_extended_jwt_location = None
         return None
 
     # Save these at the very end so that they are only saved in the requet
     # context if the token is valid and all callbacks succeed
-    _request_ctx_stack.top.jwt_user = _load_user(jwt_header, jwt_data)
-    _request_ctx_stack.top.jwt_header = jwt_header
-    _request_ctx_stack.top.jwt = jwt_data
-    _request_ctx_stack.top.jwt_location = jwt_location
+    g._jwt_extended_jwt_user = _load_user(jwt_header, jwt_data)
+    g._jwt_extended_jwt_header = jwt_header
+    g._jwt_extended_jwt = jwt_data
+    g._jwt_extended_jwt_location = jwt_location
 
     return jwt_header, jwt_data
 

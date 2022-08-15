@@ -1,12 +1,18 @@
+import json
+from datetime import date
 from datetime import timedelta
 
 import pytest
 from dateutil.relativedelta import relativedelta
+from flask import __version__ as flask_version
 from flask import Flask
-from flask.json import JSONEncoder
 
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended.config import config
+from flask_jwt_extended.internal_utils import JSONEncoder
+
+
+flask_version_tuple = tuple(map(int, flask_version.split(".")))
 
 
 @pytest.fixture(scope="function")
@@ -65,8 +71,6 @@ def test_default_configs(app):
 
         assert config.identity_claim_key == "sub"
 
-        assert config.json_encoder is app.json_encoder
-
         assert config.error_msg_key == "msg"
 
 
@@ -111,11 +115,6 @@ def test_override_configs(app, delta_func):
     app.config["JWT_IDENTITY_CLAIM"] = "foo"
 
     app.config["JWT_ERROR_MESSAGE_KEY"] = "message"
-
-    class CustomJSONEncoder(JSONEncoder):
-        pass
-
-    app.json_encoder = CustomJSONEncoder
 
     with app.test_request_context():
         assert config.token_location == ["cookies", "query_string", "json"]
@@ -162,9 +161,27 @@ def test_override_configs(app, delta_func):
 
         assert config.identity_claim_key == "foo"
 
-        assert config.json_encoder is CustomJSONEncoder
-
         assert config.error_msg_key == "message"
+
+
+@pytest.mark.skipif(
+    flask_version_tuple >= (2, 2, 0), reason="Only applies to Flask <= 2.2.0"
+)
+def test_config_json_encoder_flask21(app):
+    with app.test_request_context():
+        assert config.json_encoder == app.json_encoder
+        dump = json.dumps({"d": date(2022, 8, 12)}, cls=config.json_encoder)
+        assert dump == '{"d": "Fri, 12 Aug 2022 00:00:00 GMT"}'
+
+
+@pytest.mark.skipif(
+    flask_version_tuple < (2, 2, 0), reason="Only applies to Flask > 2.2.0"
+)
+def test_config_json_encoder_flask(app):
+    with app.test_request_context():
+        assert config.json_encoder == JSONEncoder
+        dump = json.dumps({"d": date(2022, 8, 12)}, cls=config.json_encoder)
+        assert dump == '{"d": "Fri, 12 Aug 2022 00:00:00 GMT"}'
 
 
 def test_tokens_never_expire(app):

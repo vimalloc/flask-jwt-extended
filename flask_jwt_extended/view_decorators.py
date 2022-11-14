@@ -48,6 +48,7 @@ def verify_jwt_in_request(
     refresh: bool = False,
     locations: LocationType = None,
     verify_type: bool = True,
+    skip_revocation_check: bool = False,
 ) -> Optional[Tuple[dict, dict]]:
     """
     Verify that a valid JWT is present in the request, unless ``optional=True`` in
@@ -87,7 +88,11 @@ def verify_jwt_in_request(
 
     try:
         jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
-            locations, fresh, refresh=refresh, verify_type=verify_type
+            locations,
+            fresh,
+            refresh=refresh,
+            verify_type=verify_type,
+            skip_revocation_check=skip_revocation_check,
         )
 
     except NoAuthorizationError:
@@ -115,6 +120,7 @@ def jwt_required(
     refresh: bool = False,
     locations: LocationType = None,
     verify_type: bool = True,
+    skip_revocation_check: bool = False,
 ) -> Any:
     """
     A decorator to protect a Flask endpoint with JSON Web Tokens.
@@ -145,12 +151,18 @@ def jwt_required(
         If ``True``, the token type (access or refresh) will be checked according
         to the ``refresh`` argument. If ``False``, type will not be checked and both
         access and refresh tokens will be accepted.
+
+    :param skip_revocation_check:
+        If ``True``, revocation status of the token will be *not* checked. If ``False``,
+        revocation status of the token will be checked.
     """
 
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
-            verify_jwt_in_request(optional, fresh, refresh, locations, verify_type)
+            verify_jwt_in_request(
+                optional, fresh, refresh, locations, verify_type, skip_revocation_check
+            )
             return current_app.ensure_sync(fn)(*args, **kwargs)
 
         return decorator
@@ -284,6 +296,7 @@ def _decode_jwt_from_request(
     fresh: bool,
     refresh: bool = False,
     verify_type: bool = True,
+    skip_revocation_check: bool = False,
 ) -> Tuple[dict, dict, str]:
     # Figure out what locations to look for the JWT in this request
     if isinstance(locations, str):
@@ -346,7 +359,10 @@ def _decode_jwt_from_request(
 
     if fresh:
         _verify_token_is_fresh(jwt_header, decoded_token)
-    verify_token_not_blocklisted(jwt_header, decoded_token)
+
+    if not skip_revocation_check:
+        verify_token_not_blocklisted(jwt_header, decoded_token)
+
     custom_verification_for_token(jwt_header, decoded_token)
 
     return decoded_token, jwt_header, jwt_location

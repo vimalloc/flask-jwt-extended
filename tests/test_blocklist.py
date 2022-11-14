@@ -21,12 +21,64 @@ def app():
     def access_protected():
         return jsonify(foo="bar")
 
+    @app.route("/protected_skip_blocklist", methods=["GET"])
+    @jwt_required(verify_type=False, skip_revocation_check=True)
+    def access_protected_skip_blocklist():
+        return jsonify(foo="bar")
+
+    @app.route("/protected_noskip_blocklist", methods=["GET"])
+    @jwt_required(verify_type=False)
+    def access_protected_no_skip_blocklist():
+        return jsonify(foo="bar")
+
     @app.route("/refresh_protected", methods=["GET"])
     @jwt_required(refresh=True)
     def refresh_protected():
         return jsonify(foo="bar")
 
     return app
+
+
+@pytest.mark.parametrize("blocklist_type", [["access"], ["refresh", "access"]])
+def test_blocklisted_access_token_revocation_skip(app, blocklist_type):
+    jwt = get_jwt_manager(app)
+
+    @jwt.token_in_blocklist_loader
+    def check_blocklisted(jwt_header, jwt_data):
+        assert jwt_header["alg"] == "HS256"
+        assert jwt_data["sub"] == "username"
+        return True
+
+    with app.test_request_context():
+        access_token = create_access_token("username")
+
+    test_client = app.test_client()
+    response = test_client.get(
+        "/protected_skip_blocklist", headers=make_headers(access_token)
+    )
+    assert response.get_json() == {"foo": "bar"}
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize("blocklist_type", [["access"], ["refresh", "access"]])
+def test_blocklisted_access_token_revocation_no_skip(app, blocklist_type):
+    jwt = get_jwt_manager(app)
+
+    @jwt.token_in_blocklist_loader
+    def check_blocklisted(jwt_header, jwt_data):
+        assert jwt_header["alg"] == "HS256"
+        assert jwt_data["sub"] == "username"
+        return True
+
+    with app.test_request_context():
+        access_token = create_access_token("username")
+
+    test_client = app.test_client()
+    response = test_client.get(
+        "/protected_noskip_blocklist", headers=make_headers(access_token)
+    )
+    assert response.get_json() == {"msg": "Token has been revoked"}
+    assert response.status_code == 401
 
 
 @pytest.mark.parametrize("blocklist_type", [["access"], ["refresh", "access"]])

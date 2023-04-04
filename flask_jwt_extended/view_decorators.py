@@ -46,7 +46,7 @@ def verify_jwt_in_request(
     optional: bool = False,
     fresh: bool = False,
     refresh: bool = False,
-    locations: LocationType = None,
+    locations: Optional[LocationType] = None,
     verify_type: bool = True,
 ) -> Optional[Tuple[dict, dict]]:
     """
@@ -113,7 +113,7 @@ def jwt_required(
     optional: bool = False,
     fresh: bool = False,
     refresh: bool = False,
-    locations: LocationType = None,
+    locations: Optional[LocationType] = None,
     verify_type: bool = True,
 ) -> Any:
     """

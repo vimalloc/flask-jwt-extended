@@ -55,7 +55,9 @@ class JWTManager(object):
     to your app in a factory function.
     """
 
-    def __init__(self, app: Flask = None, add_context_processor: bool = False) -> None:
+    def __init__(
+        self, app: Optional[Flask] = None, add_context_processor: bool = False
+    ) -> None:
         """
         Create the JWTManager instance. You can either pass a flask application
         in directly here to register this extension with the flask app, or
@@ -492,7 +494,7 @@ class JWTManager(object):
         token_type: str,
         claims=None,
         fresh: bool = False,
-        expires_delta: ExpiresDelta = None,
+        expires_delta: Optional[ExpiresDelta] = None,
         headers=None,
     ) -> str:
         header_overrides = self._jwt_additional_header_callback(identity)

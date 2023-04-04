@@ -101,7 +101,7 @@ def get_current_user() -> Any:
 
 
 def decode_token(
-    encoded_token: str, csrf_value: str = None, allow_expired: bool = False
+    encoded_token: str, csrf_value: Optional[str] = None, allow_expired: bool = False
 ) -> dict:
     """
     Returns the decoded token (python dict) from an encoded JWT. This does all
@@ -130,7 +130,7 @@ def decode_token(
 def create_access_token(
     identity: Any,
     fresh: bool = False,
-    expires_delta: datetime.timedelta = None,
+    expires_delta: Optional[datetime.timedelta] = None,
     additional_claims=None,
     additional_headers=None,
 ):
@@ -183,7 +183,7 @@ def create_access_token(
 
 def create_refresh_token(
     identity: Any,
-    expires_delta: datetime.timedelta = None,
+    expires_delta: Optional[datetime.timedelta] = None,
     additional_claims=None,
     additional_headers=None,
 ):
@@ -320,8 +320,8 @@ def set_access_cookies(
 def set_refresh_cookies(
     response: Response,
     encoded_refresh_token: str,
-    max_age: int = None,
-    domain: str = None,
+    max_age: Optional[int] = None,
+    domain: Optional[str] = None,
 ) -> None:
     """
     Modifiy a Flask Response to set a cookie containing the refresh JWT.
@@ -370,7 +370,7 @@ def set_refresh_cookies(
         )
 
 
-def unset_jwt_cookies(response: Response, domain: str = None) -> None:
+def unset_jwt_cookies(response: Response, domain: Optional[str] = None) -> None:
     """
     Modifiy a Flask Response to delete the cookies containing access or refresh
     JWTs.  Also deletes the corresponding CSRF cookies if applicable.
@@ -382,7 +382,7 @@ def unset_jwt_cookies(response: Response, domain: str = None) -> None:
     unset_refresh_cookies(response, domain)
 
 
-def unset_access_cookies(response: Response, domain: str = None) -> None:
+def unset_access_cookies(response: Response, domain: Optional[str] = None) -> None:
     """
     Modifiy a Flask Response to delete the cookie containing an access JWT.
     Also deletes the corresponding CSRF cookie if applicable.
@@ -420,7 +420,7 @@ def unset_access_cookies(response: Response, domain: str = None) -> None:
         )
 
 
-def unset_refresh_cookies(response: Response, domain: str = None) -> None:
+def unset_refresh_cookies(response: Response, domain: Optional[str] = None) -> None:
     """
     Modifiy a Flask Response to delete the cookie containing a refresh JWT.
     Also deletes the corresponding CSRF cookie if applicable.

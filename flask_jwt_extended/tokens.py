@@ -23,7 +23,7 @@ def _encode_jwt(
     claim_overrides: dict,
     csrf: bool,
     expires_delta: ExpiresDelta,
-    fresh: bool,
+    fresh: Fresh,
     header_overrides: dict,
     identity: Any,
     identity_claim_key: str,

@@ -8,4 +8,4 @@ else:
     from typing_extensions import Literal  # pragma: no cover
 
 ExpiresDelta = Union[Literal[False], timedelta]
-Fresh = Union[bool, timedelta]
+Fresh = Union[bool, float, timedelta]

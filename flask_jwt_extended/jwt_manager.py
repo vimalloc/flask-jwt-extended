@@ -42,6 +42,7 @@ from flask_jwt_extended.exceptions import WrongTokenError
 from flask_jwt_extended.tokens import _decode_jwt
 from flask_jwt_extended.tokens import _encode_jwt
 from flask_jwt_extended.typing import ExpiresDelta
+from flask_jwt_extended.typing import Fresh
 from flask_jwt_extended.utils import current_user_context_processor
 
 
@@ -493,7 +494,7 @@ class JWTManager(object):
         identity: Any,
         token_type: str,
         claims=None,
-        fresh: bool = False,
+        fresh: Fresh = False,
         expires_delta: Optional[ExpiresDelta] = None,
         headers=None,
     ) -> str:

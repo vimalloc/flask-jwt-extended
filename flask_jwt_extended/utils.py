@@ -1,4 +1,3 @@
-import datetime
 from typing import Any
 from typing import Optional
 
@@ -9,6 +8,8 @@ from werkzeug.local import LocalProxy
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.internal_utils import get_jwt_manager
+from flask_jwt_extended.typing import ExpiresDelta
+from flask_jwt_extended.typing import Fresh
 
 # Proxy to access the current user
 current_user: Any = LocalProxy(lambda: get_current_user())
@@ -129,8 +130,8 @@ def decode_token(
 
 def create_access_token(
     identity: Any,
-    fresh: bool = False,
-    expires_delta: Optional[datetime.timedelta] = None,
+    fresh: Fresh = False,
+    expires_delta: Optional[ExpiresDelta] = None,
     additional_claims=None,
     additional_headers=None,
 ):
@@ -183,7 +184,7 @@ def create_access_token(
 
 def create_refresh_token(
     identity: Any,
-    expires_delta: Optional[datetime.timedelta] = None,
+    expires_delta: Optional[ExpiresDelta] = None,
     additional_claims=None,
     additional_headers=None,
 ):

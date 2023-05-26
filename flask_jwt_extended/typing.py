@@ -1,5 +1,5 @@
 import sys
-from typing import Any
+from datetime import timedelta
 from typing import Union
 
 if sys.version_info >= (3, 8):
@@ -7,4 +7,5 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import Literal  # pragma: no cover
 
-ExpiresDelta = Union[Literal[False], Any]
+ExpiresDelta = Union[Literal[False], timedelta]
+Fresh = Union[bool, float, timedelta]

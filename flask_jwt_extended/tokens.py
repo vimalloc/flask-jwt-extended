@@ -15,6 +15,7 @@ import jwt
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import JWTDecodeError
 from flask_jwt_extended.typing import ExpiresDelta
+from flask_jwt_extended.typing import Fresh
 
 
 def _encode_jwt(
@@ -23,7 +24,7 @@ def _encode_jwt(
     claim_overrides: dict,
     csrf: bool,
     expires_delta: ExpiresDelta,
-    fresh: bool,
+    fresh: Fresh,
     header_overrides: dict,
     identity: Any,
     identity_claim_key: str,

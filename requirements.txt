@@ -1,8 +1,8 @@
 black==21.12b0
 cryptography==39.0.1
-Flask==2.1.1
+Flask==2.3.2
 Pallets-Sphinx-Themes==2.0.2
 pre-commit==2.18.1
-PyJWT==2.4.0
+PyJWT==2.7.0
 Sphinx==4.5.0
 tox==3.25.0

@@ -18,3 +18,14 @@ sphinx:
 formats:
   - pdf
   - epub
+
+# Install our theme. I'm doing this here because I don't really want it
+# to live in the requirements.txt for this project, instead using tox to
+# build docs locally and this config file to install it on RTD
+python:
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - Pallets-Sphinx-Themes
+

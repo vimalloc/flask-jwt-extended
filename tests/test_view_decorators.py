@@ -337,7 +337,7 @@ def test_jwt_invalid_audience(app):
     access_token = encode_token(app, {"aud": "different_audience", "sub": "me"})
     response = test_client.get(url, headers=make_headers(access_token))
     assert response.status_code == 422
-    assert response.get_json() == {"msg": "Invalid audience"}
+    assert response.get_json() == {"msg": "Audience doesn't match"}
 
 
 def test_jwt_invalid_issuer(app):

@@ -24,8 +24,7 @@ formats:
 # build docs locally and this config file to install it on RTD
 python:
   install:
-    - method: pip
-      path: .
+    - requirements: docs/requirements.txt
       extra_requirements:
         - Pallets-Sphinx-Themes
 

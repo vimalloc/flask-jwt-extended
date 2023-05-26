@@ -93,6 +93,6 @@ def get_json_encoder(app: Flask) -> Type[json.JSONEncoder]:
 
     """
     if not HAS_JSON_PROVIDER:  # pragma: no cover
-        return app.json_encoder
+        return app.json_encoder  # type: ignore
 
     return JSONEncoder

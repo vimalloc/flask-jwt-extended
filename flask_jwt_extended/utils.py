@@ -160,13 +160,13 @@ def create_access_token(
         Optional. A hash of claims to include in the access token.  These claims are
         merged into the default claims (exp, iat, etc) and claims returned from the
         :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader` callback.
-        On conflict, these claims take presidence.
+        On conflict, these claims take precedence.
 
     :param headers:
         Optional. A hash of headers to include in the access token. These headers
         are merged into the default headers (alg, typ) and headers returned from
         the :meth:`~flask_jwt_extended.JWTManager.additional_headers_loader`
-        callback. On conflict, these headers take presidence.
+        callback. On conflict, these headers take precedence.
 
     :return:
         An encoded access token
@@ -206,13 +206,13 @@ def create_refresh_token(
         Optional. A hash of claims to include in the refresh token. These claims are
         merged into the default claims (exp, iat, etc) and claims returned from the
         :meth:`~flask_jwt_extended.JWTManager.additional_claims_loader` callback.
-        On conflict, these claims take presidence.
+        On conflict, these claims take precedence.
 
     :param headers:
         Optional. A hash of headers to include in the refresh token. These headers
         are merged into the default headers (alg, typ) and headers returned from the
         :meth:`~flask_jwt_extended.JWTManager.additional_headers_loader` callback.
-        On conflict, these headers take presidence.
+        On conflict, these headers take precedence.
 
     :return:
         An encoded refresh token

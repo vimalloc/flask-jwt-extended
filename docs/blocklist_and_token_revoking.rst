@@ -4,7 +4,7 @@ JWT Revoking / Blocklist
 ========================
 JWT revoking is a mechanism for preventing an otherwise valid JWT from accessing your
 routes while still letting other valid JWTs in. To utilize JWT revoking in this
-extension, you must defining a callback function via the
+extension, you must define a callback function via the
 :meth:`~flask_jwt_extended.JWTManager.token_in_blocklist_loader` decorator.
 This function is called whenever a valid JWT is used to access a protected route.
 The callback will receive the JWT header and JWT payload as arguments, and must

@@ -29,7 +29,7 @@ going to the data supplied by the ``additional_claims`` argument.
   # claims to add to the JWT.
   @jwt.additional_claims_loader
   def add_claims_to_access_token(identity):
-       return = {
+       return {
            "aud": "some_audience",
            "foo": "bar",
            "upcase_name": identity.upper(),

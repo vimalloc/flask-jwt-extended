@@ -81,10 +81,6 @@ def verify_jwt_in_request(
         If ``True``, revocation status of the token will be *not* checked. If ``False``,
         revocation status of the token will be checked.
 
-    :param skip_revocation_check:
-        If ``True``, revocation status of the token will be *not* checked. If ``False``,
-        revocation status of the token will be checked.
-
     :return:
         A tuple containing the jwt_header and the jwt_data if a valid JWT is
         present in the request. If ``optional=True`` and no JWT is in the request,

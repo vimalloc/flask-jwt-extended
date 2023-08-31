@@ -113,7 +113,7 @@ app.config["JWT_PUBLIC_KEY"] = RSAAlgorithm.from_jwk(
 app.config["JWT_DECODE_AUDIENCE"] = OIDC_CLIENT_ID
 
 # name of token entry that will become distinct flask identity username
-app.config["JWT_IDENTITY_CLAIM"] = OIDC_USERNAME_CLAIM
+app.config["JWT_IDENTITY_CLAIMS"] = [OIDC_USERNAME_CLAIM]
 jwt = JWTManager(app)
 
 

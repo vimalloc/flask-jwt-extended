@@ -208,7 +208,7 @@ class JWTManager(object):
         app.config.setdefault("JWT_ERROR_MESSAGE_KEY", "msg")
         app.config.setdefault("JWT_HEADER_NAME", "Authorization")
         app.config.setdefault("JWT_HEADER_TYPE", "Bearer")
-        app.config.setdefault("JWT_IDENTITY_CLAIM", "sub")
+        app.config.setdefault("JWT_IDENTITY_CLAIMS", ["sub"])
         app.config.setdefault("JWT_JSON_KEY", "access_token")
         app.config.setdefault("JWT_PRIVATE_KEY", None)
         app.config.setdefault("JWT_PUBLIC_KEY", None)
@@ -518,7 +518,7 @@ class JWTManager(object):
             fresh=fresh,
             header_overrides=header_overrides,
             identity=self._user_identity_callback(identity),
-            identity_claim_key=config.identity_claim_key,
+            identity_claim_keys=config.identity_claim_keys,
             issuer=config.encode_issuer,
             json_encoder=config.json_encoder,
             secret=self._encode_key_callback(identity),
@@ -542,7 +542,7 @@ class JWTManager(object):
             "audience": config.decode_audience,
             "csrf_value": csrf_value,
             "encoded_token": encoded_token,
-            "identity_claim_key": config.identity_claim_key,
+            "identity_claim_keys": config.identity_claim_keys,
             "issuer": config.decode_issuer,
             "leeway": config.leeway,
             "secret": secret,

@@ -38,9 +38,10 @@ def app():
 @pytest.fixture(scope="function")
 def default_access_token(app):
     with app.test_request_context():
+        identity_claim_key = config.identity_claim_keys[0]
         return {
             "jti": "1234",
-            config.identity_claim_key: "username",
+            identity_claim_key: ["username"],
             "type": "access",
             "fresh": True,
             "csrf": "abcd",
@@ -170,7 +171,7 @@ def test_nbf_token_in_future(app):
 
 
 def test_alternate_identity_claim(app, default_access_token):
-    app.config["JWT_IDENTITY_CLAIM"] = "banana"
+    app.config["JWT_IDENTITY_CLAIMS"] = ["banana"]
 
     # Ensure decoding fails if the claim isn't there
     token = encode_token(app, default_access_token)

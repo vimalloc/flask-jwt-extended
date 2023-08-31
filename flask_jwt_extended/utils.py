@@ -59,7 +59,13 @@ def get_jwt_identity() -> Any:
     :return:
         The identity of the JWT in the current request
     """
-    return get_jwt().get(config.identity_claim_key, None)
+    claims = get_jwt()
+    for identity_claim_key in config.identity_claim_keys:
+        identity = claims.get(identity_claim_key, None)
+        if identity:
+            return identity
+
+    return None
 
 
 def get_jwt_request_location() -> Optional[str]:

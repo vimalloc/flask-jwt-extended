@@ -26,7 +26,7 @@ def _encode_jwt(
     fresh: bool,
     header_overrides: dict,
     identity: Any,
-    identity_claim_key: str,
+    identity_claim_keys: List[str],
     issuer: str,
     json_encoder: Type[JSONEncoder],
     secret: str,
@@ -37,6 +37,8 @@ def _encode_jwt(
 
     if isinstance(fresh, timedelta):
         fresh = datetime.timestamp(now + fresh)
+
+    identity_claim_key = identity_claim_keys[0]
 
     token_data = {
         "fresh": fresh,
@@ -79,7 +81,7 @@ def _decode_jwt(
     audience: Union[str, Iterable[str]],
     csrf_value: str,
     encoded_token: str,
-    identity_claim_key: str,
+    identity_claim_keys: List[str],
     issuer: str,
     leeway: int,
     secret: str,
@@ -102,8 +104,14 @@ def _decode_jwt(
     )
 
     # Make sure that any custom claims we expect in the token are present
-    if identity_claim_key not in decoded_token:
-        raise JWTDecodeError("Missing claim: {}".format(identity_claim_key))
+    has_identity_claim = False
+    for identity_claim_key in identity_claim_keys:
+        if identity_claim_key in decoded_token:
+            has_identity_claim = True
+            break
+
+    if not has_identity_claim:
+        raise JWTDecodeError("Missing claim: {}".format(identity_claim_keys))
 
     if "type" not in decoded_token:
         decoded_token["type"] = "access"

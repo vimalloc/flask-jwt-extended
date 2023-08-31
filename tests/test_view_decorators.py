@@ -314,7 +314,7 @@ def test_jwt_missing_claims(app):
 
     response = test_client.get(url, headers=make_headers(token))
     assert response.status_code == 422
-    assert response.get_json() == {"msg": "Missing claim: sub"}
+    assert response.get_json() == {"msg": "Missing claim: ['sub']"}
 
 
 def test_jwt_invalid_audience(app):

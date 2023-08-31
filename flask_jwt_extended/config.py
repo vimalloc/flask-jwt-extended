@@ -272,8 +272,11 @@ class _Config(object):
         return None if self.session_cookie else 31540000  # 1 year
 
     @property
-    def identity_claim_key(self) -> str:
-        return current_app.config["JWT_IDENTITY_CLAIM"]
+    def identity_claim_keys(self) -> List[str]:
+        if current_app.config["JWT_IDENTITY_CLAIMS"]:
+            return current_app.config["JWT_IDENTITY_CLAIMS"]
+        else:
+            return [current_app.config["JWT_IDENTITY_CLAIM"]]
 
     @property
     def exempt_methods(self) -> Iterable[str]:

@@ -162,8 +162,12 @@ def _load_user(jwt_header: dict, jwt_data: dict) -> Optional[dict]:
     if not has_user_lookup():
         return None
 
-    identity = jwt_data[config.identity_claim_key]
-    user = user_lookup(jwt_header, jwt_data)
+    for identity_claim_key in config.identity_claim_keys:
+        if identity_claim_key in jwt_data:
+            identity = jwt_data[identity_claim_key]
+            user = user_lookup(jwt_header, jwt_data)
+            break
+
     if user is None:
         error_msg = "user_lookup returned None for {}".format(identity)
         raise UserLookupError(error_msg, jwt_header, jwt_data)

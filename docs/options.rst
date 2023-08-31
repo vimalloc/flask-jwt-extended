@@ -23,7 +23,7 @@ Overview:
   * `JWT_ENCODE_ISSUER`_
   * `JWT_ENCODE_NBF`_
   * `JWT_ERROR_MESSAGE_KEY`_
-  * `JWT_IDENTITY_CLAIM`_
+  * `JWT_IDENTITY_CLAIMS`_
   * `JWT_PRIVATE_KEY`_
   * `JWT_PUBLIC_KEY`_
   * `JWT_REFRESH_TOKEN_EXPIRES`_
@@ -169,12 +169,12 @@ General Options:
     Default: ``"msg"``
 
 
-.. _JWT_IDENTITY_CLAIM:
-.. py:data:: JWT_IDENTITY_CLAIM
+.. _JWT_IDENTITY_CLAIMS:
+.. py:data:: JWT_IDENTITY_CLAIMS
 
-    The claim in a JWT that is used as the source of identity.
+    The list of potential claims in a JWT that is used as the source of identity.
 
-    Default: ``"sub"``
+    Default: ``["sub"]``
 
 
 .. _JWT_PRIVATE_KEY:

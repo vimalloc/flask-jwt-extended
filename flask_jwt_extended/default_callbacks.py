@@ -120,7 +120,10 @@ def default_user_lookup_error_callback(
     function returns None, we return a general error message with a 401
     status code
     """
-    identity = jwt_data[config.identity_claim_key]
+    for identity_claim_key in config.identity_claim_keys:
+        if identity_claim_key in jwt_data:
+            identity = jwt_data[identity_claim_key]
+            break
     result = {config.error_msg_key: f"Error loading the user {identity}"}
     return jsonify(result), HTTPStatus.UNAUTHORIZED
 

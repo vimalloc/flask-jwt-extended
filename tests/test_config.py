@@ -69,7 +69,7 @@ def test_default_configs(app):
 
         assert config.cookie_max_age is None
 
-        assert config.identity_claim_key == "sub"
+        assert config.identity_claim_keys == ["sub"]
 
         assert config.error_msg_key == "msg"
 
@@ -112,7 +112,7 @@ def test_override_configs(app, delta_func):
     app.config["JWT_ALGORITHM"] = "HS512"
     app.config["JWT_DECODE_ALGORITHMS"] = ["HS512", "HS256"]
 
-    app.config["JWT_IDENTITY_CLAIM"] = "foo"
+    app.config["JWT_IDENTITY_CLAIMS"] = ["foo"]
 
     app.config["JWT_ERROR_MESSAGE_KEY"] = "message"
 
@@ -159,7 +159,7 @@ def test_override_configs(app, delta_func):
 
         assert config.cookie_max_age == 31540000
 
-        assert config.identity_claim_key == "foo"
+        assert config.identity_claim_keys == ["foo"]
 
         assert config.error_msg_key == "message"
 

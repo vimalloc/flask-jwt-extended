@@ -1,6 +1,6 @@
 black==21.12b0
 cryptography==41.0.4
-Flask==2.3.2
+Flask==3.0.0
 pre-commit==2.18.1
 PyJWT==2.7.0
 tox==3.25.0

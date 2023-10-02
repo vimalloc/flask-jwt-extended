@@ -30,7 +30,7 @@ setup(
     platforms="any",
     install_requires=[
         "Werkzeug>=0.14",  # Needed for SameSite cookie functionality
-        "Flask>=2.0,<3.0",
+        "Flask>=2.0,<4.0",
         "PyJWT>=2.0,<3.0",
         "typing_extensions>=3.7.4; python_version<'3.8'",  # typing.Literal
     ],
@@ -52,6 +52,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Software Development :: Libraries :: Python Modules",

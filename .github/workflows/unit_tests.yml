@@ -20,7 +20,9 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install Dependencies
         run: pip install tox
-      - name: Run Tox
+      - name: Run Tox Flask==3.x
         run: tox -e py
       - name: Run Tox Flask==2.1
         run: tox -e flask21
+      - name: Run Tox Flask==2.x
+        run: tox -e flask2x

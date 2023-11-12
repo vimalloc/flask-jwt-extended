@@ -5,9 +5,9 @@ JWT Revoking / Blocklist
 JWT revoking is a mechanism for preventing an otherwise valid JWT from accessing your
 routes while still letting other valid JWTs in. To utilize JWT revoking in this
 extension, you must define a callback function via the
-:meth:`~flask_jwt_extended.JWTManager.token_in_blocklist_loader` decorator.
+:meth:`~flask_jwt_extended.JWTManager.token_in_blacklist_loader` decorator.
 This function is called whenever a valid JWT is used to access a protected route.
-The callback will receive the JWT header and JWT payload as arguments, and must
+The callback will receive the JWT header and JWT payload as arguments and must
 return ``True`` if the JWT has been revoked.
 
 In production, you will want to use some form of persistent storage (database,
@@ -18,7 +18,7 @@ your specific application and tech stack.
 
 Redis
 ~~~~~
-If your only requirements are to check if a JWT has been revoked, our recommendation
+If your only requirement is to check if a JWT has been revoked, our recommendation
 is to use redis. It is blazing fast, can be configured to persist data to disc,
 and can automatically clear out JWTs after they expire by utilizing the Time To
 Live (TTL) functionality when storing a JWT. Here is an example using redis:
@@ -27,10 +27,10 @@ Live (TTL) functionality when storing a JWT. Here is an example using redis:
 
 
 .. warning::
-    Note that configuring redis to be disk-persistent is an absolutely necessity for
+    Note that configuring redis to be disk-persistent is an absolute necessity for
     production use. Otherwise, events like power outages or server crashes/reboots
     would cause all invalidated tokens to become valid again (assuming the
-    secret key does not change). This is especially concering for long-lived
+    secret key does not change). This is especially concerning for long-lived
     refresh tokens, discussed below.
 
 Database
@@ -111,12 +111,12 @@ Alternatively, there are a few ways to revoke both tokens at once:
    with the access token. Upon revoking the access token, extract the refresh jti from it
    and invalidate both. This has the advantage of requiring no extra work from the frontend.
 #. Store every generated tokens jti in a database upon creation. Have a boolean column to represent
-   whether it is valid or not, which the ``token_in_blocklist_loader`` should respond based upon.
+   whether it is valid or not, which the ``token_in_blacklist_loader`` should respond based upon.
    Upon revoking a token, mark that token row as invalid, as well as all other tokens from the same
    user generated at the same time. This would also allow for a "log out everywhere" option where
-   all tokens for a user are invalidated at once, which is otherwise not easily possibile
+   all tokens for a user are invalidated at once, which is otherwise not easily possible
 
 
 The best option of course depends and needs to be chosen based upon the circumstances. If there
-if ever a time where an unknown, untracked token needs to be immediately invalidated, this can
+if ever a time when an unknown, untracked token needs to be immediately invalidated, this can
 be accomplished by changing the secret key.

@@ -1,5 +1,5 @@
 black==21.12b0
-cryptography==41.0.4
+cryptography==41.0.6
 Flask==3.0.0
 pre-commit==2.18.1
 PyJWT==2.7.0

@@ -51,7 +51,7 @@ def test_default_configs(app):
         assert config.json_key == "access_token"
         assert config.refresh_json_key == "refresh_token"
 
-        assert config.csrf_protect is False
+        assert config.cookie_csrf_protect is True
         assert config.csrf_request_methods == ["POST", "PUT", "PATCH", "DELETE"]
         assert config.csrf_in_cookies is True
         assert config.access_csrf_cookie_name == "csrf_access_token"
@@ -142,7 +142,7 @@ def test_override_configs(app, delta_func):
         assert config.session_cookie is False
         assert config.cookie_samesite == "Strict"
 
-        assert config.csrf_protect is True
+        assert config.cookie_csrf_protect is True
         assert config.csrf_request_methods == ["GET"]
         assert config.csrf_in_cookies is False
         assert config.access_csrf_cookie_name == "access_csrf_cookie"
@@ -333,17 +333,11 @@ def test_jwt_token_locations_config(app):
 
 def test_csrf_protect_config(app):
     with app.test_request_context():
-        app.config["JWT_TOKEN_LOCATION"] = ["headers"]
         app.config["JWT_COOKIE_CSRF_PROTECT"] = True
-        assert config.csrf_protect is False
+        assert config.cookie_csrf_protect is True
 
-        app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
-        app.config["JWT_COOKIE_CSRF_PROTECT"] = True
-        assert config.csrf_protect is True
-
-        app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
         app.config["JWT_COOKIE_CSRF_PROTECT"] = False
-        assert config.csrf_protect is False
+        assert config.cookie_csrf_protect is False
 
 
 def test_missing_algorithm_in_decode_algorithms(app):

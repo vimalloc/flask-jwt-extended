@@ -244,7 +244,7 @@ def _decode_jwt_from_cookies(refresh: bool) -> Tuple[str, Optional[str]]:
     if not encoded_token:
         raise NoAuthorizationError('Missing cookie "{}"'.format(cookie_key))
 
-    if config.csrf_protect and request.method in config.csrf_request_methods:
+    if config.cookie_csrf_protect and request.method in config.csrf_request_methods:
         csrf_value = request.headers.get(csrf_header_key, None)
         if not csrf_value and config.csrf_check_form:
             csrf_value = request.form.get(csrf_field_key, None)

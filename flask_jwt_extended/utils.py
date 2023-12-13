@@ -305,7 +305,7 @@ def set_access_cookies(
         samesite=config.cookie_samesite,
     )
 
-    if config.csrf_protect and config.csrf_in_cookies:
+    if config.cookie_csrf_protect and config.csrf_in_cookies:
         response.set_cookie(
             config.access_csrf_cookie_name,
             value=get_csrf_token(encoded_access_token),
@@ -358,7 +358,7 @@ def set_refresh_cookies(
         samesite=config.cookie_samesite,
     )
 
-    if config.csrf_protect and config.csrf_in_cookies:
+    if config.cookie_csrf_protect and config.csrf_in_cookies:
         response.set_cookie(
             config.refresh_csrf_cookie_name,
             value=get_csrf_token(encoded_refresh_token),
@@ -408,7 +408,7 @@ def unset_access_cookies(response: Response, domain: Optional[str] = None) -> No
         samesite=config.cookie_samesite,
     )
 
-    if config.csrf_protect and config.csrf_in_cookies:
+    if config.cookie_csrf_protect and config.csrf_in_cookies:
         response.set_cookie(
             config.access_csrf_cookie_name,
             value="",
@@ -446,7 +446,7 @@ def unset_refresh_cookies(response: Response, domain: Optional[str] = None) -> N
         samesite=config.cookie_samesite,
     )
 
-    if config.csrf_protect and config.csrf_in_cookies:
+    if config.cookie_csrf_protect and config.csrf_in_cookies:
         response.set_cookie(
             config.refresh_csrf_cookie_name,
             value="",

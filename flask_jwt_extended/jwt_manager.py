@@ -516,7 +516,7 @@ class JWTManager(object):
             algorithm=config.algorithm,
             audience=config.encode_audience,
             claim_overrides=claim_overrides,
-            csrf=config.csrf_protect,
+            csrf=config.cookie_csrf_protect,
             expires_delta=expires_delta,
             fresh=fresh,
             header_overrides=header_overrides,

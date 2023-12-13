@@ -135,8 +135,8 @@ class _Config(object):
         return current_app.config["JWT_REFRESH_JSON_KEY"]
 
     @property
-    def csrf_protect(self) -> bool:
-        return self.jwt_in_cookies and current_app.config["JWT_COOKIE_CSRF_PROTECT"]
+    def cookie_csrf_protect(self) -> bool:
+        return current_app.config["JWT_COOKIE_CSRF_PROTECT"]
 
     @property
     def csrf_request_methods(self) -> Iterable[str]:

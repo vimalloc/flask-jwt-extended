@@ -1,6 +1,6 @@
-black==21.12b0
-cryptography==41.0.6
-Flask==3.0.0
-pre-commit==2.18.1
-PyJWT==2.7.0
-tox==3.25.0
+black==23.12.1
+cryptography==41.0.7
+Flask==3.0.1
+pre-commit==3.6.0
+PyJWT==2.8.0
+tox==4.12.1

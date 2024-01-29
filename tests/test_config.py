@@ -1,10 +1,10 @@
+import importlib
 import json
 from datetime import date
 from datetime import timedelta
 
 import pytest
 from dateutil.relativedelta import relativedelta
-from flask import __version__ as flask_version
 from flask import Flask
 
 from flask_jwt_extended import JWTManager
@@ -12,6 +12,7 @@ from flask_jwt_extended.config import config
 from flask_jwt_extended.internal_utils import JSONEncoder
 
 
+flask_version = importlib.metadata.version("flask")
 flask_version_tuple = tuple(map(int, flask_version.split(".")))
 
 

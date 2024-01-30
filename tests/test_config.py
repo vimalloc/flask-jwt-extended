@@ -1,5 +1,5 @@
-import importlib
 import json
+import sys
 from datetime import date
 from datetime import timedelta
 
@@ -12,7 +12,20 @@ from flask_jwt_extended.config import config
 from flask_jwt_extended.internal_utils import JSONEncoder
 
 
-flask_version = importlib.metadata.version("flask")
+def get_package_version(package_name):
+    if sys.version_info >= (3, 8):
+        # Use importlib.metadata for Python 3.8 and newer
+        import importlib.metadata
+
+        return importlib.metadata.version(package_name)
+    else:
+        # Use pkg_resources for older versions
+        import pkg_resources
+
+        return pkg_resources.get_distribution(package_name).version
+
+
+flask_version = get_package_version("flask")
 flask_version_tuple = tuple(map(int, flask_version.split(".")))
 
 

@@ -41,7 +41,7 @@ def default_jwt_headers_callback(default_headers) -> dict:
     return {}
 
 
-def default_user_identity_callback(userdata: Any) -> Any:
+def default_user_identity_callback(userdata: Any) -> str:
     """
     By default, we use the passed in object directly as the jwt identity.
     See this for additional info:

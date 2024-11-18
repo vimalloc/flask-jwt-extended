@@ -469,3 +469,14 @@ def test_verify_jwt_in_request_returns_decoded_token(app):
     response = test_client.get(url, headers=make_headers(token))
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
+
+
+def test_non_string_identity(app):
+    url = "/protected"
+    test_client = app.test_client()
+    with app.test_request_context():
+        token = create_access_token(1234)
+
+    response = test_client.get(url, headers=make_headers(token))
+    assert response.status_code == 422
+    assert response.get_json() == {"msg": "Subject must be a string"}

@@ -139,10 +139,9 @@ def create_access_token(
     Create a new access token.
 
     :param identity:
-        The identity of this token. It can be any data that is json serializable.
-        You can use :meth:`~flask_jwt_extended.JWTManager.user_identity_loader`
-        to define a callback function to convert any object passed in into a json
-        serializable format.
+        The identity of this token. This must either be a string, or you must have
+        defined :meth:`~flask_jwt_extended.JWTManager.user_identity_loader` in order
+        to convert the object you passed in into a string.
 
     :param fresh:
         If this token should be marked as fresh, and can thus access endpoints
@@ -192,10 +191,9 @@ def create_refresh_token(
     Create a new refresh token.
 
     :param identity:
-        The identity of this token. It can be any data that is json serializable.
-        You can use :meth:`~flask_jwt_extended.JWTManager.user_identity_loader`
-        to define a callback function to convert any object passed in into a json
-        serializable format.
+        The identity of this token. This must either be a string, or you must have
+        defined :meth:`~flask_jwt_extended.JWTManager.user_identity_loader` in order
+        to convert the object you passed in into a string.
 
     :param expires_delta:
         A ``datetime.timedelta`` for how long this token should last before it expires.

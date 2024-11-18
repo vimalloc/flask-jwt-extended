@@ -434,15 +434,14 @@ class JWTManager(object):
     def user_identity_loader(self, callback: Callable) -> Callable:
         """
         This decorator sets the callback function used to convert an identity to
-        a JSON serializable format when creating JWTs. This is useful for
-        using objects (such as SQLAlchemy instances) as the identity when
-        creating your tokens.
+        a string when creating JWTs. This is useful for using objects (such as
+        SQLAlchemy instances) as the identity when creating your tokens.
 
         The decorated function must take **one** argument.
 
         The argument is the identity that was used when creating a JWT.
 
-        The decorated function must return JSON serializable data.
+        The decorated function must return a string.
         """
         self._user_identity_callback = callback
         return callback

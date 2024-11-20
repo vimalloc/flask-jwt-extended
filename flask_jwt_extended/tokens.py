@@ -85,8 +85,9 @@ def _decode_jwt(
     leeway: int,
     secret: str,
     verify_aud: bool,
+    verify_sub: bool,
 ) -> dict:
-    options = {"verify_aud": verify_aud}
+    options = {"verify_aud": verify_aud, "verify_sub": verify_sub}
     if allow_expired:
         options["verify_exp"] = False
 

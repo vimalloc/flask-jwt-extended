@@ -29,6 +29,7 @@ Overview:
   * `JWT_REFRESH_TOKEN_EXPIRES`_
   * `JWT_SECRET_KEY`_
   * `JWT_TOKEN_LOCATION`_
+  * `JWT_VERIFY_SUB`_
 
 - `Header Options:`_
 
@@ -254,6 +255,18 @@ General Options:
     argument in :func:`flask_jwt_extended.jwt_required`.
 
     Default: ``"headers"``
+
+.. _JWT_VERIFY_SUB:
+.. py:data:: JWT_VERIFY_SUB
+
+    Control whether the ``sub`` claim is verified during JWT decoding.
+
+    The ``sub`` claim MUST be a ``str`` according the the JWT spec. Setting this option
+    to ``True`` (the default) will enforce this requirement, and consider non-compliant
+    JWTs invalid. Setting the option to ``False`` will skip this validation of the type
+    of the ``sub`` claim, allowing any type for the ``sub`` claim to be considered valid.
+
+    Default: ``True``
 
 
 Header Options:

@@ -308,6 +308,10 @@ class _Config(object):
         return current_app.config["JWT_DECODE_LEEWAY"]
 
     @property
+    def verify_sub(self) -> bool:
+        return current_app.config["JWT_VERIFY_SUB"]
+
+    @property
     def encode_nbf(self) -> bool:
         return current_app.config["JWT_ENCODE_NBF"]
 

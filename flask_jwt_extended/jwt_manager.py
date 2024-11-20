@@ -228,6 +228,7 @@ class JWTManager(object):
         app.config.setdefault("JWT_SECRET_KEY", None)
         app.config.setdefault("JWT_SESSION_COOKIE", True)
         app.config.setdefault("JWT_TOKEN_LOCATION", ("headers",))
+        app.config.setdefault("JWT_VERIFY_SUB", True)
         app.config.setdefault("JWT_ENCODE_NBF", True)
 
     def additional_claims_loader(self, callback: Callable) -> Callable:
@@ -549,6 +550,7 @@ class JWTManager(object):
             "leeway": config.leeway,
             "secret": secret,
             "verify_aud": config.decode_audience is not None,
+            "verify_sub": config.verify_sub,
         }
 
         try:

@@ -12,6 +12,7 @@ from jwt import InvalidAudienceError
 from jwt import InvalidIssuerError
 from jwt import InvalidSignatureError
 from jwt import MissingRequiredClaimError
+from jwt.exceptions import InvalidSubjectError
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import create_refresh_token
@@ -277,6 +278,35 @@ def test_verify_no_aud(app, default_access_token, token_aud):
     with app.test_request_context():
         decoded = decode_token(valid_token)
         assert decoded["aud"] == token_aud
+
+
+@pytest.mark.parametrize("token_sub", [123, {}, [], False])
+def test_invalid_sub_values(app, default_access_token, token_sub):
+    """Verifies that invalid values for the sub claim fail decoding, the
+    default behavior of JWT_VERIFY_SUB = True
+    """
+
+    default_access_token["sub"] = token_sub
+    invalid_token = encode_token(app, default_access_token)
+    with pytest.raises(InvalidSubjectError):
+        with app.test_request_context():
+            decode_token(invalid_token)
+
+
+@pytest.mark.parametrize("token_sub", [123, {}, [], False])
+def test_invalid_sub_values_allowed_with_no_verify(
+    app, default_access_token, token_sub
+):
+    """Verifies that invalid values for the sub claim succeed at decoding, if
+    the user configures JWT_VERIFY_SUB = False
+    """
+
+    app.config["JWT_VERIFY_SUB"] = False
+    default_access_token["sub"] = token_sub
+    valid_token = encode_token(app, default_access_token)
+    with app.test_request_context():
+        decoded = decode_token(valid_token)
+        assert decoded["sub"] == token_sub
 
 
 def test_encode_iss(app, default_access_token):

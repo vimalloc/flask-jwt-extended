@@ -202,7 +202,7 @@ def _decode_jwt_from_headers() -> Tuple[str, None]:
     # <HeaderName>: <field> <value>, <field> <value>, etc...
     if header_type:
         field_values = split(r",\s*", auth_header)
-        jwt_headers = [s for s in field_values if s.split()[0] == header_type]
+        jwt_headers = [s for s in field_values if s and s.split()[0] == header_type]
         if len(jwt_headers) != 1:
             msg = (
                 f"Missing '{header_type}' type in '{header_name}' header. "

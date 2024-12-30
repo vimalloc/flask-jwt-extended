@@ -253,6 +253,13 @@ def test_jwt_optional_with_no_valid_jwt(app):
     assert response.status_code == 422
     assert response.get_json() == {"msg": "Not enough segments"}
 
+    # Unexpected token
+    response = test_client.get(url, headers={"Authorization": "Bearer ,,0"})
+    assert response.status_code == 422
+    assert response.get_json() == {
+        "msg": "Bad Authorization header. Expected 'Authorization: Bearer <JWT>'"
+    }
+
 
 def test_override_jwt_location(app):
     app.config["JWT_TOKEN_LOCATION"] = ["cookies"]

@@ -301,6 +301,7 @@ def set_access_cookies(
         domain=domain or config.cookie_domain,
         path=config.access_cookie_path,
         samesite=config.cookie_samesite,
+        partitioned=config.cookie_partitioned
     )
 
     if config.cookie_csrf_protect and config.csrf_in_cookies:
@@ -313,6 +314,7 @@ def set_access_cookies(
             domain=domain or config.cookie_domain,
             path=config.access_csrf_cookie_path,
             samesite=config.cookie_samesite,
+            partitioned=config.cookie_partitioned
         )
 
 

@@ -356,6 +356,7 @@ def set_refresh_cookies(
         domain=domain or config.cookie_domain,
         path=config.refresh_cookie_path,
         samesite=config.cookie_samesite,
+        partitioned=config.cookie_partitioned
     )
 
     if config.cookie_csrf_protect and config.csrf_in_cookies:
@@ -368,6 +369,7 @@ def set_refresh_cookies(
             domain=domain or config.cookie_domain,
             path=config.refresh_csrf_cookie_path,
             samesite=config.cookie_samesite,
+            partitioned=config.cookie_partitioned
         )
 
 
@@ -406,6 +408,7 @@ def unset_access_cookies(response: Response, domain: Optional[str] = None) -> No
         domain=domain or config.cookie_domain,
         path=config.access_cookie_path,
         samesite=config.cookie_samesite,
+        partitioned=config.cookie_partitioned
     )
 
     if config.cookie_csrf_protect and config.csrf_in_cookies:
@@ -418,6 +421,7 @@ def unset_access_cookies(response: Response, domain: Optional[str] = None) -> No
             domain=domain or config.cookie_domain,
             path=config.access_csrf_cookie_path,
             samesite=config.cookie_samesite,
+            partitioned=config.cookie_partitioned
         )
 
 
@@ -444,6 +448,7 @@ def unset_refresh_cookies(response: Response, domain: Optional[str] = None) -> N
         domain=domain or config.cookie_domain,
         path=config.refresh_cookie_path,
         samesite=config.cookie_samesite,
+        partitioned=config.cookie_partitioned
     )
 
     if config.cookie_csrf_protect and config.csrf_in_cookies:
@@ -456,6 +461,7 @@ def unset_refresh_cookies(response: Response, domain: Optional[str] = None) -> N
             domain=domain or config.cookie_domain,
             path=config.refresh_csrf_cookie_path,
             samesite=config.cookie_samesite,
+            partitioned=config.cookie_partitioned
         )
 
 

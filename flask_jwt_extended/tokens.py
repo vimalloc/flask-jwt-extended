@@ -11,6 +11,7 @@ from typing import Type
 from typing import Union
 
 import jwt
+from jwt.types import Options
 
 from flask_jwt_extended.exceptions import CSRFError
 from flask_jwt_extended.exceptions import JWTDecodeError
@@ -87,6 +88,7 @@ def _decode_jwt(
     verify_aud: bool,
     verify_sub: bool,
 ) -> dict:
+    options: Options
     options = {"verify_aud": verify_aud, "verify_sub": verify_sub}
     if allow_expired:
         options["verify_exp"] = False

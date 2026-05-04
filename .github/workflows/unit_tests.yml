@@ -13,9 +13,9 @@ jobs:
         python: ['3.10', '3.11', '3.12', '3.13', '3.14', 'pypy3.11']
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
       - name: Install Dependencies

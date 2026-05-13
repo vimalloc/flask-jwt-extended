@@ -31,7 +31,10 @@ setup(
     install_requires=[
         "Werkzeug>=0.14",  # Needed for SameSite cookie functionality
         "Flask>=2.0,<4.0",
-        "PyJWT>=2.0,<3.0",
+        # `flask_jwt_extended/tokens.py` imports `Options` from `jwt.types`,
+        # which was first added in PyJWT 2.11.0. Earlier 2.x releases parse
+        # the import-time `from jwt.types import Options` as an ImportError.
+        "PyJWT>=2.11.0,<3.0",
     ],
     extras_require={"asymmetric_crypto": ["cryptography>=3.3.1"]},
     python_requires=">=3.10,<4",

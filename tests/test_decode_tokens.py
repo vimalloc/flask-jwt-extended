@@ -155,7 +155,7 @@ def test_never_expire_token(app):
 
 
 def test_nbf_token_in_future(app):
-    date_in_future = datetime.utcnow() + timedelta(seconds=30)
+    date_in_future = datetime.now(timezone.utc) + timedelta(seconds=30)
 
     with pytest.raises(ImmatureSignatureError):
         with app.test_request_context():

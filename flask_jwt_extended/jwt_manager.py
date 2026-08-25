@@ -199,6 +199,7 @@ class JWTManager(object):
         app.config.setdefault("JWT_COOKIE_DOMAIN", None)
         app.config.setdefault("JWT_COOKIE_SAMESITE", None)
         app.config.setdefault("JWT_COOKIE_SECURE", False)
+        app.config.setdefault("JWT_COOKIE_PARTITIONED", False)
         app.config.setdefault("JWT_CSRF_CHECK_FORM", False)
         app.config.setdefault("JWT_CSRF_IN_COOKIES", True)
         app.config.setdefault("JWT_CSRF_METHODS", ["POST", "PUT", "PATCH", "DELETE"])

@@ -44,6 +44,7 @@ Overview:
   * `JWT_COOKIE_DOMAIN`_
   * `JWT_COOKIE_SAMESITE`_
   * `JWT_COOKIE_SECURE`_
+  * `JWT_COOKIE_PARTITIONED`_
   * `JWT_REFRESH_COOKIE_NAME`_
   * `JWT_REFRESH_COOKIE_PATH`_
   * `JWT_SESSION_COOKIE`_
@@ -358,6 +359,18 @@ These are only applicable if a route is configured to accept JWTs via cookies.
 
     Default: ``False``
 
+.. _JWT_COOKIE_PARTITIONED:
+.. py:data:: JWT_COOKIE_PARTITIONED
+
+    Controls if the ``partitioned`` flag should be placed on cookies
+    created by this extension.
+
+    Cookies Having Independent Partitioned State (CHIPS, also known as
+    Partitioned cookies) allows developers to opt a cookie into
+    partitioned storage, with a separate cookie jar per top-level
+    site.
+
+    Default: ``False``
 
 .. _JWT_REFRESH_COOKIE_NAME:
 .. py:data:: JWT_REFRESH_COOKIE_NAME

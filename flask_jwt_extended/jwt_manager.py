@@ -2,6 +2,7 @@ import datetime
 from typing import Any
 from typing import Callable
 from typing import Optional
+from typing import TypeVar
 
 import jwt
 from flask import Flask
@@ -44,6 +45,8 @@ from flask_jwt_extended.tokens import _encode_jwt
 from flask_jwt_extended.typing import ExpiresDelta
 from flask_jwt_extended.typing import Fresh
 from flask_jwt_extended.utils import current_user_context_processor
+
+_F = TypeVar("_F", bound=Callable[..., Any])
 
 
 class JWTManager(object):
@@ -231,7 +234,7 @@ class JWTManager(object):
         app.config.setdefault("JWT_VERIFY_SUB", True)
         app.config.setdefault("JWT_ENCODE_NBF", True)
 
-    def additional_claims_loader(self, callback: Callable) -> Callable:
+    def additional_claims_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function used to add additional claims
         when creating a JWT. The claims returned by this function will be merged
@@ -248,7 +251,7 @@ class JWTManager(object):
         self._user_claims_callback = callback
         return callback
 
-    def additional_headers_loader(self, callback: Callable) -> Callable:
+    def additional_headers_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function used to add additional headers
         when creating a JWT. The headers returned by this function will be merged
@@ -265,7 +268,7 @@ class JWTManager(object):
         self._jwt_additional_header_callback = callback
         return callback
 
-    def decode_key_loader(self, callback: Callable) -> Callable:
+    def decode_key_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function for dynamically setting the JWT
         decode key based on the **UNVERIFIED** contents of the token. Think
@@ -286,7 +289,7 @@ class JWTManager(object):
         self._decode_key_callback = callback
         return callback
 
-    def encode_key_loader(self, callback: Callable) -> Callable:
+    def encode_key_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function for dynamically setting the JWT
         encode key based on the tokens identity. Think carefully before using this
@@ -302,7 +305,7 @@ class JWTManager(object):
         self._encode_key_callback = callback
         return callback
 
-    def expired_token_loader(self, callback: Callable) -> Callable:
+    def expired_token_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function for returning a custom
         response when an expired JWT is encountered.
@@ -318,7 +321,7 @@ class JWTManager(object):
         self._expired_token_callback = callback
         return callback
 
-    def invalid_token_loader(self, callback: Callable) -> Callable:
+    def invalid_token_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function for returning a custom
         response when an invalid JWT is encountered.
@@ -335,7 +338,7 @@ class JWTManager(object):
         self._invalid_token_callback = callback
         return callback
 
-    def needs_fresh_token_loader(self, callback: Callable) -> Callable:
+    def needs_fresh_token_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function for returning a custom
         response when a valid and non-fresh token is used on an endpoint
@@ -352,7 +355,7 @@ class JWTManager(object):
         self._needs_fresh_token_callback = callback
         return callback
 
-    def revoked_token_loader(self, callback: Callable) -> Callable:
+    def revoked_token_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function for returning a custom
         response when a revoked token is encountered.
@@ -368,7 +371,7 @@ class JWTManager(object):
         self._revoked_token_callback = callback
         return callback
 
-    def token_in_blocklist_loader(self, callback: Callable) -> Callable:
+    def token_in_blocklist_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function used to check if a JWT has
         been revoked.
@@ -385,7 +388,7 @@ class JWTManager(object):
         self._token_in_blocklist_callback = callback
         return callback
 
-    def token_verification_failed_loader(self, callback: Callable) -> Callable:
+    def token_verification_failed_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function used to return a custom
         response when the claims verification check fails.
@@ -401,7 +404,7 @@ class JWTManager(object):
         self._token_verification_failed_callback = callback
         return callback
 
-    def token_verification_loader(self, callback: Callable) -> Callable:
+    def token_verification_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function used for custom verification
         of a valid JWT.
@@ -418,7 +421,7 @@ class JWTManager(object):
         self._token_verification_callback = callback
         return callback
 
-    def unauthorized_loader(self, callback: Callable) -> Callable:
+    def unauthorized_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function used to return a custom
         response when no JWT is present.
@@ -432,7 +435,7 @@ class JWTManager(object):
         self._unauthorized_callback = callback
         return callback
 
-    def user_identity_loader(self, callback: Callable) -> Callable:
+    def user_identity_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function used to convert an identity to
         a string when creating JWTs. This is useful for using objects (such as
@@ -447,7 +450,7 @@ class JWTManager(object):
         self._user_identity_callback = callback
         return callback
 
-    def user_lookup_loader(self, callback: Callable) -> Callable:
+    def user_lookup_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function used to convert a JWT into
         a python object that can be used in a protected endpoint. This is useful
@@ -472,7 +475,7 @@ class JWTManager(object):
         self._user_lookup_callback = callback
         return callback
 
-    def user_lookup_error_loader(self, callback: Callable) -> Callable:
+    def user_lookup_error_loader(self, callback: _F) -> _F:
         """
         This decorator sets the callback function used to return a custom
         response when loading a user via

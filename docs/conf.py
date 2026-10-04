@@ -366,4 +366,6 @@ nitpick_ignore = [
     ("py:class", "flask.app.Flask"),
     ("py:class", "datetime.timedelta"),
     ("py:class", "flask.wrappers.Response"),
+    ("py:class", "flask_jwt_extended.jwt_manager._F"),
+    ("py:class", "flask_jwt_extended.view_decorators._F"),
 ]

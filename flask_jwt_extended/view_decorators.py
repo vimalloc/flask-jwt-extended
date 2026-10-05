@@ -3,9 +3,12 @@ from datetime import timezone
 from functools import wraps
 from re import split
 from typing import Any
+from typing import Callable
+from typing import cast
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
+from typing import TypeVar
 from typing import Union
 
 from flask import current_app
@@ -29,6 +32,8 @@ from flask_jwt_extended.utils import decode_token
 from flask_jwt_extended.utils import get_unverified_jwt_headers
 
 LocationType = Union[str, Sequence, None]
+
+_F = TypeVar("_F", bound=Callable[..., Any])
 
 
 def _verify_token_is_fresh(jwt_header: dict, jwt_data: dict) -> None:
@@ -125,7 +130,7 @@ def jwt_required(
     locations: Optional[LocationType] = None,
     verify_type: bool = True,
     skip_revocation_check: bool = False,
-) -> Any:
+) -> Callable[[_F], _F]:
     """
     A decorator to protect a Flask endpoint with JSON Web Tokens.
 
@@ -161,15 +166,15 @@ def jwt_required(
         revocation status of the token will be checked.
     """
 
-    def wrapper(fn):
+    def wrapper(fn: _F) -> _F:
         @wraps(fn)
-        def decorator(*args, **kwargs):
+        def decorator(*args: Any, **kwargs: Any) -> Any:
             verify_jwt_in_request(
                 optional, fresh, refresh, locations, verify_type, skip_revocation_check
             )
             return current_app.ensure_sync(fn)(*args, **kwargs)
 
-        return decorator
+        return cast(_F, decorator)
 
     return wrapper
 

@@ -93,7 +93,12 @@ def verify_jwt_in_request(
         is in the request.
     """
     if request.method in config.exempt_methods:
-        return None
+        if not optional:
+            g._jwt_extended_jwt = {}
+            g._jwt_extended_jwt_header = {}
+            g._jwt_extended_jwt_user = {"loaded_user": None}
+            g._jwt_extended_jwt_location = None
+            return None
 
     try:
         jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(

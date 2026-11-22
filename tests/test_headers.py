@@ -1,17 +1,14 @@
 import pytest
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-from tests.utils import get_jwt_manager
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from tests.utils import JWT_SECRET_KEY, get_jwt_manager
 
 
 @pytest.fixture(scope="function")
 def app():
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
     JWTManager(app)
 
     @app.route("/protected", methods=["GET"])
@@ -39,19 +36,19 @@ def test_default_headers(app):
     assert response.get_json() == {"msg": error_msg}
 
     # Ensure default headers work
-    access_headers = {"Authorization": "Bearer {}".format(access_token)}
+    access_headers = {"Authorization": f"Bearer {access_token}"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
     # Ensure default headers work with multiple field values
-    access_headers = {"Authorization": "Bearer {}, Basic creds".format(access_token)}
+    access_headers = {"Authorization": f"Bearer {access_token}, Basic creds"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
     # Ensure default headers work with multiple field values in any position
-    access_headers = {"Authorization": "Basic creds, Bearer {}".format(access_token)}
+    access_headers = {"Authorization": f"Basic creds, Bearer {access_token}"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
@@ -63,7 +60,7 @@ def test_header_with_trailing_spaces_and_commas(app):
     with app.test_request_context():
         access_token = create_access_token("username")
 
-    access_headers = {"Authorization": "Bearer {},   ".format(access_token)}
+    access_headers = {"Authorization": f"Bearer {access_token},   "}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
@@ -77,25 +74,25 @@ def test_custom_header_name(app):
         access_token = create_access_token("username")
 
     # Ensure 'default' headers no longer work
-    access_headers = {"Authorization": "Bearer {}".format(access_token)}
+    access_headers = {"Authorization": f"Bearer {access_token}"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 401
     assert response.get_json() == {"msg": "Missing Foo Header"}
 
     # Ensure new headers do work
-    access_headers = {"Foo": "Bearer {}".format(access_token)}
+    access_headers = {"Foo": f"Bearer {access_token}"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
     # Ensure new headers work with multiple field values
-    access_headers = {"Foo": "Bearer {}, Basic randomcredshere".format(access_token)}
+    access_headers = {"Foo": f"Bearer {access_token}, Basic randomcredshere"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
     # Ensure new headers work with multiple field values in any position
-    access_headers = {"Foo": "Basic randomcredshere, Bearer {}".format(access_token)}
+    access_headers = {"Foo": f"Basic randomcredshere, Bearer {access_token}"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
@@ -109,7 +106,7 @@ def test_custom_header_type(app):
         access_token = create_access_token("username")
 
     # Ensure 'default' headers no longer work
-    access_headers = {"Authorization": "Bearer {}".format(access_token)}
+    access_headers = {"Authorization": f"Bearer {access_token}"}
     response = test_client.get("/protected", headers=access_headers)
     error_msg = (
         "Missing 'JWT' type in 'Authorization' header. "
@@ -119,19 +116,19 @@ def test_custom_header_type(app):
     assert response.get_json() == {"msg": error_msg}
 
     # Ensure new headers do work
-    access_headers = {"Authorization": "JWT {}".format(access_token)}
+    access_headers = {"Authorization": f"JWT {access_token}"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
     # Ensure new headers work with multiple field values
-    access_headers = {"Authorization": "JWT {}, Basic creds".format(access_token)}
+    access_headers = {"Authorization": f"JWT {access_token}, Basic creds"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
 
     # Ensure new headers work with multiple field values in any position
-    access_headers = {"Authorization": "Basic creds, JWT {}".format(access_token)}
+    access_headers = {"Authorization": f"Basic creds, JWT {access_token}"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
@@ -145,7 +142,7 @@ def test_custom_header_type(app):
 
     # Ensure header with too many parts fails
     app.config["JWT_HEADER_TYPE"] = ""
-    access_headers = {"Authorization": "Bearer {}".format(access_token)}
+    access_headers = {"Authorization": f"Bearer {access_token}"}
     response = test_client.get("/protected", headers=access_headers)
     expected_json = {"msg": "Bad Authorization header. Expected 'Authorization: <JWT>'"}
     assert response.get_json() == expected_json

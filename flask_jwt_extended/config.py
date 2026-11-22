@@ -1,13 +1,6 @@
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from collections.abc import Iterable, Sequence
+from datetime import UTC, datetime, timedelta
 from json import JSONEncoder
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Type
-from typing import Union
 
 from flask import current_app
 from jwt.algorithms import requires_cryptography
@@ -16,7 +9,7 @@ from flask_jwt_extended.internal_utils import get_json_encoder
 from flask_jwt_extended.typing import ExpiresDelta
 
 
-class _Config(object):
+class _Config:
     """
     Helper object for accessing and verifying options in this extension. This
     is meant for internal use of the application; modifying config options
@@ -45,7 +38,7 @@ class _Config(object):
         if isinstance(locations, str):
             locations = (locations,)
         elif not isinstance(locations, Iterable):
-            raise RuntimeError("JWT_TOKEN_LOCATION must be a sequence or a set")
+            raise RuntimeError("JWT_TOKEN_LOCATION must be a sequence or a set")  # noqa: TRY004
         elif not locations:
             raise RuntimeError(
                 "JWT_TOKEN_LOCATION must contain at least one "
@@ -191,7 +184,7 @@ class _Config(object):
             try:
                 # Basically runtime typechecking. Probably a better way to do
                 # this with proper type checking
-                delta + datetime.now(timezone.utc)
+                delta + datetime.now(UTC)
             except TypeError as e:
                 err = (
                     "must be able to add JWT_ACCESS_TOKEN_EXPIRES to datetime.datetime"
@@ -208,7 +201,7 @@ class _Config(object):
             # Basically runtime typechecking. Probably a better way to do
             # this with proper type checking
             try:
-                delta + datetime.now(timezone.utc)
+                delta + datetime.now(UTC)
             except TypeError as e:
                 err = (
                     "must be able to add JWT_REFRESH_TOKEN_EXPIRES to datetime.datetime"
@@ -221,7 +214,7 @@ class _Config(object):
         return current_app.config["JWT_ALGORITHM"]
 
     @property
-    def decode_algorithms(self) -> List[str]:
+    def decode_algorithms(self) -> list[str]:
         algorithms = current_app.config["JWT_DECODE_ALGORITHMS"]
         if not algorithms:
             return [self.algorithm]
@@ -238,7 +231,7 @@ class _Config(object):
                 raise RuntimeError(
                     "JWT_SECRET_KEY or flask SECRET_KEY "
                     "must be set when using symmetric "
-                    'algorithm "{}"'.format(self.algorithm)
+                    f'algorithm "{self.algorithm}"'
                 )
         return key
 
@@ -249,7 +242,7 @@ class _Config(object):
             raise RuntimeError(
                 "JWT_PUBLIC_KEY must be set to use "
                 "asymmetric cryptography algorithm "
-                '"{}"'.format(self.algorithm)
+                f'"{self.algorithm}"'
             )
         return key
 
@@ -260,12 +253,12 @@ class _Config(object):
             raise RuntimeError(
                 "JWT_PRIVATE_KEY must be set to use "
                 "asymmetric cryptography algorithm "
-                '"{}"'.format(self.algorithm)
+                f'"{self.algorithm}"'
             )
         return key
 
     @property
-    def cookie_max_age(self) -> Optional[int]:
+    def cookie_max_age(self) -> int | None:
         # Returns the appropiate value for max_age for flask set_cookies. If
         # session cookie is true, return None, otherwise return a number of
         # seconds 1 year in the future
@@ -284,15 +277,15 @@ class _Config(object):
         return current_app.config["JWT_ERROR_MESSAGE_KEY"]
 
     @property
-    def json_encoder(self) -> Type[JSONEncoder]:
+    def json_encoder(self) -> type[JSONEncoder]:
         return get_json_encoder(current_app)
 
     @property
-    def decode_audience(self) -> Union[str, Iterable[str]]:
+    def decode_audience(self) -> str | Iterable[str]:
         return current_app.config["JWT_DECODE_AUDIENCE"]
 
     @property
-    def encode_audience(self) -> Union[str, Iterable[str]]:
+    def encode_audience(self) -> str | Iterable[str]:
         return current_app.config["JWT_ENCODE_AUDIENCE"]
 
     @property

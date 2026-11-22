@@ -1,21 +1,21 @@
 import pytest
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import create_refresh_token
-from flask_jwt_extended import decode_token
-from flask_jwt_extended import get_jwt
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-from tests.utils import get_jwt_manager
-from tests.utils import make_headers
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    get_jwt,
+    jwt_required,
+)
+from tests.utils import JWT_SECRET_KEY, get_jwt_manager, make_headers
 
 
 @pytest.fixture(scope="function")
 def app():
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
     JWTManager(app)
 
     @app.route("/protected", methods=["GET"])
@@ -54,13 +54,12 @@ def test_non_serializable_claims(app):
     def add_claims(identity):
         return app
 
-    with pytest.raises(TypeError):
-        with app.test_request_context():
-            create_access_token("username")
+    with pytest.raises(TypeError), app.test_request_context():
+        create_access_token("username")
 
 
 def test_token_from_complex_object(app):
-    class TestObject:  # noqa: B903
+    class TestObject:
         def __init__(self, username):
             self.username = username
 

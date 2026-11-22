@@ -1,13 +1,9 @@
 from datetime import timedelta
 
 import redis
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
 
 ACCESS_EXPIRES = timedelta(hours=1)
 

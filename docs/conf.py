@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-#
-import io
 import os
 import re
 import sys
@@ -70,7 +67,7 @@ author = "Lily Acadia Gilbert"
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-with io.open("../flask_jwt_extended/__init__.py", encoding="utf-8") as f:
+with open("../flask_jwt_extended/__init__.py", encoding="utf-8") as f:
     package_version = re.search(r"__version__ = \"(.+)\"", f.read()).group(1)
 version = package_version
 release = package_version
@@ -368,4 +365,6 @@ nitpick_ignore = [
     ("py:class", "flask.wrappers.Response"),
     ("py:class", "flask_jwt_extended.jwt_manager._F"),
     ("py:class", "flask_jwt_extended.view_decorators._F"),
+    ("py:class", "collections.abc.Sequence"),
+    ("py:class", "collections.abc.Callable"),
 ]

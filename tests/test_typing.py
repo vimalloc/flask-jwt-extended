@@ -6,26 +6,21 @@ decorator starts erasing the type of the function it wraps (e.g. by being
 annotated as returning ``Any``). The runtime tests make sure the decorated
 objects keep behaving like the originals.
 """
-from typing import Any
-from typing import Callable
-from typing import Coroutine
-from typing import Dict
-from typing import Optional
-from typing import TYPE_CHECKING
 
-from flask import Flask
-from flask import Response
+from collections.abc import Callable, Coroutine
+from typing import TYPE_CHECKING, Any
 
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
+from flask import Flask, Response
+
+from flask_jwt_extended import JWTManager, jwt_required
 
 if TYPE_CHECKING:
-    from typing_extensions import assert_type
+    from typing import assert_type
 
 
 def test_jwt_required_preserves_function_types() -> None:
     @jwt_required()
-    def view(user_id: str) -> Dict[str, str]:
+    def view(user_id: str) -> dict[str, str]:
         return {"user_id": user_id}
 
     @jwt_required(optional=True)
@@ -33,7 +28,7 @@ def test_jwt_required_preserves_function_types() -> None:
         return "ok"
 
     if TYPE_CHECKING:
-        assert_type(view(""), Dict[str, str])
+        assert_type(view(""), dict[str, str])
         assert_type(async_view, Callable[[], Coroutine[Any, Any, str]])
 
     assert view.__name__ == "view"
@@ -45,11 +40,11 @@ def test_loaders_preserve_function_types() -> None:
     jwt = JWTManager(app)
 
     @jwt.additional_claims_loader
-    def additional_claims(identity: int) -> Dict[str, int]:
+    def additional_claims(identity: int) -> dict[str, int]:
         return {"identity": identity}
 
     @jwt.additional_headers_loader
-    def additional_headers(identity: int) -> Dict[str, str]:
+    def additional_headers(identity: int) -> dict[str, str]:
         return {"kid": str(identity)}
 
     @jwt.decode_key_loader
@@ -97,7 +92,7 @@ def test_loaders_preserve_function_types() -> None:
         return str(user)
 
     @jwt.user_lookup_loader
-    def user_lookup(jwt_header: dict, jwt_data: dict) -> Optional[int]:
+    def user_lookup(jwt_header: dict, jwt_data: dict) -> int | None:
         return 1
 
     @jwt.user_lookup_error_loader
@@ -105,8 +100,8 @@ def test_loaders_preserve_function_types() -> None:
         return Response("user not found", status=401)
 
     if TYPE_CHECKING:
-        assert_type(additional_claims(1), Dict[str, int])
-        assert_type(additional_headers(1), Dict[str, str])
+        assert_type(additional_claims(1), dict[str, int])
+        assert_type(additional_headers(1), dict[str, str])
         assert_type(decode_key({}, {}), str)
         assert_type(encode_key(1), str)
         assert_type(expired_token({}, {}), Response)
@@ -118,7 +113,7 @@ def test_loaders_preserve_function_types() -> None:
         assert_type(verify_token({}, {}), bool)
         assert_type(unauthorized(""), Response)
         assert_type(identity(1), str)
-        assert_type(user_lookup({}, {}), Optional[int])
+        assert_type(user_lookup({}, {}), int | None)
         assert_type(user_lookup_error({}, {}), Response)
 
     assert additional_claims(1) == {"identity": 1}

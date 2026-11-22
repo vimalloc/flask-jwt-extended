@@ -1,15 +1,9 @@
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from datetime import UTC, datetime, timedelta
 
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
 
 app = Flask(__name__)
 
@@ -60,7 +54,7 @@ def login():
 @jwt_required()
 def modify_token():
     jti = get_jwt()["jti"]
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     db.session.add(TokenBlocklist(jti=jti, created_at=now))
     db.session.commit()
     return jsonify(msg="JWT revoked")

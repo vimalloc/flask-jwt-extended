@@ -1,0 +1,4 @@
+target-version = "py311"
+
+[lint.per-file-ignores]
+"tests/**" = ["B018"]

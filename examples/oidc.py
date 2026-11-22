@@ -3,16 +3,11 @@ from functools import wraps
 
 import config
 import requests
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
 from flask_restful import Api
 from jwt.algorithms import RSAAlgorithm
 
-from flask_jwt_extended import current_user
-from flask_jwt_extended import get_jwt
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import verify_jwt_in_request
-
+from flask_jwt_extended import JWTManager, current_user, get_jwt, verify_jwt_in_request
 
 # Setup Flask Server
 app = Flask(__name__)
@@ -55,7 +50,7 @@ def urljoin(*args):
     stripped for each argument.
     """
 
-    return "/".join(map(lambda x: str(x).rstrip("/"), args))
+    return "/".join(str(x).rstrip("/") for x in args)
 
 
 def token_required(fn):

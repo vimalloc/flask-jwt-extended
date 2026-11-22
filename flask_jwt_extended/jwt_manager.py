@@ -1,55 +1,55 @@
 import datetime
-from typing import Any
-from typing import Callable
-from typing import Optional
-from typing import TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import jwt
 from flask import Flask
-from jwt import DecodeError
-from jwt import ExpiredSignatureError
-from jwt import InvalidAudienceError
-from jwt import InvalidIssuerError
-from jwt import InvalidTokenError
-from jwt import MissingRequiredClaimError
+from jwt import (
+    DecodeError,
+    ExpiredSignatureError,
+    InvalidAudienceError,
+    InvalidIssuerError,
+    InvalidTokenError,
+    MissingRequiredClaimError,
+)
 
 from flask_jwt_extended.config import config
-from flask_jwt_extended.default_callbacks import default_additional_claims_callback
-from flask_jwt_extended.default_callbacks import default_blocklist_callback
-from flask_jwt_extended.default_callbacks import default_decode_key_callback
-from flask_jwt_extended.default_callbacks import default_encode_key_callback
-from flask_jwt_extended.default_callbacks import default_expired_token_callback
-from flask_jwt_extended.default_callbacks import default_invalid_token_callback
-from flask_jwt_extended.default_callbacks import default_jwt_headers_callback
-from flask_jwt_extended.default_callbacks import default_needs_fresh_token_callback
-from flask_jwt_extended.default_callbacks import default_revoked_token_callback
-from flask_jwt_extended.default_callbacks import default_token_verification_callback
 from flask_jwt_extended.default_callbacks import (
+    default_additional_claims_callback,
+    default_blocklist_callback,
+    default_decode_key_callback,
+    default_encode_key_callback,
+    default_expired_token_callback,
+    default_invalid_token_callback,
+    default_jwt_headers_callback,
+    default_needs_fresh_token_callback,
+    default_revoked_token_callback,
+    default_token_verification_callback,
     default_token_verification_failed_callback,
+    default_unauthorized_callback,
+    default_user_identity_callback,
+    default_user_lookup_error_callback,
 )
-from flask_jwt_extended.default_callbacks import default_unauthorized_callback
-from flask_jwt_extended.default_callbacks import default_user_identity_callback
-from flask_jwt_extended.default_callbacks import default_user_lookup_error_callback
-from flask_jwt_extended.exceptions import CSRFError
-from flask_jwt_extended.exceptions import FreshTokenRequired
-from flask_jwt_extended.exceptions import InvalidHeaderError
-from flask_jwt_extended.exceptions import InvalidQueryParamError
-from flask_jwt_extended.exceptions import JWTDecodeError
-from flask_jwt_extended.exceptions import NoAuthorizationError
-from flask_jwt_extended.exceptions import RevokedTokenError
-from flask_jwt_extended.exceptions import UserClaimsVerificationError
-from flask_jwt_extended.exceptions import UserLookupError
-from flask_jwt_extended.exceptions import WrongTokenError
-from flask_jwt_extended.tokens import _decode_jwt
-from flask_jwt_extended.tokens import _encode_jwt
-from flask_jwt_extended.typing import ExpiresDelta
-from flask_jwt_extended.typing import Fresh
+from flask_jwt_extended.exceptions import (
+    CSRFError,
+    FreshTokenRequired,
+    InvalidHeaderError,
+    InvalidQueryParamError,
+    JWTDecodeError,
+    NoAuthorizationError,
+    RevokedTokenError,
+    UserClaimsVerificationError,
+    UserLookupError,
+    WrongTokenError,
+)
+from flask_jwt_extended.tokens import _decode_jwt, _encode_jwt
+from flask_jwt_extended.typing import ExpiresDelta, Fresh
 from flask_jwt_extended.utils import current_user_context_processor
 
 _F = TypeVar("_F", bound=Callable[..., Any])
 
 
-class JWTManager(object):
+class JWTManager:
     """
     An object used to hold JWT settings and callback functions for the
     Flask-JWT-Extended extension.
@@ -60,7 +60,7 @@ class JWTManager(object):
     """
 
     def __init__(
-        self, app: Optional[Flask] = None, add_context_processor: bool = False
+        self, app: Flask | None = None, add_context_processor: bool = False
     ) -> None:
         """
         Create the JWTManager instance. You can either pass a flask application
@@ -88,7 +88,7 @@ class JWTManager(object):
         self._unauthorized_callback = default_unauthorized_callback
         self._user_claims_callback = default_additional_claims_callback
         self._user_identity_callback = default_user_identity_callback
-        self._user_lookup_callback: Optional[Callable] = None
+        self._user_lookup_callback: Callable | None = None
         self._user_lookup_error_callback = default_user_lookup_error_callback
         self._token_verification_failed_callback = (
             default_token_verification_failed_callback
@@ -498,7 +498,7 @@ class JWTManager(object):
         token_type: str,
         claims=None,
         fresh: Fresh = False,
-        expires_delta: Optional[ExpiresDelta] = None,
+        expires_delta: ExpiresDelta | None = None,
         headers=None,
     ) -> str:
         header_overrides = self._jwt_additional_header_callback(identity)

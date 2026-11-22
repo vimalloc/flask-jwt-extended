@@ -1,27 +1,20 @@
 import uuid
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from collections.abc import Iterable
+from datetime import UTC, datetime, timedelta
 from hmac import compare_digest
 from json import JSONEncoder
 from typing import Any
-from typing import Iterable
-from typing import List
-from typing import Type
-from typing import Union
 
 import jwt
 from jwt.types import Options
 
-from flask_jwt_extended.exceptions import CSRFError
-from flask_jwt_extended.exceptions import JWTDecodeError
-from flask_jwt_extended.typing import ExpiresDelta
-from flask_jwt_extended.typing import Fresh
+from flask_jwt_extended.exceptions import CSRFError, JWTDecodeError
+from flask_jwt_extended.typing import ExpiresDelta, Fresh
 
 
 def _encode_jwt(
     algorithm: str,
-    audience: Union[str, Iterable[str]],
+    audience: str | Iterable[str],
     claim_overrides: dict,
     csrf: bool,
     expires_delta: ExpiresDelta,
@@ -30,12 +23,12 @@ def _encode_jwt(
     identity: Any,
     identity_claim_key: str,
     issuer: str,
-    json_encoder: Type[JSONEncoder],
+    json_encoder: type[JSONEncoder],
     secret: str,
     token_type: str,
     nbf: bool,
 ) -> str:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     if isinstance(fresh, timedelta):
         fresh = datetime.timestamp(now + fresh)
@@ -76,9 +69,9 @@ def _encode_jwt(
 
 
 def _decode_jwt(
-    algorithms: List,
+    algorithms: list,
     allow_expired: bool,
-    audience: Union[str, Iterable[str]],
+    audience: str | Iterable[str],
     csrf_value: str,
     encoded_token: str,
     identity_claim_key: str,
@@ -107,7 +100,7 @@ def _decode_jwt(
 
     # Make sure that any custom claims we expect in the token are present
     if identity_claim_key not in decoded_token:
-        raise JWTDecodeError("Missing claim: {}".format(identity_claim_key))
+        raise JWTDecodeError(f"Missing claim: {identity_claim_key}")
 
     if "type" not in decoded_token:
         decoded_token["type"] = "access"

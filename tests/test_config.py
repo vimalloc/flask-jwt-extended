@@ -1,7 +1,6 @@
 import importlib.metadata
 import json
-from datetime import date
-from datetime import timedelta
+from datetime import date, timedelta
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -10,7 +9,7 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended.config import config
 from flask_jwt_extended.internal_utils import JSONEncoder
-
+from tests.utils import JWT_SECRET_KEY
 
 flask_version = importlib.metadata.version("flask")
 flask_version_tuple = tuple(map(int, flask_version.split(".")))
@@ -202,7 +201,6 @@ def test_tokens_with_int_values(app):
         assert config.refresh_expires == timedelta(days=5)
 
 
-# noinspection PyStatementEffect
 def test_symmetric_secret_key(app):
     with app.test_request_context():
         assert config.is_asymmetric is False
@@ -212,18 +210,17 @@ def test_symmetric_secret_key(app):
         with pytest.raises(RuntimeError):
             config.decode_key
 
-        app.secret_key = "foobar"
+        app.secret_key = JWT_SECRET_KEY
         with app.test_request_context():
-            assert config.encode_key == "foobar"
-            assert config.decode_key == "foobar"
+            assert config.encode_key == JWT_SECRET_KEY
+            assert config.decode_key == JWT_SECRET_KEY
 
-        app.config["JWT_SECRET_KEY"] = "foobarbaz"
+        app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY + "foobar"
         with app.test_request_context():
-            assert config.encode_key == "foobarbaz"
-            assert config.decode_key == "foobarbaz"
+            assert config.encode_key == JWT_SECRET_KEY + "foobar"
+            assert config.decode_key == JWT_SECRET_KEY + "foobar"
 
 
-# noinspection PyStatementEffect
 def test_default_with_asymmetric_secret_key(app):
     with app.test_request_context():
         app.config["JWT_ALGORITHM"] = "RS256"
@@ -243,7 +240,7 @@ def test_default_with_asymmetric_secret_key(app):
             config.decode_key
 
         # Make sure the secret key isn't being used for asymmetric stuff
-        app.config["JWT_SECRET_KEY"] = "foobarbaz"
+        app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
         with pytest.raises(RuntimeError):
             config.encode_key
         with pytest.raises(RuntimeError):
@@ -257,7 +254,6 @@ def test_default_with_asymmetric_secret_key(app):
             assert config.encode_key == "bar2"
 
 
-# noinspection PyStatementEffect
 def test_invalid_config_options(app):
     with app.test_request_context():
         app.config["JWT_TOKEN_LOCATION"] = []
@@ -285,9 +281,8 @@ def test_invalid_config_options(app):
             config.token_location
 
         app.config["JWT_HEADER_NAME"] = ""
-        with app.test_request_context():
-            with pytest.raises(RuntimeError):
-                config.header_name
+        with app.test_request_context(), pytest.raises(RuntimeError):
+            config.header_name
 
         app.config["JWT_ACCESS_TOKEN_EXPIRES"] = "banana"
         with pytest.raises(RuntimeError):

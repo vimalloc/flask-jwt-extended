@@ -1,16 +1,19 @@
 import pytest
 from flask import Flask
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    get_jwt_identity,
+    jwt_required,
+)
+from tests.utils import JWT_SECRET_KEY
 
 
 @pytest.fixture(scope="function")
 def app():
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "secret"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
     JWTManager(app)
 
     @app.route("/jwt_required", methods=["GET", "OPTIONS"])

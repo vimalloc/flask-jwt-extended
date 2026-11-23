@@ -1,6 +1,6 @@
 cryptography==42.0.4
 Flask==3.0.1
 pre-commit==3.6.0
-PyJWT==2.12.1
+PyJWT==2.15.0
 ruff==0.17.6
 tox==4.12.1

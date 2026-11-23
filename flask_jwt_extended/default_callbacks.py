@@ -6,6 +6,7 @@ loader decorators. For further information, check out the following links:
 http://flask-jwt-extended.readthedocs.io/en/latest/changing_default_behavior.html
 http://flask-jwt-extended.readthedocs.io/en/latest/tokens_from_complex_object.html
 """
+
 from http import HTTPStatus
 from typing import Any
 

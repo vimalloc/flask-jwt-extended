@@ -1,12 +1,13 @@
 from functools import wraps
 
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import verify_jwt_in_request
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    get_jwt,
+    verify_jwt_in_request,
+)
 
 app = Flask(__name__)
 

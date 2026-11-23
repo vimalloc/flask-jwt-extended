@@ -1,20 +1,22 @@
 import pytest
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
 
-from flask_jwt_extended import current_user
-from flask_jwt_extended import get_current_user
-from flask_jwt_extended import get_jwt
-from flask_jwt_extended import get_jwt_header
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import (
+    JWTManager,
+    current_user,
+    get_current_user,
+    get_jwt,
+    get_jwt_header,
+    get_jwt_identity,
+    jwt_required,
+)
+from tests.utils import JWT_SECRET_KEY
 
 
 @pytest.fixture(scope="function")
 def app():
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
     jwt = JWTManager(app)
 
     @app.route("/optional", methods=["GET"])
@@ -22,14 +24,14 @@ def app():
     def access_protected():
         assert get_jwt() == {}
         assert get_jwt_header() == {}
-        assert get_jwt_identity() == None  # noqa: E711
-        assert get_current_user() == None  # noqa: E711
-        assert current_user == None  # noqa: E711
+        assert get_jwt_identity() == None
+        assert get_current_user() == None
+        assert current_user == None
         return jsonify(foo="bar")
 
     @jwt.user_lookup_loader
     def user_lookup_callback(_jwt_header, _jwt_data):
-        assert True == False  # noqa: E712
+        raise RuntimeError("test failed")
 
     return app
 

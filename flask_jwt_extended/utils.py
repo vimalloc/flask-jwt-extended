@@ -1,15 +1,12 @@
 from typing import Any
-from typing import Optional
 
 import jwt
-from flask import g
-from flask import Response
+from flask import Response, g
 from werkzeug.local import LocalProxy
 
 from flask_jwt_extended.config import config
 from flask_jwt_extended.internal_utils import get_jwt_manager
-from flask_jwt_extended.typing import ExpiresDelta
-from flask_jwt_extended.typing import Fresh
+from flask_jwt_extended.typing import ExpiresDelta, Fresh
 
 # Proxy to access the current user
 current_user: Any = LocalProxy(lambda: get_current_user())
@@ -63,7 +60,7 @@ def get_jwt_identity() -> Any:
     return get_jwt().get(config.identity_claim_key, None)
 
 
-def get_jwt_request_location() -> Optional[str]:
+def get_jwt_request_location() -> str | None:
     """
     In a protected endpoint, this will return the "location" at which the JWT
     that is accessing the endpoint was found--e.g., "cookies", "query-string",
@@ -95,14 +92,13 @@ def get_current_user() -> Any:
     jwt_user_dict = g.get("_jwt_extended_jwt_user", None)
     if jwt_user_dict is None:
         raise RuntimeError(
-            "You must provide a `@jwt.user_lookup_loader` callback to use "
-            "this method"
+            "You must provide a `@jwt.user_lookup_loader` callback to use this method"
         )
     return jwt_user_dict["loaded_user"]
 
 
 def decode_token(
-    encoded_token: str, csrf_value: Optional[str] = None, allow_expired: bool = False
+    encoded_token: str, csrf_value: str | None = None, allow_expired: bool = False
 ) -> dict:
     """
     Returns the decoded token (python dict) from an encoded JWT. This does all
@@ -131,7 +127,7 @@ def decode_token(
 def create_access_token(
     identity: Any,
     fresh: Fresh = False,
-    expires_delta: Optional[ExpiresDelta] = None,
+    expires_delta: ExpiresDelta | None = None,
     additional_claims=None,
     additional_headers=None,
 ):
@@ -183,7 +179,7 @@ def create_access_token(
 
 def create_refresh_token(
     identity: Any,
-    expires_delta: Optional[ExpiresDelta] = None,
+    expires_delta: ExpiresDelta | None = None,
     additional_claims=None,
     additional_headers=None,
 ):
@@ -239,7 +235,7 @@ def get_unverified_jwt_headers(encoded_token: str) -> dict:
     return jwt.get_unverified_header(encoded_token)
 
 
-def get_jti(encoded_token: str) -> Optional[str]:
+def get_jti(encoded_token: str) -> str | None:
     """
     Returns the JTI (unique identifier) of an encoded JWT
 
@@ -319,8 +315,8 @@ def set_access_cookies(
 def set_refresh_cookies(
     response: Response,
     encoded_refresh_token: str,
-    max_age: Optional[int] = None,
-    domain: Optional[str] = None,
+    max_age: int | None = None,
+    domain: str | None = None,
 ) -> None:
     """
     Modifiy a Flask Response to set a cookie containing the refresh JWT.
@@ -369,7 +365,7 @@ def set_refresh_cookies(
         )
 
 
-def unset_jwt_cookies(response: Response, domain: Optional[str] = None) -> None:
+def unset_jwt_cookies(response: Response, domain: str | None = None) -> None:
     """
     Modifiy a Flask Response to delete the cookies containing access or refresh
     JWTs.  Also deletes the corresponding CSRF cookies if applicable.
@@ -381,7 +377,7 @@ def unset_jwt_cookies(response: Response, domain: Optional[str] = None) -> None:
     unset_refresh_cookies(response, domain)
 
 
-def unset_access_cookies(response: Response, domain: Optional[str] = None) -> None:
+def unset_access_cookies(response: Response, domain: str | None = None) -> None:
     """
     Modifiy a Flask Response to delete the cookie containing an access JWT.
     Also deletes the corresponding CSRF cookie if applicable.
@@ -419,7 +415,7 @@ def unset_access_cookies(response: Response, domain: Optional[str] = None) -> No
         )
 
 
-def unset_refresh_cookies(response: Response, domain: Optional[str] = None) -> None:
+def unset_refresh_cookies(response: Response, domain: str | None = None) -> None:
     """
     Modifiy a Flask Response to delete the cookie containing a refresh JWT.
     Also deletes the corresponding CSRF cookie if applicable.

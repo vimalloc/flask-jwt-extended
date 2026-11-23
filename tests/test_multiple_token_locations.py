@@ -1,18 +1,20 @@
 import pytest
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_request_location
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import set_access_cookies
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    get_jwt_request_location,
+    jwt_required,
+    set_access_cookies,
+)
+from tests.utils import JWT_SECRET_KEY
 
 
 @pytest.fixture(scope="function")
 def app():
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
     app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies", "query_string", "json"]
     JWTManager(app)
 
@@ -34,7 +36,7 @@ def app():
 @pytest.fixture(scope="function")
 def app_with_locations():
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
     app.config["JWT_TOKEN_LOCATION"] = ["headers"]
     locations = ["headers", "cookies", "query_string", "json"]
     JWTManager(app)
@@ -60,7 +62,7 @@ def test_header_access(app, app_with_locations):
         with test_app.test_request_context():
             access_token = create_access_token("username")
 
-        access_headers = {"Authorization": "Bearer {}".format(access_token)}
+        access_headers = {"Authorization": f"Bearer {access_token}"}
         response = test_client.get("/protected", headers=access_headers)
         assert response.status_code == 200
         assert response.get_json() == {"foo": "bar", "location": "headers"}
@@ -81,7 +83,7 @@ def test_query_string_access(app, app_with_locations):
         with test_app.test_request_context():
             access_token = create_access_token("username")
 
-        url = "/protected?jwt={}".format(access_token)
+        url = f"/protected?jwt={access_token}"
         response = test_client.get(url)
         assert response.status_code == 200
         assert response.get_json() == {"foo": "bar", "location": "query_string"}
@@ -165,8 +167,8 @@ def test_order_of_jwt_locations_with_one_invalid_token_in_request(app, options):
     with app.test_request_context():
         access_token = create_access_token("username")
     # invalidate the token, to check token location precedence
-    access_token = "000000{}".format(access_token[5:])
-    access_headers = {"Authorization": "Bearer {}".format(access_token)}
+    access_token = f"000000{access_token[5:]}"
+    access_headers = {"Authorization": f"Bearer {access_token}"}
     # set valid cookies
     test_client.get("/cookie_login")
     response = test_client.get("/protected", headers=access_headers)

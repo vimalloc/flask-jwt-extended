@@ -1,17 +1,14 @@
 import pytest
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-from tests.utils import get_jwt_manager
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from tests.utils import JWT_SECRET_KEY, get_jwt_manager
 
 
 @pytest.fixture(scope="function")
 def app():
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
     app.config["JWT_TOKEN_LOCATION"] = ["query_string"]
     JWTManager(app)
 
@@ -29,7 +26,7 @@ def test_default_query_paramater(app):
     with app.test_request_context():
         access_token = create_access_token("username")
 
-    url = "/protected?jwt={}".format(access_token)
+    url = f"/protected?jwt={access_token}"
     response = test_client.get(url)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
@@ -67,13 +64,13 @@ def test_custom_query_paramater(app):
         access_token = create_access_token("username")
 
     # Ensure 'default' query paramaters no longer work
-    url = "/protected?jwt={}".format(access_token)
+    url = f"/protected?jwt={access_token}"
     response = test_client.get(url)
     assert response.status_code == 401
     assert response.get_json() == {"msg": "Missing 'foo' query paramater"}
 
     # Ensure new query_string does work
-    url = "/protected?foo={}".format(access_token)
+    url = f"/protected?foo={access_token}"
     response = test_client.get(url)
     assert response.status_code == 200
     assert response.get_json() == {"foo": "bar"}
@@ -92,7 +89,7 @@ def test_missing_query_paramater(app):
     assert response.get_json() == {"msg": "Missing 'jwt' query paramater"}
 
     # Ensure headers don't work
-    access_headers = {"Authorization": "Bearer {}".format(access_token)}
+    access_headers = {"Authorization": f"Bearer {access_token}"}
     response = test_client.get("/protected", headers=access_headers)
     assert response.status_code == 401
     assert response.get_json() == {"msg": "Missing 'jwt' query paramater"}

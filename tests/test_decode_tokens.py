@@ -1,35 +1,36 @@
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from dateutil.relativedelta import relativedelta
 from flask import Flask
-from jwt import DecodeError
-from jwt import ExpiredSignatureError
-from jwt import ImmatureSignatureError
-from jwt import InvalidAudienceError
-from jwt import InvalidIssuerError
-from jwt import InvalidSignatureError
-from jwt import MissingRequiredClaimError
+from jwt import (
+    DecodeError,
+    ExpiredSignatureError,
+    ImmatureSignatureError,
+    InvalidAudienceError,
+    InvalidIssuerError,
+    InvalidSignatureError,
+    MissingRequiredClaimError,
+)
 from jwt.exceptions import InvalidSubjectError
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import create_refresh_token
-from flask_jwt_extended import decode_token
-from flask_jwt_extended import get_jti
-from flask_jwt_extended import get_unverified_jwt_headers
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    get_jti,
+    get_unverified_jwt_headers,
+)
 from flask_jwt_extended.config import config
 from flask_jwt_extended.exceptions import JWTDecodeError
-from tests.utils import encode_token
-from tests.utils import get_jwt_manager
+from tests.utils import JWT_SECRET_KEY, encode_token, get_jwt_manager
 
 
 @pytest.fixture(scope="function")
 def app():
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "change_me"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
     app.config["JWT_TOKEN_LOCATION"] = ["cookies", "headers"]
     app.config["JWT_COOKIE_CSRF_PROTECT"] = True
     JWTManager(app)
@@ -53,9 +54,8 @@ def test_missing_claims(app, default_access_token, missing_claims):
     del default_access_token[missing_claims]
     missing_jwt_token = encode_token(app, default_access_token)
 
-    with pytest.raises(JWTDecodeError):
-        with app.test_request_context():
-            decode_token(missing_jwt_token, csrf_value="abcd")
+    with pytest.raises(JWTDecodeError), app.test_request_context():
+        decode_token(missing_jwt_token, csrf_value="abcd")
 
 
 def test_default_decode_token_values(app, default_access_token):
@@ -155,14 +155,13 @@ def test_never_expire_token(app):
 
 
 def test_nbf_token_in_future(app):
-    date_in_future = datetime.now(timezone.utc) + timedelta(seconds=30)
+    date_in_future = datetime.now(UTC) + timedelta(seconds=30)
 
-    with pytest.raises(ImmatureSignatureError):
-        with app.test_request_context():
-            access_token = create_access_token(
-                "username", additional_claims={"nbf": date_in_future}
-            )
-            decode_token(access_token)
+    with pytest.raises(ImmatureSignatureError), app.test_request_context():
+        access_token = create_access_token(
+            "username", additional_claims={"nbf": date_in_future}
+        )
+        decode_token(access_token)
 
     with app.test_request_context():
         app.config["JWT_DECODE_LEEWAY"] = 30
@@ -175,9 +174,8 @@ def test_alternate_identity_claim(app, default_access_token):
 
     # Ensure decoding fails if the claim isn't there
     token = encode_token(app, default_access_token)
-    with pytest.raises(JWTDecodeError):
-        with app.test_request_context():
-            decode_token(token)
+    with pytest.raises(JWTDecodeError), app.test_request_context():
+        decode_token(token)
 
     # Ensure the claim exists in the decoded jwt
     del default_access_token["sub"]
@@ -198,10 +196,10 @@ def test_get_jti(app, default_access_token):
 
 def test_encode_decode_callback_values(app, default_access_token):
     jwtM = get_jwt_manager(app)
-    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
     with app.test_request_context():
-        assert jwtM._decode_key_callback({}, {}) == "foobarbaz"
-        assert jwtM._encode_key_callback({}) == "foobarbaz"
+        assert jwtM._decode_key_callback({}, {}) == JWT_SECRET_KEY
+        assert jwtM._encode_key_callback({}) == JWT_SECRET_KEY
 
     @jwtM.encode_key_loader
     def get_encode_key_1(identity):
@@ -218,27 +216,25 @@ def test_encode_decode_callback_values(app, default_access_token):
 
 def test_custom_encode_decode_key_callbacks(app, default_access_token):
     jwtM = get_jwt_manager(app)
-    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
 
     @jwtM.encode_key_loader
     def get_encode_key_1(identity):
         assert identity == "username"
-        return "different secret"
+        return JWT_SECRET_KEY + "foobar"
 
-    with pytest.raises(InvalidSignatureError):
-        with app.test_request_context():
-            token = create_access_token("username")
-            decode_token(token)
-    with pytest.raises(InvalidSignatureError):
-        with app.test_request_context():
-            token = create_refresh_token("username")
-            decode_token(token)
+    with pytest.raises(InvalidSignatureError), app.test_request_context():
+        token = create_access_token("username")
+        decode_token(token)
+    with pytest.raises(InvalidSignatureError), app.test_request_context():
+        token = create_refresh_token("username")
+        decode_token(token)
 
     @jwtM.decode_key_loader
     def get_decode_key_1(jwt_header, jwt_data):
         assert jwt_header["alg"] == "HS256"
         assert jwt_data["sub"] == "username"
-        return "different secret"
+        return JWT_SECRET_KEY + "foobar"
 
     with app.test_request_context():
         token = create_access_token("username")
@@ -264,9 +260,8 @@ def test_invalid_aud(app, default_access_token, token_aud):
 
     default_access_token["aud"] = token_aud
     invalid_token = encode_token(app, default_access_token)
-    with pytest.raises(InvalidAudienceError):
-        with app.test_request_context():
-            decode_token(invalid_token)
+    with pytest.raises(InvalidAudienceError), app.test_request_context():
+        decode_token(invalid_token)
 
 
 @pytest.mark.parametrize("token_aud", ["bar", ["bar"], ["bar", "baz"]])
@@ -288,9 +283,8 @@ def test_invalid_sub_values(app, default_access_token, token_sub):
 
     default_access_token["sub"] = token_sub
     invalid_token = encode_token(app, default_access_token)
-    with pytest.raises(InvalidSubjectError):
-        with app.test_request_context():
-            decode_token(invalid_token)
+    with pytest.raises(InvalidSubjectError), app.test_request_context():
+        decode_token(invalid_token)
 
 
 @pytest.mark.parametrize("token_sub", [123, {}, [], False])
@@ -322,10 +316,9 @@ def test_mismatch_iss(app, default_access_token):
     app.config["JWT_ENCODE_ISSUER"] = "foobar"
     app.config["JWT_DECODE_ISSUER"] = "baz"
 
-    with pytest.raises(InvalidIssuerError):
-        with app.test_request_context():
-            invalid_token = create_access_token("username")
-            decode_token(invalid_token)
+    with pytest.raises(InvalidIssuerError), app.test_request_context():
+        invalid_token = create_access_token("username")
+        decode_token(invalid_token)
 
 
 def test_valid_decode_iss(app, default_access_token):
@@ -343,16 +336,14 @@ def test_invalid_decode_iss(app, default_access_token):
 
     default_access_token["iss"] = "foobar"
     invalid_token = encode_token(app, default_access_token)
-    with pytest.raises(InvalidIssuerError):
-        with app.test_request_context():
-            decode_token(invalid_token)
+    with pytest.raises(InvalidIssuerError), app.test_request_context():
+        decode_token(invalid_token)
 
 
 def test_malformed_token(app):
     invalid_token = "foobarbaz"
-    with pytest.raises(DecodeError):
-        with app.test_request_context():
-            decode_token(invalid_token)
+    with pytest.raises(DecodeError), app.test_request_context():
+        decode_token(invalid_token)
 
 
 def test_jwt_headers(app):
@@ -368,7 +359,7 @@ def test_token_expires_time(app):
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(hours=2)
 
-    now_timestamp = datetime.timestamp(datetime.now(timezone.utc))
+    now_timestamp = datetime.timestamp(datetime.now(UTC))
 
     with app.test_request_context():
         access_token = create_access_token("username")

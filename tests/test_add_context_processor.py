@@ -1,16 +1,14 @@
 import pytest
-from flask import Flask
-from flask import render_template_string
+from flask import Flask, render_template_string
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from tests.utils import JWT_SECRET_KEY
 
 
 @pytest.fixture(scope="function")
 def app():
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
 
     @app.route("/context_current_user", methods=["GET"])
     @jwt_required()
@@ -32,7 +30,7 @@ def test_add_context_processor(app):
     with app.test_request_context():
         access_token = create_access_token("username")
 
-    access_headers = {"Authorization": "Bearer {}".format(access_token)}
+    access_headers = {"Authorization": f"Bearer {access_token}"}
     response = test_client.get("/context_current_user", headers=access_headers)
     assert response.text == "test_user"
 
@@ -49,6 +47,6 @@ def test_no_add_context_processor(app):
     with app.test_request_context():
         access_token = create_access_token("username")
 
-    access_headers = {"Authorization": "Bearer {}".format(access_token)}
+    access_headers = {"Authorization": f"Bearer {access_token}"}
     response = test_client.get("/context_current_user", headers=access_headers)
     assert response.text == ""

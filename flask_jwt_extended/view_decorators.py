@@ -1,37 +1,31 @@
-from datetime import datetime
-from datetime import timezone
+from collections.abc import Callable, Sequence
+from datetime import UTC, datetime
 from functools import wraps
 from re import split
-from typing import Any
-from typing import Callable
-from typing import cast
-from typing import Optional
-from typing import Sequence
-from typing import Tuple
-from typing import TypeVar
-from typing import Union
+from typing import Any, TypeVar, cast
 
-from flask import current_app
-from flask import g
-from flask import request
+from flask import current_app, g, request
 from werkzeug.exceptions import BadRequest
 
 from flask_jwt_extended.config import config
-from flask_jwt_extended.exceptions import CSRFError
-from flask_jwt_extended.exceptions import FreshTokenRequired
-from flask_jwt_extended.exceptions import InvalidHeaderError
-from flask_jwt_extended.exceptions import InvalidQueryParamError
-from flask_jwt_extended.exceptions import NoAuthorizationError
-from flask_jwt_extended.exceptions import UserLookupError
-from flask_jwt_extended.internal_utils import custom_verification_for_token
-from flask_jwt_extended.internal_utils import has_user_lookup
-from flask_jwt_extended.internal_utils import user_lookup
-from flask_jwt_extended.internal_utils import verify_token_not_blocklisted
-from flask_jwt_extended.internal_utils import verify_token_type
-from flask_jwt_extended.utils import decode_token
-from flask_jwt_extended.utils import get_unverified_jwt_headers
+from flask_jwt_extended.exceptions import (
+    CSRFError,
+    FreshTokenRequired,
+    InvalidHeaderError,
+    InvalidQueryParamError,
+    NoAuthorizationError,
+    UserLookupError,
+)
+from flask_jwt_extended.internal_utils import (
+    custom_verification_for_token,
+    has_user_lookup,
+    user_lookup,
+    verify_token_not_blocklisted,
+    verify_token_type,
+)
+from flask_jwt_extended.utils import decode_token, get_unverified_jwt_headers
 
-LocationType = Union[str, Sequence, None]
+LocationType = str | Sequence | None
 
 _F = TypeVar("_F", bound=Callable[..., Any])
 
@@ -42,7 +36,7 @@ def _verify_token_is_fresh(jwt_header: dict, jwt_data: dict) -> None:
         if not fresh:
             raise FreshTokenRequired("Fresh token required", jwt_header, jwt_data)
     else:
-        now = datetime.timestamp(datetime.now(timezone.utc))
+        now = datetime.timestamp(datetime.now(UTC))
         if fresh < now:
             raise FreshTokenRequired("Fresh token required", jwt_header, jwt_data)
 
@@ -51,10 +45,10 @@ def verify_jwt_in_request(
     optional: bool = False,
     fresh: bool = False,
     refresh: bool = False,
-    locations: Optional[LocationType] = None,
+    locations: LocationType | None = None,
     verify_type: bool = True,
     skip_revocation_check: bool = False,
-) -> Optional[Tuple[dict, dict]]:
+) -> tuple[dict, dict] | None:
     """
     Verify that a valid JWT is present in the request, unless ``optional=True`` in
     which case no JWT is also considered valid.
@@ -92,13 +86,12 @@ def verify_jwt_in_request(
         ``None`` will be returned instead. Raise an exception if an invalid JWT
         is in the request.
     """
-    if request.method in config.exempt_methods:
-        if not optional:
-            g._jwt_extended_jwt = {}
-            g._jwt_extended_jwt_header = {}
-            g._jwt_extended_jwt_user = {"loaded_user": None}
-            g._jwt_extended_jwt_location = None
-            return None
+    if request.method in config.exempt_methods and not optional:
+        g._jwt_extended_jwt = {}
+        g._jwt_extended_jwt_header = {}
+        g._jwt_extended_jwt_user = {"loaded_user": None}
+        g._jwt_extended_jwt_location = None
+        return None
 
     try:
         jwt_data, jwt_header, jwt_location = _decode_jwt_from_request(
@@ -132,7 +125,7 @@ def jwt_required(
     optional: bool = False,
     fresh: bool = False,
     refresh: bool = False,
-    locations: Optional[LocationType] = None,
+    locations: LocationType | None = None,
     verify_type: bool = True,
     skip_revocation_check: bool = False,
 ) -> Callable[[_F], _F]:
@@ -184,19 +177,19 @@ def jwt_required(
     return wrapper
 
 
-def _load_user(jwt_header: dict, jwt_data: dict) -> Optional[dict]:
+def _load_user(jwt_header: dict, jwt_data: dict) -> dict | None:
     if not has_user_lookup():
         return None
 
     identity = jwt_data[config.identity_claim_key]
     user = user_lookup(jwt_header, jwt_data)
     if user is None:
-        error_msg = "user_lookup returned None for {}".format(identity)
+        error_msg = f"user_lookup returned None for {identity}"
         raise UserLookupError(error_msg, jwt_header, jwt_data)
     return {"loaded_user": user}
 
 
-def _decode_jwt_from_headers() -> Tuple[str, None]:
+def _decode_jwt_from_headers() -> tuple[str, None]:
     header_name = config.header_name
     header_type = config.header_type
 
@@ -240,7 +233,7 @@ def _decode_jwt_from_headers() -> Tuple[str, None]:
     return encoded_token, None
 
 
-def _decode_jwt_from_cookies(refresh: bool) -> Tuple[str, Optional[str]]:
+def _decode_jwt_from_cookies(refresh: bool) -> tuple[str, str | None]:
     if refresh:
         cookie_key = config.refresh_cookie_name
         csrf_header_key = config.refresh_csrf_header_name
@@ -252,7 +245,7 @@ def _decode_jwt_from_cookies(refresh: bool) -> Tuple[str, Optional[str]]:
 
     encoded_token = request.cookies.get(cookie_key)
     if not encoded_token:
-        raise NoAuthorizationError('Missing cookie "{}"'.format(cookie_key))
+        raise NoAuthorizationError(f'Missing cookie "{cookie_key}"')
 
     if config.cookie_csrf_protect and request.method in config.csrf_request_methods:
         csrf_value = request.headers.get(csrf_header_key, None)
@@ -266,7 +259,7 @@ def _decode_jwt_from_cookies(refresh: bool) -> Tuple[str, Optional[str]]:
     return encoded_token, csrf_value
 
 
-def _decode_jwt_from_query_string() -> Tuple[str, None]:
+def _decode_jwt_from_query_string() -> tuple[str, None]:
     param_name = config.query_string_name
     prefix = config.query_string_value_prefix
 
@@ -280,11 +273,11 @@ def _decode_jwt_from_query_string() -> Tuple[str, None]:
             f"Expected the value to start with '{prefix}'"
         )
 
-    encoded_token = value[len(prefix) :]  # noqa: E203
+    encoded_token = value[len(prefix) :]
     return encoded_token, None
 
 
-def _decode_jwt_from_json(refresh: bool) -> Tuple[str, None]:
+def _decode_jwt_from_json(refresh: bool) -> tuple[str, None]:
     if not request.is_json:
         raise NoAuthorizationError("Invalid content-type. Must be application/json.")
 
@@ -298,9 +291,7 @@ def _decode_jwt_from_json(refresh: bool) -> Tuple[str, None]:
         if not encoded_token:
             raise BadRequest()
     except BadRequest:
-        raise NoAuthorizationError(
-            'Missing "{}" key in json data.'.format(token_key)
-        ) from None
+        raise NoAuthorizationError(f'Missing "{token_key}" key in json data.') from None
 
     return encoded_token, None
 
@@ -311,7 +302,7 @@ def _decode_jwt_from_request(
     refresh: bool = False,
     verify_type: bool = True,
     skip_revocation_check: bool = False,
-) -> Tuple[dict, dict, str]:
+) -> tuple[dict, dict, str]:
     # Figure out what locations to look for the JWT in this request
     if isinstance(locations, str):
         locations = [locations]

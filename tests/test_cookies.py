@@ -1,17 +1,18 @@
 import pytest
-from flask import Flask
-from flask import jsonify
-from flask import request
+from flask import Flask, jsonify, request
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import create_refresh_token
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import set_access_cookies
-from flask_jwt_extended import set_refresh_cookies
-from flask_jwt_extended import unset_access_cookies
-from flask_jwt_extended import unset_jwt_cookies
-from flask_jwt_extended import unset_refresh_cookies
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    set_access_cookies,
+    set_refresh_cookies,
+    unset_access_cookies,
+    unset_jwt_cookies,
+    unset_refresh_cookies,
+)
+from tests.utils import JWT_SECRET_KEY
 
 
 def _get_cookie_from_response(response, cookie_name):
@@ -30,7 +31,7 @@ def _get_cookie_from_response(response, cookie_name):
 @pytest.fixture(scope="function")
 def app():
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "foobarbaz"
+    app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
     app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
     JWTManager(app)
 
@@ -118,7 +119,7 @@ def test_jwt_refresh_required_with_cookies(app, options):
     # Test without cookies
     response = test_client.get(protected_url)
     assert response.status_code == 401
-    assert response.get_json() == {"msg": 'Missing cookie "{}"'.format(cookie_name)}
+    assert response.get_json() == {"msg": f'Missing cookie "{cookie_name}"'}
 
     # Test after receiving cookies
     test_client.get(auth_url)
@@ -130,7 +131,7 @@ def test_jwt_refresh_required_with_cookies(app, options):
     test_client.get(delete_url)
     response = test_client.get(protected_url)
     assert response.status_code == 401
-    assert response.get_json() == {"msg": 'Missing cookie "{}"'.format(cookie_name)}
+    assert response.get_json() == {"msg": f'Missing cookie "{cookie_name}"'}
 
     # log back in once more to test that clearing all tokens works
     test_client.get(auth_url)
@@ -140,7 +141,7 @@ def test_jwt_refresh_required_with_cookies(app, options):
     test_client.get("/delete_tokens")
     response = test_client.get(protected_url)
     assert response.status_code == 401
-    assert response.get_json() == {"msg": 'Missing cookie "{}"'.format(cookie_name)}
+    assert response.get_json() == {"msg": f'Missing cookie "{cookie_name}"'}
 
 
 @pytest.mark.parametrize(

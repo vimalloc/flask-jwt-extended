@@ -1,14 +1,13 @@
 import json
-from typing import Any
-from typing import Type
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from flask import current_app
-from flask import Flask
+from flask import Flask, current_app
 
-from flask_jwt_extended.exceptions import RevokedTokenError
-from flask_jwt_extended.exceptions import UserClaimsVerificationError
-from flask_jwt_extended.exceptions import WrongTokenError
+from flask_jwt_extended.exceptions import (
+    RevokedTokenError,
+    UserClaimsVerificationError,
+    WrongTokenError,
+)
 
 try:
     from flask.json.provider import DefaultJSONProvider
@@ -78,7 +77,7 @@ class JSONEncoder(json.JSONEncoder):
         return default(o)
 
 
-def get_json_encoder(app: Flask) -> Type[json.JSONEncoder]:
+def get_json_encoder(app: Flask) -> type[json.JSONEncoder]:
     """Get the JSON Encoder for the provided flask app
 
     Starting with flask version 2.2 the flask application provides a

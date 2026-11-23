@@ -1,15 +1,14 @@
 from hmac import compare_digest
 
-from flask import Flask
-from flask import jsonify
-from flask import request
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import current_user
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    current_user,
+    jwt_required,
+)
 
 app = Flask(__name__)
 

@@ -222,9 +222,12 @@ class _Config(object):
 
     @property
     def decode_algorithms(self) -> List[str]:
-        algorithms = current_app.config["JWT_DECODE_ALGORITHMS"]
-        if not algorithms:
-            return [self.algorithm]
+        # Copy before appending. The configured list can be shared by
+        # reference between applications, for example when they are
+        # built from the same object with ``from_object``, so mutating it
+        # would add this application's algorithm to the algorithms every
+        # other application accepts.
+        algorithms = list(current_app.config["JWT_DECODE_ALGORITHMS"] or [])
         if self.algorithm not in algorithms:
             algorithms.append(self.algorithm)
         return algorithms

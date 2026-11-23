@@ -347,3 +347,17 @@ def test_missing_algorithm_in_decode_algorithms(app):
 
     with app.test_request_context():
         assert config.decode_algorithms == ["HS512", "RS256"]
+
+
+def test_decode_algorithms_does_not_modify_config(app):
+    app.config["JWT_ALGORITHM"] = "RS256"
+    app.config["JWT_DECODE_ALGORITHMS"] = ["HS512"]
+
+    with app.test_request_context():
+        assert config.decode_algorithms == ["HS512", "RS256"]
+
+        # The configured list must be left alone. Applications built from
+        # the same object share it by reference, so modifying it here would
+        # silently widen the algorithms the other applications accept.
+        assert app.config["JWT_DECODE_ALGORITHMS"] == ["HS512"]
+        assert config.decode_algorithms == ["HS512", "RS256"]

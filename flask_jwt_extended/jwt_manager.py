@@ -121,7 +121,7 @@ class JWTManager:
         self._set_default_configuration_options(app)
         self._set_error_handler_callbacks(app)
 
-    def _set_error_handler_callbacks(self, app: Flask) -> None:
+    def _set_error_handler_callbacks(self, app: Flask) -> None:  # noqa: C901
         @app.errorhandler(CSRFError)
         def handle_csrf_error(e):
             return self._unauthorized_callback(str(e))
@@ -562,6 +562,6 @@ class JWTManager:
             # TODO: If we ever do another breaking change, don't raise this pyjwt
             #       error directly, instead raise a custom error of ours from this
             #       error.
-            e.jwt_header = unverified_headers  # type: ignore
-            e.jwt_data = _decode_jwt(**kwargs, allow_expired=True)  # type: ignore
+            e.jwt_header = unverified_headers  # type: ignore[attr-defined]
+            e.jwt_data = _decode_jwt(**kwargs, allow_expired=True)  # type: ignore[attr-defined]
             raise

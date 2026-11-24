@@ -63,7 +63,7 @@ def _encode_jwt(
         token_data,
         secret,
         algorithm,
-        json_encoder=json_encoder,  # type: ignore
+        json_encoder=json_encoder,
         headers=header_overrides,
     )
 

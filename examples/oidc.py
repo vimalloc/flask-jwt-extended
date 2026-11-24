@@ -30,7 +30,8 @@ OIDC_CLIENT_ID = "example.my-identity-server"
 # Token variable holding unique username
 OIDC_USERNAME_CLAIM = "email"
 
-# Token list variable holding groups that user belongs to (for role-based-access-control)
+# Token list variable holding groups that user belongs to
+# (for role-based-access-control)
 # idea here is to have few but could be hundreds of groups, based on which groups user
 # belongs to, grants them access to various endpoints in identity server this is
 # usually mapped directly to ldap, so ldap group membership defines which endpoints user

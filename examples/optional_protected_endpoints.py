@@ -31,8 +31,7 @@ def optionally_protected():
     current_identity = get_jwt_identity()
     if current_identity:
         return jsonify(logged_in_as=current_identity)
-    else:
-        return jsonify(logged_in_as="anonymous user")
+    return jsonify(logged_in_as="anonymous user")
 
 
 if __name__ == "__main__":

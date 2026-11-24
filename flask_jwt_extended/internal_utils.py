@@ -48,7 +48,7 @@ def user_lookup(*args, **kwargs) -> Any:
 def verify_token_type(decoded_token: dict, refresh: bool) -> None:
     if not refresh and decoded_token["type"] == "refresh":
         raise WrongTokenError("Only non-refresh tokens are allowed")
-    elif refresh and decoded_token["type"] != "refresh":
+    if refresh and decoded_token["type"] != "refresh":
         raise WrongTokenError("Only refresh tokens are allowed")
 
 
@@ -92,6 +92,6 @@ def get_json_encoder(app: Flask) -> type[json.JSONEncoder]:
 
     """
     if not HAS_JSON_PROVIDER:  # pragma: no cover
-        return app.json_encoder  # type: ignore
+        return app.json_encoder  # type: ignore[attr-defined]
 
     return JSONEncoder

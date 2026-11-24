@@ -9,7 +9,8 @@ from flask_jwt_extended.internal_utils import get_jwt_manager
 from flask_jwt_extended.typing import ExpiresDelta, Fresh
 
 # Proxy to access the current user
-current_user: Any = LocalProxy(lambda: get_current_user())
+# The lambda defers the lookup: get_current_user is defined further down
+current_user: Any = LocalProxy(lambda: get_current_user())  # noqa: PLW0108
 
 
 def get_jwt() -> dict:

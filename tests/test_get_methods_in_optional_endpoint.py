@@ -24,9 +24,9 @@ def app():
     def access_protected():
         assert get_jwt() == {}
         assert get_jwt_header() == {}
-        assert get_jwt_identity() == None
-        assert get_current_user() == None
-        assert current_user == None
+        assert get_jwt_identity() == None  # noqa: E711
+        assert get_current_user() == None  # noqa: E711
+        assert current_user == None  # noqa: E711
         return jsonify(foo="bar")
 
     @jwt.user_lookup_loader

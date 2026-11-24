@@ -42,8 +42,7 @@ def app():
     def optional_protected():
         if get_jwt_identity():
             return jsonify(foo="baz")
-        else:
-            return jsonify(foo="bar")
+        return jsonify(foo="bar")
 
     @app.route("/no_typecheck_protected", methods=["GET"])
     @jwt_required(verify_type=False)

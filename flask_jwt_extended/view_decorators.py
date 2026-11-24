@@ -172,7 +172,7 @@ def jwt_required(
             )
             return current_app.ensure_sync(fn)(*args, **kwargs)
 
-        return cast(_F, decorator)
+        return cast("_F", decorator)
 
     return wrapper
 
@@ -281,22 +281,19 @@ def _decode_jwt_from_json(refresh: bool) -> tuple[str, None]:
     if not request.is_json:
         raise NoAuthorizationError("Invalid content-type. Must be application/json.")
 
-    if refresh:
-        token_key = config.refresh_json_key
-    else:
-        token_key = config.json_key
+    token_key = config.refresh_json_key if refresh else config.json_key
 
     try:
         encoded_token = request.json and request.json.get(token_key, None)
         if not encoded_token:
-            raise BadRequest()
+            raise BadRequest
     except BadRequest:
         raise NoAuthorizationError(f'Missing "{token_key}" key in json data.') from None
 
     return encoded_token, None
 
 
-def _decode_jwt_from_request(
+def _decode_jwt_from_request(  # noqa: C901, PLR0912
     locations: LocationType,
     fresh: bool,
     refresh: bool = False,
@@ -355,8 +352,7 @@ def _decode_jwt_from_request(
                 details="; ".join(errors),
             )
             raise NoAuthorizationError(err_msg)
-        else:
-            raise NoAuthorizationError(errors[0])
+        raise NoAuthorizationError(errors[0])
 
     # Additional verifications provided by this extension
     if verify_type:

@@ -26,8 +26,7 @@ def admin_required():
             claims = get_jwt()
             if claims["is_administrator"]:
                 return fn(*args, **kwargs)
-            else:
-                return jsonify(msg="Admins only!"), 403
+            return jsonify(msg="Admins only!"), 403
 
         return decorator
 

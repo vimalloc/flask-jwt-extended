@@ -1,4 +1,68 @@
+# Ruff is pinned in requirements.txt and .pre-commit-config.yaml. With
+# select = ["ALL"], rules added by new Ruff releases only show up when that
+# pin is deliberately bumped.
 target-version = "py311"
 
+[lint]
+select = ["ALL"]
+ignore = [
+    # Out of scope: docstring style, and annotation coverage (mypy owns types)
+    "D",
+    "ANN",
+    # Conflicts with `ruff format`
+    "COM812",
+    # The project does not use per-file copyright headers
+    "CPY001",
+    # Public API shape: positional booleans, long signatures, exception names
+    "FBT001",
+    "FBT002",
+    "PLR0913",
+    "PLR0917",
+    "N818",
+    # Loader callbacks must accept every argument they are passed, used or not
+    "ARG001",
+    # Exception messages are written inline throughout the codebase
+    "TRY003",
+    "EM101",
+    "EM102",
+    # Moving imports into TYPE_CHECKING blocks changes what is imported at runtime
+    "TC001",
+    "TC002",
+    "TC003",
+    # Flags any name containing "token" or "password", e.g. token_type="access"
+    "S105",
+    "S106",
+    # Style preferences this codebase does not follow
+    "ICN001",  # `import datetime` instead of `import datetime as dt`
+    "PLR2004", # literal values in comparisons
+    "PT003",   # explicit @pytest.fixture(scope="function")
+    "TRY300",  # `return` inside `try`
+    "TRY301",  # `raise` inside `try`
+    # Plain TODO comments (without author or issue link) are allowed
+    "TD002",
+    "TD003",
+    "FIX002",
+]
+
 [lint.per-file-ignores]
-"tests/**" = ["B018"]
+# Package modules share JWTManager's private callbacks and g._jwt_extended_* slots
+"flask_jwt_extended/**" = ["SLF001"]
+"tests/**" = [
+    "S101",    # pytest uses bare asserts
+    "SLF001",  # tests inspect internals
+    "B018",    # bare expressions force LocalProxy evaluation
+    "C901",    # fixtures define many nested routes
+    "PLR0915", # fixtures define many nested routes
+    "N806",    # `jwtM` locals
+    "PT012",   # token creation and decoding share a pytest.raises block
+]
+"examples/**" = [
+    "INP001", # standalone scripts, not a package
+    "S",      # demo code: hardcoded secrets, local-only HTTP settings
+]
+"setup.py" = ["PTH"]
+"docs/conf.py" = [
+    "INP001", # Sphinx configuration, not a package
+    "ERA001", # commented-out options from the Sphinx template
+    "PTH",    # Sphinx template uses os.path
+]

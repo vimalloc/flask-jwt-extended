@@ -112,6 +112,10 @@ class _Config:
         return current_app.config["JWT_COOKIE_DOMAIN"]
 
     @property
+    def cookie_partitioned(self) -> bool:
+        return current_app.config["JWT_COOKIE_PARTITIONED"]
+
+    @property
     def session_cookie(self) -> bool:
         return current_app.config["JWT_SESSION_COOKIE"]
 

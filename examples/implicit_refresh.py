@@ -28,6 +28,14 @@ jwt = JWTManager(app)
 # minutes of expiring. Change the timedeltas to match the needs of your application.
 @app.after_request
 def refresh_expiring_jwts(response):
+    # Don't refresh the token if the access cookie is being unset (e.g. on logout)
+    access_cookie = app.config["JWT_ACCESS_COOKIE_NAME"]
+    if any(
+        cookie.split(";", 1)[0] == f"{access_cookie}="
+        for cookie in response.headers.getlist("Set-Cookie")
+    ):
+        return response
+
     try:
         exp_timestamp = get_jwt()["exp"]
         now = datetime.now(UTC)

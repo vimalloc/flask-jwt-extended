@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 
 from flask_jwt_extended import (
     JWTManager,
@@ -28,8 +28,12 @@ jwt = JWTManager(app)
 # minutes of expiring. Change the timedeltas to match the needs of your application.
 @app.after_request
 def refresh_expiring_jwts(response):
-    # Don't refresh the token if the user is logging out
-    if request.path == "/logout":
+    # Don't refresh the token if the access cookie is being unset (e.g. on logout)
+    access_cookie = app.config["JWT_ACCESS_COOKIE_NAME"]
+    if any(
+        cookie.split(";", 1)[0] == f"{access_cookie}="
+        for cookie in response.headers.getlist("Set-Cookie")
+    ):
         return response
 
     try:
